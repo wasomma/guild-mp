@@ -1,8 +1,35 @@
-# Guild of the Open Mic (multiplayer)
+# Guild of the Open Mic
 
-A shared, persistent, voice-channel-driven idle RPG. One authoritative game world runs on the server; every browser is a live window into the same fight. See ARCHITECTURE.md for the full design.
+**A Discord-native, presence-driven idle RPG.** When people join a Discord voice channel, their persistent characters walk into a shared 2.5D pixel-art world and fight as a party. When the last person leaves, the world freezes mid-swing and waits. The game is a side effect of hanging out: you don't play it so much as it plays alongside you while you talk.
 
-For putting this on the internet so friends can connect remotely, see DEPLOY.md.
+## The design intent
+
+1. **Presence is the input device.** No controller, no clicks required. Joining voice *is* joining the game. The simulation only advances while someone is present, so there is no offline grind and no FOMO — the world's story only moves when the group is actually together.
+2. **One shared canon, not parallel saves.** A single persistent campaign per Discord server. Everyone watching sees the same authoritative entities. Prestige ("Retell the Tale") is a majority *vote*; finished chapters are enshrined in a Hall of Legends with MVPs and loot records; sessions end with an auto-posted Discord chronicle. Social memory is a first-class system.
+3. **Cooperative texture without APM.** The design problem is making a zero-input game legible and social: tank-focused aggro plus telegraphed party-wide cleaves (so healers visibly matter), interruptible boss windups, chapter mutators that twist each prestige run's rules, and presence buffs that scale with the number of people in voice.
+4. **HD-2D presentation on a strict pixel grid** (Octopath-inspired): depth-blurred scene layers, tilt-shift banding, bloom, material-ramped weapon models, rarity-visible gear rendered on the sprite, and a zoomed inspect portrait — because the reward loop is *seeing* the rare thing you earned.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    D["Discord voice channel"] -->|voiceStateUpdate| B["Bot (discord.js, in-process)"]
+    B -->|joinVoice / leaveVoice| S["Node game server\nauthoritative sim @ 20Hz, presence-gated\nsnapshots @ 10Hz - intent validation - OAuth2"]
+    S <--> DB[("SQLite\none file: worlds, characters,\nsessions, hall records")]
+    S -->|"snapshots (state + event queue)"| C["Browser clients\nReact + raw canvas\nrendering and UI only, zero authority"]
+    C -->|"intents { a: '...' }"| S
+```
+
+The decisions worth knowing:
+
+- **The simulation is a pure, headless module** (`shared/sim.js`): every game rule, no rendering, no I/O. It runs identically under Node and in the browser. Visual moments are emitted as *events* ("crit burst at x,y"); clients translate them into particles locally — the wire stays small at 10Hz while rendering runs at 60fps with client-side interpolation.
+- **Server-authoritative, intent-based networking.** Clients send `{a: "buyPotion"}`-style intents; the server validates everything. A modified client can *ask* but cannot *take*.
+- **Hibernation as an architectural feature.** Worlds load on first join, tick while occupied, write through on significant actions, and unload after the last leave. The ops cost of an idle community is zero, and one process shards to hundreds of guilds because worlds share nothing.
+- **Boring, durable persistence:** one SQLite file, additive guarded migrations, characters keyed by Discord snowflake so identity survives nickname changes, device switches, and disconnects. Backup is copying one file.
+- **Two deliberately duplicated codebases.** A single-file prototype (`prototype/guild-idle.jsx`, for instant sandboxed iteration in claude.ai artifacts) and the multiplayer build share *textually identical* game logic and sprite code, differing mechanically only at the I/O seams (direct sfx calls vs. emitted events). Every change lands in both — see the cardinal rule in CLAUDE.md.
+- **Testing without a framework:** headless sim scripts drive `joinVoice`/`tick`/`applyIntent` and assert on world state; a mock-canvas soak runs the *real* draw code through 24 scenarios; geometry tests verify layout invariants like formation spacing never clipping pet sprites.
+
+Want to *see* it? Two commands (below) put the live world in your browser. For the full design rationale read [ARCHITECTURE.md](ARCHITECTURE.md); for contributor conventions read [CLAUDE.md](CLAUDE.md); for the why behind recent decisions read [docs/SESSION-JOURNAL.md](docs/SESSION-JOURNAL.md); for hosting see [DEPLOY.md](DEPLOY.md).
 
 ## Running it
 
@@ -28,7 +55,7 @@ Open the URL Vite prints (usually http://localhost:5173). Open it in two browser
 
 ## What is where
 
-`shared/sim.js` holds every game rule and no rendering. The server ticks it; a future Discord bot calls its `joinVoice` and `leaveVoice` functions directly.
+`shared/sim.js` holds every game rule and no rendering. The server ticks it; the Discord bot calls its `joinVoice` and `leaveVoice` functions directly.
 
 `server/index.js` runs the world at 20Hz, broadcasts snapshots at 10Hz over WebSockets, validates every client intent, and freezes the simulation whenever nobody is in the party (the hibernation rule). `server/db.js` persists everything to SQLite (`server/guild.db`): every 20 seconds, on shutdown, and instantly whenever a purchase, skill point, prestige, or departure happens.
 
