@@ -57,15 +57,18 @@ The prototype (`prototype/guild-idle.jsx`) and the multiplayer build (`shared/si
 - Prestige ("Retell the Tale"): stage >= 21; with 2+ party members it becomes a 60s majority vote (multiplayer only); success triggers the 22s mead-hall feast, then Chapter+1.
 - Economy: kill gold = (10 + stage*4) * (boss 8 / elite 3.5 / 1); legacy upgrades multiply gold/xp/damage/HP.
 
-## Roadmap (agreed with the owner, in order)
+## Roadmap (agreed with the owner)
 
-Done: chiptune sound, prestige-by-vote, feast celebration, boss mechanics, style ultimates, loot affixes (AFFIX_DEFS and UNIQUES in both sims: lifesteal, thorns, crit damage, gold find, plus six teal Uniques with a wearer shimmer), session chronicles (world.session ledger in the sims; formatChronicle in server/bot.js posts to the announce channel after CHRONICLE_GRACE_MS of empty voice; multiplayer-only like voting, the prototype's ledger stays inert), presence buffs (Chorus of Courage in stats(): +4% dmg/heal and +3% HP per voice past the first, capped at 9 stacks; join/leave log lines, chorus chime, header pill), guild quests (daily contracts in both sims: rollQuests/questProg, five kinds, auto-completing with gold and renown; persisted via the quests/quest_day columns added by guarded ALTER TABLE migration in db.js; boards in both Guild Hall UIs; chronicle counts fulfillments).
-Next up:
-1. Presence buffs: party-wide bonus scaling with number of people in voice.
-3. Guild quests: daily shared goals paying gold/renown.
-4. Chapter mutators: post-prestige modifier chapters for renown bonuses.
-5. Hall of Legends: permanent per-chapter records (SQLite) with an UI page.
-Also wanted at some point: camp scenes between zones, pet detail pass, Discord Activity packaging.
+Done: chiptune sound, prestige-by-vote, feast celebration, boss mechanics, style ultimates, loot affixes (AFFIX_DEFS and UNIQUES in both sims: lifesteal, thorns, crit damage, gold find, plus six teal Uniques with a wearer shimmer), session chronicles (world.session ledger in the sims; formatChronicle in server/bot.js posts to the announce channel after CHRONICLE_GRACE_MS of empty voice; multiplayer-only like voting, the prototype's ledger stays inert), presence buffs (Chorus of Courage in stats(): +4% dmg/heal and +3% HP per voice past the first, capped at 9 stacks; join/leave log lines, chorus chime, header pill), guild quests (daily contracts in both sims: rollQuests/questProg, five kinds, auto-completing with gold and renown; persisted via the quests/quest_day columns added by guarded ALTER TABLE migration in db.js; boards in both Guild Hall UIs; chronicle counts fulfillments), splash damage (enemyCleave in both sims: non-boss mobs telegraph a whole-party cleave via cleaveWind — warning ring in drawEnemy, cleaveWind in LERP_KEYS — only when 2+ members are alive, 0.5x dmg / elite 0.7x; session counts cleaves), chapter mutators (MUTATORS table in both sims; chapters 2+ roll one at each prestige, never repeating; hooks in stats()/makeEnemy/spawnEncounter/ult charge; x1.25–x1.5 renown at the retelling; mutator snapshot field + worlds.mutator column; header pill in both UIs; chronicle closes with the current tale), Hall of Legends (g.chapter accumulator fed by killEnemy/dropLoot; doPrestige enshrines a record — chapter, stage, mutator, kills, gold, renown, MVP, heroes, uniques — into g.hall before resets; snapshot ships the last 25, worlds.hall/chapter columns keep everything; plaques render in both Guild Hall UIs).
+
+Art direction (Octopath-inspired detail arc, all done): weapon models (drawWarriorAxe/drawPaladinBlade/drawRogueDagger/drawArcherBow/drawChainBlade/drawMysticStaff + shared FITTINGS metals and wkRamp in both renderers; WEAPON_SKINS carry cD/cL/edge material ramps; each skin has a distinct silhouette and a living touch — glint sweeps, edge flicker, drips, facet sparkle), visible rarity gear (armor tiers/trinket charm/weapon hand-glow drawn from m.gear rarity objects, render-only), body dimorphism (masc breadth vs fem taper, parametrized inside drawAdventurer), inspect portraits (Portrait component in both UIs draws the live member at 4x with m.noBars; render.js exports drawAdventurer for it), cosmetics construction (OUTFITS trim/sash fields, CAPES lining, drawHat takes t for per-hat motion), rim light, bloom (additive blurred self-copy in draw(); layer depth blur, tilt-shift band blur, and vignette predate it), ground-plate HUD under the feet, pets in a front-left lane drawn over the cape, staggered double-rank formation (50px pitch, pet-lane geometry verified for parties 1–9).
+
+Someday (owner-endorsed, no committed order):
+- Camp scenes between zones.
+- Pet detail pass.
+- Discord Activity packaging (see ARCHITECTURE.md step 6).
+
+Owner's visual reference: the animated concept-sheet artifact (claude.ai, owner's account) documents the weapon/cosmetic direction across passes; its character sections are rendered by bundling the real render.js, so it can be regenerated after any character change.
 
 ## Configuration
 
