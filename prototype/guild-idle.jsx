@@ -1931,6 +1931,242 @@ function drawWarriorAxe(ctx, wk, pose, t, seed) {
   }
 }
 
+/* Shared guard/fitting metals per weapon skin, used by every style's painter. */
+const FITTINGS = {
+  steel:    { m: "#9aa3b5", hi: "#e3e8f2" },
+  gold:     { m: "#f2c14e", hi: "#fff1c9", gem: "#d0455a", gemHi: "#ff9fae" },
+  obsidian: { m: "#3a3050", hi: "#8a77b8", gem: "#8a5cff", gemHi: "#cdbcff" },
+  blood:    { m: "#5b3a2a", hi: "#7a6248", gem: "#8e0f24", gemHi: "#f27d8d" },
+  crystal:  { m: "#9fb8cc", hi: "#d1f4ff", gem: "#ffffff", gemHi: "#ffffff" },
+};
+function wkRamp(wk) {
+  return {
+    id: wk.id, c: wk.c,
+    cD: wk.cD || shade(wk.c, 0.55), cL: wk.cL || shade(wk.c, 1.3),
+    edge: wk.edge || "#f2f6fc", F: FITTINGS[wk.id] || FITTINGS.steel,
+    grip: wk.id === "obsidian" ? "#3a3050" : wk.id === "blood" ? "#4a3b2c" : wk.id === "crystal" ? "#7f95ad" : "#6b4a32",
+    gripD: wk.id === "obsidian" ? "#262038" : wk.id === "blood" ? "#2e2517" : wk.id === "crystal" ? "#5d7085" : "#513723",
+  };
+}
+
+/* Paladin longsword, hand-local rotated space: blade up to y=-38, guard at
+   y=-8, grip below, pommel at the bottom. */
+function drawPaladinBlade(ctx, wk, t, seed) {
+  const { id, c, cD, cL, edge, F, grip, gripD } = wkRamp(wk);
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  if (id === "obsidian") { ctx.fillStyle = "rgba(138,92,255,0.14)"; ctx.fillRect(-6, -40, 12, 36); }
+  if (id === "crystal") {
+    const pl = 0.1 + 0.06 * Math.sin(t * 3 + seed);
+    ctx.fillStyle = `rgba(143,227,255,${pl})`; ctx.fillRect(-6, -41, 12, 37);
+    R(-4, -36, 8, 30, hexA(c, 0.35));
+    R(-3, -35, 6, 28, hexA(c, 0.55));
+    R(-2, -38, 4, 3, hexA(cL, 0.7));
+    R(-1, -33, 1, 22, "#ffffff");
+    R(1, -35, 2, 28, hexA("#ffffff", 0.7));
+    const sp = Math.floor(t * 4 + seed) % 3;
+    const spy = [-32, -22, -14][sp];
+    R(-1, spy, 3, 1, "#ffffff"); R(0, spy - 1, 1, 3, "#ffffff");
+  } else {
+    R(-4, -36, 8, 30, cD);
+    R(-3, -35, 6, 28, c);
+    R(-2, -38, 4, 3, c); R(-1, -38, 2, 2, cL);
+    R(-1, -33, 1, 24, cD);
+    R(1, -35, 2, 28, cL); R(2, -33, 1, 24, edge);
+    if (id === "gold") { R(-3, -30, 4, 1, shade(c, 0.75)); R(-3, -22, 4, 1, shade(c, 0.75)); R(-3, -14, 4, 1, shade(c, 0.75)); }
+    if (id === "obsidian") {
+      R(1, -33, 2, 3, cL); R(1, -26, 2, 3, cL); R(1, -19, 2, 3, cL);
+      R(3, -32, 1, 1, edge); R(3, -25, 1, 1, edge); R(3, -18, 1, 1, edge);
+      if (Math.sin(t * 5 + seed) > 0.3) R(2, -29, 1, 5, edge);
+    }
+    if (id === "blood") {
+      R(1, -28, 2, 2, cD); R(1, -18, 2, 2, cD);
+      R(-2, -31, 1, 1, "#6e1f30"); R(0, -24, 1, 1, "#6e1f30"); R(-2, -16, 1, 1, "#3a1810");
+      const dp = (t * 5 + seed * 3) % 7;
+      if (dp < 4.5) R(-1, -38 + dp * 1.6, 1, 2, "#8e0f24");
+    }
+    if (id === "steel" || id === "gold") {
+      const gp = ((t * 24 + seed * 37) % 120) / 10;
+      if (gp < 3) R(1, -35 + gp * 8, 2, 2, "rgba(255,255,255,0.85)");
+    }
+  }
+  R(-8, -8, 16, 4, F.m); R(-8, -8, 16, 1, F.hi); R(-8, -5, 16, 1, shade(F.m, 0.6));
+  if (id === "gold") { R(-9, -10, 3, 3, F.m); R(6, -10, 3, 3, F.m); R(-9, -10, 1, 1, F.hi); R(8, -10, 1, 1, F.hi); }
+  if (F.gem) { R(-1, -7, 2, 2, F.gem); R(-1, -7, 1, 1, F.gemHi); } else { R(-1, -7, 2, 2, "#d0455a"); }
+  R(-2, -4, 4, 9, grip);
+  R(-2, -1, 4, 1, gripD); R(-2, 2, 4, 1, gripD);
+  R(-3, 5, 6, 3, F.m); R(-3, 5, 6, 1, F.hi);
+  if (F.gem && id !== "steel") R(-1, 6, 2, 1, F.gem);
+}
+
+/* Rogue dagger, hand-local rotated space; front daggers are a touch longer
+   and carry the living effects. */
+function drawRogueDagger(ctx, wk, front, t, seed) {
+  const { id, c, cD, cL, edge, F } = wkRamp(wk);
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  const top = front ? -17 : -15, bh = front ? 14 : 12, ih = bh - 2;
+  if (id === "crystal") {
+    const pl = 0.1 + 0.05 * Math.sin(t * 3.5 + seed);
+    ctx.fillStyle = `rgba(143,227,255,${pl})`; ctx.fillRect(-4.5, top - 2, 9, bh + 4);
+    R(-2.5, top, 5, bh, hexA(c, 0.35));
+    R(-1.5, top + 1, 3, ih, hexA(c, 0.6));
+    R(0, top + 1, 1.5, ih, hexA("#ffffff", 0.75));
+    R(-0.5, top + 3, 1, 3, "#ffffff");
+    if (front) { const sp = Math.floor(t * 5 + seed) % 2; R(-1, top + 3 + sp * 6, 3, 1, "#ffffff"); }
+  } else {
+    R(-2.5, top, 5, bh, cD);
+    R(-1.5, top + 1, 3, ih, c);
+    R(0, top + 1, 1.5, ih, cL);
+    R(0.5, top + 2, 1, ih - 2, edge);
+    if (id === "gold") R(-1.5, top + 4, 1, ih - 6, shade(c, 0.75));
+    if (id === "obsidian") {
+      R(0, top + 2, 1.5, 2, cL); R(0, top + 6, 1.5, 2, cL);
+      if (front && Math.sin(t * 5 + seed) > 0.35) R(1, top + 3, 0.8, 4, edge);
+    }
+    if (id === "blood") {
+      R(0, top + 5, 1.5, 1.5, cD); R(-1.5, top + 3, 1, 1, "#6e1f30");
+      if (front) { const dp = (t * 6 + seed * 3) % 5; if (dp < 3) R(-0.5, top + dp * 1.4, 1, 1.6, "#8e0f24"); }
+    }
+    if ((id === "steel" || id === "gold") && front) {
+      const gp = ((t * 26 + seed * 31) % 100) / 10;
+      if (gp < 2.5) R(0, top + 2 + gp * 3.6, 1.2, 1.6, "rgba(255,255,255,0.85)");
+    }
+  }
+  R(front ? -4 : -3.5, front ? -5 : -4, front ? 8 : 7, front ? 3 : 2, F.m);
+  R(front ? -4 : -3.5, front ? -5 : -4, front ? 8 : 7, 1, F.hi);
+  R(-1.5, -2, 3, front ? 7 : 6, id === "obsidian" ? "#262038" : id === "blood" ? "#2e2517" : "#26232b");
+  if (front) { R(-1.5, 0, 3, 1, "#3a3550"); R(-1.5, 3, 3, 1, "#3a3550"); }
+  if (F.gem && front) { R(-1, 4.5, 2, 2, F.gem); R(-1, 4.5, 1, 1, F.gemHi); }
+}
+
+/* Archer bow, absolute coords centered on (bx, by) with radius r. The string
+   and nocked arrow stay with the caller (they track draw progress). */
+function drawArcherBow(ctx, wk, bx, by, r, t, seed) {
+  const { id, c, cD, cL, edge, F } = wkRamp(wk);
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  if (id === "crystal") {
+    const pl = 0.1 + 0.05 * Math.sin(t * 3 + seed);
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(143,227,255,${pl + 0.15})`; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.arc(bx, by, r, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.strokeStyle = cD; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(bx, by, r, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+  ctx.strokeStyle = id === "crystal" ? hexA(c, 0.75) : c; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(bx, by, r, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+  ctx.strokeStyle = cL; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(bx - 1, by, r, -Math.PI / 2 + 0.35, Math.PI / 2 - 0.35); ctx.stroke();
+  R(bx - 2, by - r - 3, 4, 4, c); R(bx - 2, by + r - 1, 4, 4, c);
+  if (id === "steel") { R(bx - 2, by - r - 3, 4, 1, cL); R(bx - 2, by + r - 1, 4, 1, cL); }
+  else if (id === "gold") {
+    R(bx - 1, by - r - 5, 2, 2, F.m); R(bx - 1, by + r + 3, 2, 2, F.m);
+    R(bx - 1, by - r - 5, 1, 1, F.hi); R(bx - 1, by + r + 3, 1, 1, F.hi);
+  } else if (id === "obsidian") {
+    R(bx + 1, by - r - 5, 2, 3, cD); R(bx + 1, by + r + 2, 2, 3, cD);
+    R(bx + 2, by - r - 4, 1, 1, cL); R(bx + 2, by + r + 3, 1, 1, cL);
+    if (Math.sin(t * 5 + seed) > 0.35) R(bx + 2, by - r - 5, 1, 2, edge);
+  } else if (id === "blood") {
+    R(bx - 2, by - r + 2, 4, 1, "#2e2517"); R(bx - 2, by + r - 3, 4, 1, "#2e2517");
+    const dp = (t * 5 + seed * 3) % 7;
+    if (dp < 4) R(bx, by + r + 3 + dp, 1, 2, "#8e0f24");
+  } else if (id === "crystal") {
+    R(bx - 2, by - r - 3, 4, 1, "#ffffff"); R(bx - 2, by + r + 2, 4, 1, "#ffffff");
+  }
+  R(bx - 2, by - 2, 3, 5, F.m); R(bx - 2, by - 2, 3, 1, F.hi);
+  if (F.gem) { R(bx - 1, by, 2, 2, F.gem); R(bx - 1, by, 1, 1, F.gemHi); }
+  if (id === "steel" || id === "gold") {
+    const gp = ((t * 20 + seed * 29) % 90) / 10;
+    if (gp < 3) {
+      const a = -Math.PI / 2 + (gp / 3) * Math.PI;
+      R(bx + Math.cos(a) * r - 1, by + Math.sin(a) * r - 1, 2, 2, "rgba(255,255,255,0.85)");
+    }
+  } else if (id === "crystal") {
+    const sp = Math.floor(t * 4 + seed) % 3;
+    const a = -Math.PI / 2 + (sp + 0.5) * (Math.PI / 3);
+    R(bx + Math.cos(a) * r, by + Math.sin(a) * r, 1.5, 1.5, "#ffffff");
+  }
+}
+
+/* Chainblade head. mode "held": local to the hand, resting at the hip.
+   mode "tip": local to the flying whip tip, rotated by the caller. */
+function drawChainBlade(ctx, wk, mode, t, seed) {
+  const { id, c, cD, cL, edge, F } = wkRamp(wk);
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  if (mode === "tip") {
+    if (id === "crystal") {
+      R(-3, -4, 12, 8, hexA(c, 0.4)); R(-2, -3, 10, 6, hexA(c, 0.6));
+      R(6, -3, 2, 6, hexA("#ffffff", 0.8)); R(8, -5, 2, 3, hexA(cL, 0.8));
+      R(1, -2, 3, 2, "#ffffff");
+    } else {
+      R(-3, -4, 12, 8, cD); R(-2, -3, 10, 6, c);
+      R(6, -3, 2, 6, cL); R(7, -2, 1, 4, edge); R(8, -5, 2, 3, c);
+      if (id === "gold") R(0, -2, 2, 2, F.gem);
+      if (id === "obsidian") { R(4, -4, 2, 1, cL); R(4, 2, 2, 1, cL); }
+      if (id === "blood") R(2, 2, 2, 1, "#6e1f30");
+    }
+    return;
+  }
+  if (id === "crystal") {
+    const pl = 0.1 + 0.05 * Math.sin(t * 3 + seed);
+    ctx.fillStyle = `rgba(143,227,255,${pl})`; ctx.fillRect(0, -9, 16, 13);
+    R(1, -3, 12, 6, hexA(c, 0.4)); R(2, -2, 10, 4, hexA(c, 0.6));
+    R(2, -2, 10, 1, hexA("#ffffff", 0.7)); R(10, -6, 3, 7, hexA(cL, 0.75));
+    R(5, -1, 3, 2, "#ffffff");
+    if (Math.floor(t * 5 + seed) % 2) R(11, -7, 1, 3, "#ffffff");
+  } else {
+    R(1, -3, 12, 6, cD); R(2, -2, 10, 4, c); R(2, -2, 10, 1, cL);
+    R(10, -6, 3, 7, c); R(12, -8, 2, 3, cD);
+    R(10, -6, 1, 6, cL); R(11, -5, 1, 4, edge);
+    if (id === "gold") { R(4, -2, 1, 4, F.hi); R(6, -1, 2, 2, F.gem); R(6, -1, 1, 1, F.gemHi); }
+    if (id === "obsidian") { R(8, -7, 2, 2, cL); if (Math.sin(t * 5 + seed) > 0.35) R(11, -5, 1, 4, edge); }
+    if (id === "blood") {
+      R(5, 2, 2, 1, "#6e1f30"); R(8, -2, 1, 1, "#3a1810");
+      const dp = (t * 6 + seed * 3) % 6;
+      if (dp < 3.5) R(12, 1 + dp, 1, 1.6, "#8e0f24");
+    }
+    if (id === "steel" || id === "gold") {
+      const gp = ((t * 24 + seed * 33) % 100) / 10;
+      if (gp < 2.5) R(3 + gp * 3, -2, 1.6, 1.4, "rgba(255,255,255,0.85)");
+    }
+  }
+}
+
+/* Mystic staff, drawn on the px2 grid at (ox, oy) like the caller's body. */
+function drawMysticStaff(ctx, wk, ox, oy, casting, t, seed) {
+  const { id, c, cD, cL, edge, F } = wkRamp(wk);
+  const shaft = id === "obsidian" ? "#3a3050" : id === "blood" ? "#4a3b2c" : id === "crystal" ? "#7f95ad" : "#6b4a32";
+  const shaftD = id === "obsidian" ? "#262038" : id === "blood" ? "#2e2517" : id === "crystal" ? "#5d7085" : "#513723";
+  px2(ctx, ox, oy, 9, -36, 1.5, 26, shaft);
+  px2(ctx, ox, oy, 9, -30, 1.5, 1, shaftD);
+  px2(ctx, ox, oy, 9, -20, 1.5, 1, shaftD);
+  px2(ctx, ox, oy, 7.5, -38, 4.5, 2, F.m);
+  px2(ctx, ox, oy, 6, -41, 1.5, 4, F.m);
+  px2(ctx, ox, oy, 12, -41, 1.5, 4, F.m);
+  px2(ctx, ox, oy, 6, -42, 1, 1, F.hi);
+  px2(ctx, ox, oy, 12.5, -42, 1, 1, F.hi);
+  if (id === "gold") px2(ctx, ox, oy, 7.5, -38.5, 4.5, 0.8, shade(c, 0.75));
+  if (id === "obsidian") { px2(ctx, ox, oy, 5, -40, 1, 1, cL); px2(ctx, ox, oy, 13.5, -40, 1, 1, cL); }
+  const glow = casting ? 1 : 0.6 + Math.sin(t * 4 + seed) * 0.3;
+  if (id === "crystal") {
+    px2(ctx, ox, oy, 7.5, -42, 4.5, 4.5, hexA(c, 0.6));
+    px2(ctx, ox, oy, 8, -44, 1.5, 2, hexA(cL, 0.8));
+    px2(ctx, ox, oy, 10.5, -43.5, 1, 1.5, hexA(c, 0.7));
+    px2(ctx, ox, oy, 8.5, -41, 1.5, 1.5, "#ffffff");
+  } else {
+    px2(ctx, ox, oy, 7.5, -42, 4.5, 4.5, c);
+    px2(ctx, ox, oy, 7.5, -42, 4.5, 1, cL);
+    px2(ctx, ox, oy, 8.5, -41, 1.5, 1.5, "#ffffff");
+    if (id === "obsidian" && Math.sin(t * 5 + seed) > 0.3) px2(ctx, ox, oy, 11, -42, 1, 1, edge);
+    if (id === "blood") { const dp = (t * 5 + seed * 3) % 7; if (dp < 4) px2(ctx, ox, oy, 9.5, -37.5 + dp, 0.8, 1, "#8e0f24"); }
+  }
+  ctx.fillStyle = `rgba(255,255,255,${glow * 0.45})`;
+  const pad = casting ? 3 : 0;
+  ctx.fillRect(ox + 15 - pad, oy - 84 - pad, 9 + pad * 2, 9 + pad * 2);
+  if (id === "crystal" && Math.floor(t * 4 + seed) % 2) {
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(ox + 14 + ((seed * 7) % 1) * 8, oy - 88, 2, 2);
+  }
+}
+
 function drawAdventurer(ctx, m, t) {
   if (m.feast) { drawFeaster(ctx, m, t); return; }
   drawPet(ctx, m, t);
@@ -2025,10 +2261,7 @@ function drawAdventurer(ctx, m, t) {
       if (i % 2) { ctx.fillStyle = "#c6cddb"; ctx.fillRect(pt.x - 2, pt.y - 2, 2, 2); }
     }
     ctx.save(); ctx.translate(tip.x, tip.y); ctx.rotate(ta);
-    ctx.fillStyle = tintD; ctx.fillRect(-3, -4, 12, 8);
-    ctx.fillStyle = tint; ctx.fillRect(-2, -3, 10, 6);
-    ctx.fillStyle = "#f2f6fc"; ctx.fillRect(6, -3, 2, 6);
-    ctx.fillStyle = tint; ctx.fillRect(8, -5, 2, 3);
+    drawChainBlade(ctx, wskin, "tip", t, m.seed);
     ctx.restore();
   }
 
@@ -2216,16 +2449,7 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 5, -14, 3, 3, SKIN);
     const ang = m.lunge > 0 ? swingAngle(m, -1.7, 1.3, 0.25) : 0.45;
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
-    ctx.fillStyle = tintD; ctx.fillRect(-4, -36, 8, 30);
-    ctx.fillStyle = tint; ctx.fillRect(-3, -35, 6, 28);
-    ctx.fillStyle = "#f2f6fc"; ctx.fillRect(-1, -35, 2, 27);
-    ctx.fillStyle = tint; ctx.fillRect(-2, -38, 4, 3);
-    ctx.fillStyle = "#f2c14e"; ctx.fillRect(-8, -8, 16, 4);
-    ctx.fillStyle = "#c78a3b"; ctx.fillRect(-8, -5, 16, 1);
-    ctx.fillStyle = "#d0455a"; ctx.fillRect(-1, -7, 2, 2);
-    ctx.fillStyle = "#6b4a32"; ctx.fillRect(-2, -4, 4, 9);
-    ctx.fillStyle = "#513723"; ctx.fillRect(-2, -1, 4, 1); ctx.fillRect(-2, 2, 4, 1);
-    ctx.fillStyle = "#f2c14e"; ctx.fillRect(-3, 5, 6, 3);
+    drawPaladinBlade(ctx, wskin, t, m.seed);
     ctx.restore();
     if (m.lunge > 0.05) {
       ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 4;
@@ -2271,12 +2495,7 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 6, -15, 1, 1, "#9aa3b5");
     const bx = ox + 12 * P2, by = oy - 16 * P2, r = 17;
     const pull = m.shootT > 0 ? 0 : clamp(1 - m.atkT / Math.max(0.4, m._st ? m._st.spd : 1), 0, 1);
-    ctx.strokeStyle = tintD; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.arc(bx, by, r, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-    ctx.strokeStyle = tint; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(bx, by, r, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-    ctx.fillStyle = tint;
-    ctx.fillRect(bx - 2, by - r - 3, 4, 4); ctx.fillRect(bx - 2, by + r - 1, 4, 4);
+    drawArcherBow(ctx, wskin, bx, by, r, t, m.seed);
     ctx.strokeStyle = "#e8e2d0"; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(bx, by - r); ctx.lineTo(bx - pull * 9, by); ctx.lineTo(bx, by + r); ctx.stroke();
     if (pull > 0.35) {
@@ -2290,19 +2509,10 @@ function drawAdventurer(ctx, m, t) {
     const aF = m.lunge > 0 && m.swing ? swingAngle(m, -0.6, 1.2, 0.2) : 0.7;
     const aB = m.lunge > 0 && !m.swing ? swingAngle(m, 2.2, 0.6, 0.2) : 2.6;
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(aF);
-    ctx.fillStyle = tintD; ctx.fillRect(-2.5, -17, 5, 14);
-    ctx.fillStyle = tint; ctx.fillRect(-1.5, -16, 3, 12);
-    ctx.fillStyle = "#f2f6fc"; ctx.fillRect(0, -16, 1.5, 12);
-    ctx.fillStyle = "#7f8aa0"; ctx.fillRect(-4, -5, 8, 3);
-    ctx.fillStyle = "#26232b"; ctx.fillRect(-1.5, -2, 3, 7);
-    ctx.fillStyle = "#3a3550"; ctx.fillRect(-1.5, 0, 3, 1); ctx.fillRect(-1.5, 3, 3, 1);
+    drawRogueDagger(ctx, wskin, true, t, m.seed);
     ctx.restore();
     ctx.save(); ctx.translate(ox - 7 * P2, oy - 13 * P2); ctx.rotate(aB);
-    ctx.fillStyle = tintD; ctx.fillRect(-2.5, -15, 5, 12);
-    ctx.fillStyle = tint; ctx.fillRect(-1.5, -14, 3, 10);
-    ctx.fillStyle = "#f2f6fc"; ctx.fillRect(0, -14, 1.5, 10);
-    ctx.fillStyle = "#7f8aa0"; ctx.fillRect(-3.5, -4, 7, 2);
-    ctx.fillStyle = "#26232b"; ctx.fillRect(-1.5, -2, 3, 6);
+    drawRogueDagger(ctx, wskin, false, t, m.seed);
     ctx.restore();
     if (m.lunge > 0.08) {
       ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 3; ctx.beginPath();
@@ -2325,11 +2535,9 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 5, -14, 3, 3, "#9aa3b5");
     px2(ctx, ox, oy, 7, -13, 1, 1, "#c6cddb");
     if (m.chainT <= 0) {
-      ctx.fillStyle = tintD; ctx.fillRect(hx + 1, hy - 3, 12, 6);
-      ctx.fillStyle = tint; ctx.fillRect(hx + 2, hy - 2, 10, 4);
-      ctx.fillStyle = "#f2f6fc"; ctx.fillRect(hx + 2, hy - 2, 10, 1);
-      ctx.fillStyle = tint; ctx.fillRect(hx + 10, hy - 6, 3, 7);
-      ctx.fillStyle = tintD; ctx.fillRect(hx + 12, hy - 8, 2, 3);
+      ctx.save(); ctx.translate(hx, hy);
+      drawChainBlade(ctx, wskin, "held", t, m.seed);
+      ctx.restore();
     }
     if (m.ultT > 0 && m.ultTgts) {
       for (const tg of m.ultTgts) {
@@ -2347,20 +2555,7 @@ function drawAdventurer(ctx, m, t) {
     const casting = m.castT > 0;
     px2(ctx, ox, oy, 4, -17, 2, 3, outfit);
     if (casting) px2(ctx, ox, oy, 5, -19, 2, 5, SKIN); else px2(ctx, ox, oy, 5, -15, 2, 4, SKIN);
-    px2(ctx, ox, oy, 9, -36, 1.5, 26, "#6b4a32");
-    px2(ctx, ox, oy, 9, -30, 1.5, 1, "#513723");
-    px2(ctx, ox, oy, 9, -20, 1.5, 1, "#513723");
-    px2(ctx, ox, oy, 7.5, -38, 4.5, 2, "#f2c14e");
-    px2(ctx, ox, oy, 6, -41, 1.5, 4, "#f2c14e");
-    px2(ctx, ox, oy, 12, -41, 1.5, 4, "#f2c14e");
-    px2(ctx, ox, oy, 6, -42, 1, 1, "#fff1c9");
-    px2(ctx, ox, oy, 12.5, -42, 1, 1, "#fff1c9");
-    const glow = casting ? 1 : 0.6 + Math.sin(t * 4 + m.seed) * 0.3;
-    px2(ctx, ox, oy, 7.5, -42, 4.5, 4.5, tint);
-    px2(ctx, ox, oy, 8.5, -41, 1.5, 1.5, "#ffffff");
-    ctx.fillStyle = `rgba(255,255,255,${glow * 0.45})`;
-    const pad = casting ? 3 : 0;
-    ctx.fillRect(ox + 15 - pad, oy - 84 - pad, 9 + pad * 2, 9 + pad * 2);
+    drawMysticStaff(ctx, wskin, ox, oy, casting, t, m.seed);
     if (m.ultT > 0) {
       const ua = Math.min(1, m.ultT / 0.8);
       ctx.save(); ctx.globalCompositeOperation = "lighter";
