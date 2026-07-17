@@ -252,6 +252,7 @@ export function newWorld() {
     stock: { heal: 3, armor: 1, poison: 1, res: 1 },
     auto: { heal: true, armor: true, poison: true, res: true },
     healCd: 0, buffT: 0, time: 0, mutator: null,
+    hall: [], chapter: { kills: 0, gold: 0, uniques: [] },
     autoSim: false, simT: 8,
     vote: null,
     session: null,
@@ -486,6 +487,7 @@ function dropLoot(g, uniqueChance) {
     addFloat(g, m.x, m.y - 100, "★ " + item.name, UNIQUE_COLOR, true);
     sfxEv(g, "unique");
     if (g.session) g.session.uniques.push(item.name + " (" + m.name + ")");
+    if (g.chapter) g.chapter.uniques.push(item.name);
   }
   const cur = m.gear[item.slot];
   if (!cur || item.power > cur.power) {
@@ -576,6 +578,7 @@ function killEnemy(g, killer, e) {
   g.gold += goldGain;
   sfxEv(g, "kill");
   if (g.session) { g.session.kills++; g.session.gold += goldGain; if (e.boss) g.session.bossKills.push(e.name); else if (e.elite) g.session.eliteKills++; }
+  if (g.chapter) { g.chapter.kills++; g.chapter.gold += goldGain; }
   questProg(g, "kill", 1);
   if (e.elite) questProg(g, "elite", 1);
   if (e.boss) questProg(g, "boss", 1);
@@ -679,6 +682,20 @@ export function doPrestige(g) {
   sfxEv(g, "prestige");
   if (g.session) g.session.chapters++;
   g.everBest = Math.max(g.everBest, g.stage);
+  /* enshrine the finished chapter in the Hall of Legends */
+  const mvp = [...g.members].sort((a, b) => (b.dmgDone + b.healDone) - (a.dmgDone + a.healDone))[0] || null;
+  g.hall = g.hall || [];
+  g.hall.push({
+    chapter: g.prestiges, stage: g.stage, renown: earn,
+    mutator: mu ? mu.id : null,
+    mvp: mvp ? { name: mvp.name, dmg: Math.round(mvp.dmgDone), heal: Math.round(mvp.healDone) } : null,
+    heroes: g.members.map((x) => x.name),
+    kills: g.chapter ? g.chapter.kills : 0,
+    gold: g.chapter ? Math.round(g.chapter.gold) : 0,
+    uniques: g.chapter ? g.chapter.uniques.slice(0, 12) : [],
+    endedAt: Date.now(),
+  });
+  g.chapter = { kills: 0, gold: 0, uniques: [] };
   const pool = MUTATORS.filter((x) => x.id !== g.mutator);
   const next = pool[Math.floor(Math.random() * pool.length)];
   g.mutator = next.id;
@@ -1392,6 +1409,7 @@ export function snapshot(g, events) {
     gold: g.gold, renown: g.renown, prestiges: g.prestiges,
     legacy: g.legacy, stock: g.stock, auto: g.auto,
     phase: g.phase, scroll: g.scroll, advanceT: g.advanceT, mutator: g.mutator,
+    hall: (g.hall || []).slice(-25),
     bossT: g.bossT, prestigeT: g.prestigeT, buffT: g.buffT,
     autoSim: g.autoSim,
     vote: g.vote,

@@ -87,17 +87,19 @@ for (const ddl of [
   "ALTER TABLE worlds ADD COLUMN quests TEXT",
   "ALTER TABLE worlds ADD COLUMN quest_day INTEGER",
   "ALTER TABLE worlds ADD COLUMN mutator TEXT",
+  "ALTER TABLE worlds ADD COLUMN hall TEXT",
+  "ALTER TABLE worlds ADD COLUMN chapter TEXT",
 ]) { try { db.exec(ddl); } catch { /* column already exists */ } }
 
 const upsertWorld = db.prepare(`
   INSERT INTO worlds (guild_id, stage, best, ever_best, gold, renown, prestiges,
-                      join_count, auto_sim, legacy, stock, auto, users, quests, quest_day, mutator, updated_at)
+                      join_count, auto_sim, legacy, stock, auto, users, quests, quest_day, mutator, hall, chapter, updated_at)
   VALUES (@guild_id, @stage, @best, @ever_best, @gold, @renown, @prestiges,
-          @join_count, @auto_sim, @legacy, @stock, @auto, @users, @quests, @quest_day, @mutator, @updated_at)
+          @join_count, @auto_sim, @legacy, @stock, @auto, @users, @quests, @quest_day, @mutator, @hall, @chapter, @updated_at)
   ON CONFLICT(guild_id) DO UPDATE SET
     stage=@stage, best=@best, ever_best=@ever_best, gold=@gold, renown=@renown,
     prestiges=@prestiges, join_count=@join_count, auto_sim=@auto_sim,
-    legacy=@legacy, stock=@stock, auto=@auto, users=@users, quests=@quests, quest_day=@quest_day, mutator=@mutator, updated_at=@updated_at
+    legacy=@legacy, stock=@stock, auto=@auto, users=@users, quests=@quests, quest_day=@quest_day, mutator=@mutator, hall=@hall, chapter=@chapter, updated_at=@updated_at
 `);
 
 const upsertChar = db.prepare(`
@@ -138,6 +140,8 @@ export const saveWorld = db.transaction((guildId, g) => {
     auto: JSON.stringify(g.auto), users: JSON.stringify(g.users),
     quests: JSON.stringify(g.quests || []), quest_day: g.questDay || 0,
     mutator: g.mutator || null,
+    hall: JSON.stringify(g.hall || []),
+    chapter: JSON.stringify(g.chapter || { kills: 0, gold: 0, uniques: [] }),
     updated_at: now,
   });
   // characters in the active party and characters waiting in the roster
@@ -161,6 +165,8 @@ export function loadWorld(guildId) {
   g.quests = row.quests ? JSON.parse(row.quests) : [];
   g.questDay = row.quest_day || 0;
   g.mutator = row.mutator || null;
+  g.hall = row.hall ? JSON.parse(row.hall) : [];
+  g.chapter = row.chapter ? JSON.parse(row.chapter) : { kills: 0, gold: 0, uniques: [] };
   g.users.forEach((u) => (u.inVoice = false)); // nobody is in voice after a cold boot
   for (const c of selChars.all(guildId)) {
     g.roster[c.user_key] = rehydrateMember(g, {

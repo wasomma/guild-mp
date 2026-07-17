@@ -168,7 +168,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "vote", "feastT", "quests", "questDay", "mutator"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "vote", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -613,6 +613,25 @@ function GuildHall({ g, send, confirm, setConfirm, lock, me, authConfigured }) {
           </div>
         );
       })}
+      {(g.hall || []).length > 0 && <>
+        <div className="coshead pad">🏛️ Hall of Legends</div>
+        {[...g.hall].reverse().map((r) => {
+          const rmu = MUTATORS.find((x) => x.id === r.mutator);
+          return (
+            <div key={r.chapter} className="skrow">
+              <div>
+                <div>Chapter {r.chapter} · reached stage {fmt(r.stage)}
+                  {rmu && <span style={{ color: rmu.c }}> · {rmu.name}</span>}</div>
+                <div className="dim small">
+                  {fmt(r.kills)} foes · {fmt(r.gold)}g · ✨{fmt(r.renown)}
+                  {r.mvp ? ` · MVP ${r.mvp.name} (${fmt(r.mvp.dmg)} dmg)` : ""}
+                  {r.uniques && r.uniques.length ? ` · ★ ${r.uniques.join(", ")}` : ""}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </>}
       <div className="dim small pad">Best stage this chapter: {g.best} · Best ever: {g.everBest} · Chapters told: {g.prestiges}</div>
     </div>
   );

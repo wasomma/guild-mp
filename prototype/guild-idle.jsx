@@ -232,6 +232,7 @@ function newGame() {
     stock: { heal: 3, armor: 1, poison: 1, res: 1 },
     auto: { heal: true, armor: true, poison: true, res: true },
     healCd: 0, buffT: 0, simT: 8, time: 0, mutator: null,
+    hall: [], chapter: { kills: 0, gold: 0, uniques: [] },
     quests: [], questDay: 0,
     users: [
       { name: "Pixel_Pete",    color: "#e8743b", inVoice: false },
@@ -528,6 +529,7 @@ function dropLoot(g, uniqueChance) {
     addFloat(g, m.x, m.y - 100, "★ " + item.name, UNIQUE_COLOR, true);
     sfx.unique();
     if (g.session) g.session.uniques.push(item.name + " (" + m.name + ")");
+    if (g.chapter) g.chapter.uniques.push(item.name);
   }
   const cur = m.gear[item.slot];
   if (!cur || item.power > cur.power) {
@@ -1174,6 +1176,7 @@ function killEnemy(g, killer, e) {
   g.gold += goldGain;
   sfx.kill(); sfx.coin();
   if (g.session) { g.session.kills++; g.session.gold += goldGain; if (e.boss) g.session.bossKills.push(e.name); else if (e.elite) g.session.eliteKills++; }
+  if (g.chapter) { g.chapter.kills++; g.chapter.gold += goldGain; }
   questProg(g, "kill", 1);
   if (e.elite) questProg(g, "elite", 1);
   if (e.boss) questProg(g, "boss", 1);
@@ -1279,6 +1282,20 @@ function doPrestige(g) {
   sfx.prestige();
   if (g.session) g.session.chapters++;
   g.everBest = Math.max(g.everBest, g.stage);
+  /* enshrine the finished chapter in the Hall of Legends */
+  const mvp = [...g.members].sort((a, b) => (b.dmgDone + b.healDone) - (a.dmgDone + a.healDone))[0] || null;
+  g.hall = g.hall || [];
+  g.hall.push({
+    chapter: g.prestiges, stage: g.stage, renown: earn,
+    mutator: mu ? mu.id : null,
+    mvp: mvp ? { name: mvp.name, dmg: Math.round(mvp.dmgDone), heal: Math.round(mvp.healDone) } : null,
+    heroes: g.members.map((x) => x.name),
+    kills: g.chapter ? g.chapter.kills : 0,
+    gold: g.chapter ? Math.round(g.chapter.gold) : 0,
+    uniques: g.chapter ? g.chapter.uniques.slice(0, 12) : [],
+    endedAt: Date.now(),
+  });
+  g.chapter = { kills: 0, gold: 0, uniques: [] };
   const pool = MUTATORS.filter((x) => x.id !== g.mutator);
   const next = pool[Math.floor(Math.random() * pool.length)];
   g.mutator = next.id;
@@ -4294,6 +4311,25 @@ export default function GuildIdle() {
                     );
                   })}
                 </div>
+                {(g.hall || []).length > 0 && <>
+                  <div className="gi-h" style={{ fontSize: 10, color: "#8b84ad", marginTop: 10 }}>🏛️ HALL OF LEGENDS</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {[...g.hall].reverse().map((rr) => {
+                      const rmu = MUTATORS.find((x) => x.id === rr.mutator);
+                      return (
+                        <div key={rr.chapter} style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 8 }}>
+                          <div style={{ color: "#cfc9e8" }}>Chapter {rr.chapter} · reached stage {fmt(rr.stage)}
+                            {rmu && <span style={{ color: rmu.c }}> · {rmu.name}</span>}</div>
+                          <div style={{ fontSize: 15, color: "#8b84ad" }}>
+                            {fmt(rr.kills)} foes · {fmt(rr.gold)}g · ✦{fmt(rr.renown)}
+                            {rr.mvp ? ` · MVP ${rr.mvp.name} (${fmt(rr.mvp.dmg)} dmg)` : ""}
+                            {rr.uniques && rr.uniques.length ? ` · ★ ${rr.uniques.join(", ")}` : ""}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>}
               </div>
             )}
 
