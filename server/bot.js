@@ -15,7 +15,7 @@
    the game runs exactly as before with the dev sidebar.
    ===================================================================== */
 
-import { joinVoice, leaveVoice } from "../shared/sim.js";
+import { joinVoice, leaveVoice, MUTATORS } from "../shared/sim.js";
 
 /* Compose the session chronicle from world.session. Exported for tests. */
 export function formatChronicle(world) {
@@ -43,6 +43,8 @@ export function formatChronicle(world) {
   if (s2.deaths) lines.push(`💀 ${s2.deaths} fall${s2.deaths > 1 ? "s" : ""} in battle`);
   if (s2.cleaves) lines.push(`🌀 ${s2.cleaves} cleave${s2.cleaves > 1 ? "s" : ""} weathered`);
   if (s2.chapters) lines.push(`📖 ${s2.chapters} chapter${s2.chapters > 1 ? "s" : ""} retold at the feast`);
+  const mu = MUTATORS.find((x) => x.id === world.mutator);
+  if (mu) lines.push(`🌗 The tale continues under the ${mu.name} (${mu.desc})`);
   lines.push("_The world sleeps until the party gathers again._");
   return lines.join("\n");
 }

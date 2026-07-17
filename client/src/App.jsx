@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   W, H, CLASSES, STYLES, styleOf, SKILLS, MAX_RANK,
   BODIES, HATS, HAIRS, HAIRSTYLES, OUTFITS, WEAPON_SKINS, ACCESSORIES, CAPES, PETS, AURAS,
-  RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel,
+  RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf,
 } from "@shared/sim.js";
 import { draw, drawAdventurer } from "./render.js";
@@ -168,7 +168,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "vote", "feastT", "quests", "questDay"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "vote", "feastT", "quests", "questDay", "mutator"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -232,6 +232,9 @@ export default function App() {
               <span className="pill gold">🪙 {fmt(g.gold)}</span>
               <span className="pill renown">✨ {fmt(g.renown)}</span>
               {g.members.length >= 2 && <span className="pill chorus" title={`Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP`}>🎵 +{Math.min(g.members.length - 1, 9) * 4}%</span>}
+              {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
+                <span key={mu.id} className="pill" style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
+              ))}
             </>}
             <span className={"pill " + (connected ? "ok" : "bad")}>{connected ? "● LIVE" : "○ OFFLINE"}</span>
             <button className="pill sound" title={muted ? "unmute" : "mute"}
@@ -518,7 +521,8 @@ function Skills({ g, m, send, lock }) {
 
 function GuildHall({ g, send, confirm, setConfirm, lock, me, authConfigured }) {
   const can = g.stage >= 21 && !lock;
-  const earn = renownEarn(g.stage);
+  const muDef = MUTATORS.find((x) => x.id === g.mutator);
+  const earn = Math.round(renownEarn(g.stage) * (muDef ? muDef.renownMult : 1));
   const partyKeys = [...new Set(g.members.map((m) => m.key))];
   const multi = partyKeys.length > 1;
   const v = g.vote;

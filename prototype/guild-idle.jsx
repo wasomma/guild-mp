@@ -174,6 +174,18 @@ const LEGACY = [
   { id: "stipend",  name: "Alchemist Stipend", desc: "Campaigns start with +2 of every potion per rank", max: 3 },
 ];
 const legacyCost = (rank) => (rank + 1) * 2;
+
+/* Chapter mutators: every chapter after the first is told under one of
+   these, twisting the rules and paying bonus renown at the retelling. */
+const MUTATORS = [
+  { id: "iron", name: "Chapter of the Iron Kings", desc: "Bosses and elites +50% HP · renown ×1.5", c: "#9aa3b5", renownMult: 1.5 },
+  { id: "gilded", name: "Chapter of the Gilded Road", desc: "+40% gold · foes hit 15% harder · renown ×1.25", c: "#f2c14e", renownMult: 1.25 },
+  { id: "moon", name: "Chapter of the Racing Moon", desc: "All attacks 20% faster, foes too · renown ×1.25", c: "#8fe3ff", renownMult: 1.25 },
+  { id: "horde", name: "Chapter of the Endless Horde", desc: "+1 foe per pack, each 20% frailer · renown ×1.25", c: "#7fd069", renownMult: 1.25 },
+  { id: "glass", name: "Chapter of Glass", desc: "All damage +35%, all HP -25% · renown ×1.5", c: "#e77fb3", renownMult: 1.5 },
+  { id: "storm", name: "Chapter of the Storm Chorus", desc: "Ultimates charge 30% faster · renown ×1.25", c: "#b07fe0", renownMult: 1.25 },
+];
+const mutatorOf = (g) => MUTATORS.find((mu) => mu.id === g.mutator) || null;
 const renownEarn = (stage) => Math.max(0, Math.floor(Math.pow(Math.max(0, stage - 1), 1.12) / 3));
 
 const ZONES = [
@@ -219,7 +231,7 @@ function newGame() {
     particles: [], projectiles: [], pending: [], shake: 0, bossT: 0,
     stock: { heal: 3, armor: 1, poison: 1, res: 1 },
     auto: { heal: true, armor: true, poison: true, res: true },
-    healCd: 0, buffT: 0, simT: 8, time: 0,
+    healCd: 0, buffT: 0, simT: 8, time: 0, mutator: null,
     quests: [], questDay: 0,
     users: [
       { name: "Pixel_Pete",    color: "#e8743b", inVoice: false },
@@ -285,6 +297,8 @@ function stats(m, g) {
       heal *= 1 + 0.10 * g.legacy.hymn;
       hp *= 1 + 0.10 * g.legacy.banner;
     }
+    if (g.mutator === "moon") spd *= 0.8;
+    if (g.mutator === "glass") { dmg *= 1.35; hp *= 0.75; }
     chorus = Math.min(Math.max(0, g.members.length - 1), 9);
     if (chorus > 0) {
       dmg *= 1 + 0.04 * chorus;
@@ -534,7 +548,7 @@ function makeEnemy(g, tier) {
   const s = g.stage;
   const boss = tier === "boss", elite = tier === "elite";
   const hp = Math.round((28 + s * 15) * (boss ? 9 : elite ? 3.6 : 1) * rand(0.9, 1.1));
-  return {
+  const e = {
     id: UID++, kind: zone.enemy, boss, elite,
     scale: boss ? 1.8 : elite ? 1.35 : 1,
     name: boss ? `${zone.label} King` : elite ? zone.eliteLabel : zone.label,
@@ -546,6 +560,12 @@ function makeEnemy(g, tier) {
     x: 0, y: 0, atkT: rand(0.8, 1.8), lunge: 0, stunT: 0,
     poison: 0, poisonT: 0, seed: Math.random() * 10,
   };
+  if (g.mutator === "iron" && (boss || elite)) e.hp = e.maxHp = Math.round(e.hp * 1.5);
+  if (g.mutator === "gilded") { e.dmg *= 1.15; e.gold = Math.round(e.gold * 1.4); }
+  if (g.mutator === "moon") e.spd *= 0.8;
+  if (g.mutator === "horde") e.hp = e.maxHp = Math.round(e.hp * 0.8);
+  if (g.mutator === "glass") { e.dmg *= 1.35; e.hp = e.maxHp = Math.round(e.hp * 0.75); }
+  return e;
 }
 
 function spawnEncounter(g) {
@@ -553,6 +573,7 @@ function spawnEncounter(g) {
   const boss = g.stage % 5 === 0;
   const elite = !boss && g.stage % 5 === 3;
   const tiers = boss ? ["boss"] : elite ? ["elite", "normal"] : Array(2 + Math.floor(Math.random() * 3)).fill("normal");
+  if (g.mutator === "horde" && !boss) tiers.push("normal");
   tiers.forEach((tier, i) => {
     const e = makeEnemy(g, tier);
     e.x = 440 + i * 56;
@@ -864,7 +885,7 @@ function tick(g, dt) {
     m.hop = Math.max(0, m.hop - dt);
     m.shootT = Math.max(0, m.shootT - dt);
     m.ultT = Math.max(0, (m.ultT || 0) - dt);
-    if (m.alive) m.ult = Math.min(1, (m.ult || 0) + dt / (ULT_CD[m.style] || 24));
+    if (m.alive) m.ult = Math.min(1, (m.ult || 0) + dt / ((ULT_CD[m.style] || 24) * (g.mutator === "storm" ? 0.7 : 1)));
     m.castT = Math.max(0, m.castT - dt);
     m.chainT = Math.max(0, m.chainT - dt);
     if (m.alive && Math.random() < dt * 0.03) m.bubble = 1.6;
@@ -1252,11 +1273,15 @@ function setupFeast(g) {
 }
 
 function doPrestige(g) {
-  const earn = renownEarn(g.stage);
+  const mu = mutatorOf(g);
+  const earn = Math.round(renownEarn(g.stage) * (mu ? mu.renownMult : 1));
   g.renown += earn; g.prestiges++;
   sfx.prestige();
   if (g.session) g.session.chapters++;
   g.everBest = Math.max(g.everBest, g.stage);
+  const pool = MUTATORS.filter((x) => x.id !== g.mutator);
+  const next = pool[Math.floor(Math.random() * pool.length)];
+  g.mutator = next.id;
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
   g.gold = 150;
@@ -1273,7 +1298,8 @@ function doPrestige(g) {
     m.ult = 0; m.ultT = 0;
     m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
   }
-  addLog(g, `The tale is told! The guild earns ${earn} renown and begins Chapter ${g.prestiges + 1}.`, "#f2c14e");
+  addLog(g, `The tale is told! The guild earns ${earn} renown${mu ? ` (×${mu.renownMult} for braving the ${mu.name})` : ""} and begins Chapter ${g.prestiges + 1}.`, "#f2c14e");
+  addLog(g, `The next tale is a ${next.name}: ${next.desc}`, next.c);
 }
 
 /* ---------------- drawing ---------------- */
@@ -4104,6 +4130,9 @@ export default function GuildIdle() {
             <span style={{ color: "#8b84ad" }}>Stage <b style={{ color: "#cfc9e8" }}>{g.stage}</b>{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""} · Best {g.best}</span>
             <span style={{ marginLeft: "auto", color: "#f2c14e" }}>◈ {fmt(g.gold)}g</span>
             {(g.renown > 0 || g.prestiges > 0) && <span style={{ color: "#b07fe0" }}>✦ {fmt(g.renown)}</span>}
+            {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
+              <span key={mu.id} style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
+            ))}
             <span style={{ color: "#8b84ad", fontSize: 16 }}>🧪{g.stock.heal} 🛡️{g.stock.armor} ☠️{g.stock.poison} 🔥{g.stock.res}</span>
             {g.members.length >= 2 && <span style={{ color: "#8fe3ff", fontSize: 16 }} title={`Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP`}>🎵 +{Math.min(g.members.length - 1, 9) * 4}%</span>}
             <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px" }} title={muted ? "unmute" : "mute"}
@@ -4214,7 +4243,7 @@ export default function GuildIdle() {
                   </div>
                   {g.stage >= 21 ? (
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                      <span style={{ color: "#7fd069" }}>Retiring at stage {g.stage} earns ✦ {renownEarn(g.stage)}</span>
+                      <span style={{ color: "#7fd069" }}>Retiring at stage {g.stage} earns ✦ {Math.round(renownEarn(g.stage) * (mutatorOf(g) ? mutatorOf(g).renownMult : 1))}</span>
                       {!confirmP
                         ? <button className="gi-btn" style={{ borderColor: "#f2c14e", color: "#f2c14e" }} onClick={() => setConfirmP(true)}>Retell the Tale</button>
                         : <>
