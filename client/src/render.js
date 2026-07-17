@@ -499,7 +499,7 @@ function drawCape(ctx, ox, oy, capeId, t, walking) {
 function drawPet(ctx, m, t) {
   const id = m.cos.pet;
   if (!id || id === "none") return;
-  const bx = m.x - 20, by = m.y;
+  const bx = m.x - 26, by = m.y + 7;
   const hover = Math.sin(t * 3 + m.seed) * 1.5;
   const f = m.walking ? Math.floor(t * 8 + m.seed) % 2 : 0;
   drawShadow(ctx, bx, by, 12);
@@ -927,7 +927,6 @@ function drawMysticStaff(ctx, wk, ox, oy, casting, t, seed) {
 
 export function drawAdventurer(ctx, m, t) {
   if (m.feast) { drawFeaster(ctx, m, t); return; }
-  drawPet(ctx, m, t);
   let oy = m.y;
   if (m.alive && !m.walking && m.lunge <= 0) oy += Math.round(Math.sin(t * 2.5 + m.seed) * 1.4);
   if (m.hop > 0) oy -= Math.round(Math.abs(Math.sin(((0.7 - m.hop) / 0.7) * Math.PI * 2)) * 6);
@@ -948,7 +947,8 @@ export function drawAdventurer(ctx, m, t) {
     px2(ctx, m.x, m.y, -4, -14, 3, 1, "#5a8f5f");
     px2(ctx, m.x, m.y, -8, 0, 2, 1, "#4d8f45");
     px2(ctx, m.x, m.y, 6, 0, 2, 1, "#4d8f45");
-    hpBar(ctx, m.x, m.y - 46, 26, 0, "#7fd069");
+    drawPet(ctx, m, t); /* the pet keeps vigil by the fallen */
+    hpBar(ctx, m.x, m.y + 5, 20, 0, "#7fd069");
     return;
   }
 
@@ -1454,14 +1454,16 @@ export function drawAdventurer(ctx, m, t) {
       ctx.fillRect(sxp, syp - 1, 1, 3);
     }
   }
+  drawPet(ctx, m, t); /* pets walk the front-left lane, never lost behind the cape */
   if (m.noBars) return; /* inspect portraits draw the sprite without HUD */
-  hpBar(ctx, ox, oy - 72, 26, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
+  /* compact ground-plate HUD below the feet, clear of cosmetics and neighbors */
+  hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
   if (m.ult != null) {
-    const uw = 26, ur = clamp(m.ult, 0, 1);
-    ctx.fillStyle = "#141221"; ctx.fillRect(ox - uw / 2 - 1, oy - 65, uw + 2, 4);
-    ctx.fillStyle = "#3a3550"; ctx.fillRect(ox - uw / 2, oy - 64, uw, 2);
+    const uw = 20, ur = clamp(m.ult, 0, 1);
+    ctx.fillStyle = "#141221"; ctx.fillRect(ox - uw / 2 - 1, oy + 11, uw + 2, 4);
+    ctx.fillStyle = "#3a3550"; ctx.fillRect(ox - uw / 2, oy + 12, uw, 2);
     ctx.fillStyle = ur >= 1 ? (Math.floor(t * 6) % 2 ? "#fff1c9" : "#f2c14e") : "#c78a3b";
-    ctx.fillRect(ox - uw / 2, oy - 64, uw * ur, 2);
+    ctx.fillRect(ox - uw / 2, oy + 12, uw * ur, 2);
   }
   if (m.bubble > 0) {
     ctx.fillStyle = "#efeaff"; ctx.fillRect(ox + 10, oy - 106, 26, 15);

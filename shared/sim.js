@@ -543,8 +543,8 @@ function spawnEncounter(g) {
 function formation(g) {
   const order = [...g.members].sort((a, b) => CLASS_ORDER.indexOf(a.cls) - CLASS_ORDER.indexOf(b.cls));
   order.forEach((m, i) => {
-    m.tx = 170 - i * 34;
-    m.y = GROUND - (i % 2) * 10;
+    m.tx = 178 - Math.floor(i / 2) * 50 - (i % 2) * 25;
+    m.y = GROUND - (i % 2) * 12;
   });
 }
 
