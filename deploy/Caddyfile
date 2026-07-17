@@ -1,0 +1,6 @@
+# Replace guild.example.com with your domain. Caddy fetches and renews
+# the HTTPS certificate automatically and proxies WebSockets natively.
+guild.example.com {
+    encode gzip
+    reverse_proxy localhost:8787
+}

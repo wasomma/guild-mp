@@ -1,0 +1,21 @@
+[Unit]
+Description=Guild of the Open Mic game server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=guild
+Group=guild
+WorkingDirectory=/opt/guild/app/server
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+# hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/guild/app/server
+
+[Install]
+WantedBy=multi-user.target
