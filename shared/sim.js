@@ -348,7 +348,7 @@ export function joinVoice(g, key, name, discord) {
   u.name = name; // nicknames may change; the key never does
   if (u.inVoice) return;
   u.inVoice = true;
-  if (!g.session) g.session = { startedAt: Date.now(), startStage: g.stage, startChapter: g.prestiges + 1, names: [], kills: 0, bossKills: [], eliteKills: 0, gold: 0, levelUps: 0, topLevel: null, uniques: [], deaths: 0, chapters: 0, best: g.stage };
+  if (!g.session) g.session = { startedAt: Date.now(), startStage: g.stage, startChapter: g.prestiges + 1, names: [], kills: 0, bossKills: [], eliteKills: 0, gold: 0, levelUps: 0, topLevel: null, uniques: [], deaths: 0, cleaves: 0, chapters: 0, best: g.stage };
   if (!g.session.names.includes(name)) g.session.names.push(name);
   let m = g.roster[key];
   if (m) {
@@ -774,6 +774,20 @@ function bossPhase(g, e) {
     sfxEv(g, "enrage");
   }
 }
+// Non-boss whole-party AOE. Autos stay tank-focused; this is the healer check.
+function enemyCleave(g, e, party) {
+  const s = e.scale || 1;
+  if (g.session) g.session.cleaves = (g.session.cleaves || 0) + 1;
+  shakeFx(g, e.elite ? 5 : 3);
+  sfxEv(g, "slam");
+  const mult = e.elite ? 0.7 : 0.5;
+  if (e.elite) addLog(g, `The ${e.name} sweeps the party with a brutal cleave!`, "#ef6461");
+  for (const m of party) if (m.alive) {
+    hurtMember(g, m, e.dmg * mult, e);
+    burst(g, m.x, m.y - 24, "#ff7a3a", 8, 1.6);
+  }
+  burst(g, e.x, e.y - 12 * s, "#ffb24a", 16, 2.2);
+}
 
 
 
@@ -1181,6 +1195,22 @@ export function tick(g, dt) {
       if (e.hp <= 0) { killEnemy(g, null, e); continue; }
     }
     if (e.stunT > 0) { e.stunT -= dt; continue; }
+    if (!e.boss) {
+      const party = alive.filter((m) => m.alive);
+      if (e.cleaveWind > 0) {
+        e.cleaveWind -= dt;
+        e.atkT = Math.max(e.atkT, 0.4);
+        if (Math.random() < dt * 30) sparkle(g, e.x, e.y - 24 * (e.scale || 1), "#ffb24a", 2);
+        if (e.cleaveWind <= 0) { enemyCleave(g, e, party); e.cleaveT = rand(6, 9); }
+      } else if (party.length >= 2) {
+        e.cleaveT = (e.cleaveT == null ? rand(4, 7) : e.cleaveT) - dt;
+        if (e.cleaveT <= 0) {
+          e.cleaveWind = e.elite ? 0.5 : 0.4;
+          sfxEv(g, "warn");
+          burst(g, e.x, e.y - 24 * (e.scale || 1), "#ffb24a", 7, 1.5);
+        }
+      }
+    }
     e.atkT -= dt;
     if (e.atkT > 0) continue;
     e.atkT = e.spd; e.lunge = 0.22;

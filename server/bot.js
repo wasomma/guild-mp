@@ -41,6 +41,7 @@ export function formatChronicle(world) {
   if (s2.uniques.length) lines.push(`★ Uniques claimed: ${s2.uniques.join(", ")}`);
   if (s2.quests) lines.push(`📜 ${s2.quests} guild quest${s2.quests > 1 ? "s" : ""} fulfilled`);
   if (s2.deaths) lines.push(`💀 ${s2.deaths} fall${s2.deaths > 1 ? "s" : ""} in battle`);
+  if (s2.cleaves) lines.push(`🌀 ${s2.cleaves} cleave${s2.cleaves > 1 ? "s" : ""} weathered`);
   if (s2.chapters) lines.push(`📖 ${s2.chapters} chapter${s2.chapters > 1 ? "s" : ""} retold at the feast`);
   lines.push("_The world sleeps until the party gathers again._");
   return lines.join("\n");

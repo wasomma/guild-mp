@@ -1017,6 +1017,23 @@ function drawEnemy(ctx, e, t) {
   let oy = e.y;
   if (e.slamT > 0) oy -= Math.round(Math.sin(Math.min(1, (0.45 - e.slamT) / 0.45) * Math.PI) * 34);
   drawShadow(ctx, e.x, e.y, 26 * s);
+  if (e.cleaveWind > 0) {
+    const cwMax = e.elite ? 0.5 : 0.4;
+    const p = clamp(1 - e.cleaveWind / cwMax, 0, 1);
+    const rr = (16 + 46 * p) * s;
+    ctx.save();
+    ctx.translate(e.x, e.y); ctx.scale(1, 0.35); ctx.translate(-e.x, -e.y);
+    ctx.globalCompositeOperation = "lighter";
+    const rg = ctx.createRadialGradient(e.x, e.y, 2, e.x, e.y, rr);
+    rg.addColorStop(0, `rgba(255,120,50,${0.05 + 0.14 * p})`);
+    rg.addColorStop(0.7, `rgba(255,150,60,${0.04 + 0.1 * p})`);
+    rg.addColorStop(1, "rgba(255,150,60,0)");
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(e.x, e.y, rr, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(255,${Math.round(170 - 90 * p)},70,${0.5 + 0.4 * p})`;
+    ctx.lineWidth = 2 + 2 * p;
+    ctx.beginPath(); ctx.arc(e.x, e.y, rr, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
   if (e.elite) {
     const ar = e.enraged ? 38 : 30;
     const pulse = (e.enraged ? 0.42 : 0.22) + (e.enraged ? 0.2 : 0.12) * Math.sin(t * (e.enraged ? 7 : 3) + e.seed);

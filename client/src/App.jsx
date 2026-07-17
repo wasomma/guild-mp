@@ -15,7 +15,7 @@ const DEV = location.port === "5173";
 const HTTP_BASE = DEV ? `http://${location.hostname}:8787` : location.origin;
 const SERVER_URL = HTTP_BASE.replace(/^http/, "ws");
 const AUTH_URL = `${HTTP_BASE}/auth`;
-const LERP_KEYS = ["x", "y", "lunge", "hop", "shootT", "castT", "chainT", "hp", "bubble", "stunT", "hitT", "poisonT", "windup", "slamT", "screechT", "ult", "ultT"];
+const LERP_KEYS = ["x", "y", "lunge", "hop", "shootT", "castT", "chainT", "hp", "bubble", "stunT", "hitT", "poisonT", "windup", "slamT", "screechT", "cleaveWind", "ult", "ultT"];
 
 function lerpEnts(prev, cur, a, keys) {
   const pm = new Map((prev || []).map((e) => [e.id, e]));
