@@ -2419,6 +2419,14 @@ export function draw(ctx, g, dt) {
   }
   if (g.phase === "feast") { drawFeastFront(ctx, g); drawFeastLight(ctx, g); }
   else { drawForeground(ctx, g); drawLighting(ctx, g); }
+  /* bloom: an additive, blurred self-copy — bright emissives (glints, auras,
+     ult beams, feast candles) spill soft light; dark pixels barely add. */
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.14;
+  ctx.filter = "blur(5px) saturate(1.35) brightness(1.1)";
+  ctx.drawImage(ctx.canvas, 0, 0);
+  ctx.restore();
   ctx.restore();
   if (g.phase === "feast") drawFeastBanner(ctx, g); else drawTimeline(ctx, g);
   if (g.vote) {
