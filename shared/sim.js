@@ -135,11 +135,11 @@ export const OUTFITS = [
   { name: "Wine", c: "#7a2f45", price: 200 },
 ];
 export const WEAPON_SKINS = [
-  { id: "steel", name: "Steel", c: "#cfd6e0", price: 0 },
-  { id: "gold", name: "Gilded", c: "#f2c14e", price: 280 },
-  { id: "obsidian", name: "Obsidian", c: "#5b4d7d", price: 420 },
-  { id: "blood", name: "Bloodrot", c: "#d0455a", price: 520 },
-  { id: "crystal", name: "Crystal", c: "#8fe3ff", price: 680 },
+  { id: "steel", name: "Steel", c: "#cfd6e0", cD: "#7f8aa0", cL: "#eef2f8", edge: "#ffffff", price: 0 },
+  { id: "gold", name: "Gilded", c: "#f2c14e", cD: "#a06b24", cL: "#ffe08a", edge: "#fff6d8", price: 280 },
+  { id: "obsidian", name: "Obsidian", c: "#5b4d7d", cD: "#2e2742", cL: "#8a77b8", edge: "#cdbcff", price: 420 },
+  { id: "blood", name: "Bloodrot", c: "#d0455a", cD: "#6e1f30", cL: "#f27d8d", edge: "#ffb3bd", price: 520 },
+  { id: "crystal", name: "Crystal", c: "#8fe3ff", cD: "#4a9cc9", cL: "#d1f4ff", edge: "#ffffff", price: 680 },
 ];
 export const COSMETIC_LISTS = {
   hat: HATS, hair: HAIRS, hairstyle: HAIRSTYLES, outfit: OUTFITS,

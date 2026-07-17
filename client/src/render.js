@@ -512,6 +512,137 @@ function swingAngle(m, start, end, dur) {
   return start + (end - start) * Math.sin(Math.min(1, p) * Math.PI * 0.5);
 }
 
+/* Warrior axe models: a distinct silhouette and material ramp per weapon skin.
+   Drawn in hand-local space: the grip is at the origin, the haft runs up to
+   about y=-30, and the head hangs off the +x side of its top. Poses: "rest"
+   (held upright), "swing" (wide horizontal cleave), "back" (slung across the
+   back, small). */
+function drawWarriorAxe(ctx, wk, pose, t, seed) {
+  const id = wk.id;
+  const c = wk.c, cD = wk.cD || shade(wk.c, 0.55), cL = wk.cL || shade(wk.c, 1.3), edge = wk.edge || "#f2f6fc";
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  const haft = id === "obsidian" ? "#3a3050" : id === "blood" ? "#4a3b2c" : id === "crystal" ? "#7f95ad" : "#6b4a32";
+  const haftD = id === "obsidian" ? "#262038" : id === "blood" ? "#2e2517" : id === "crystal" ? "#5d7085" : "#513723";
+
+  if (pose === "back") {
+    R(-1, -18, 3, 18, haft); R(-1, -10, 3, 1, haftD);
+    if (id === "gold") { R(-1, -14, 3, 1, "#f2c14e"); R(-1, -6, 3, 1, "#f2c14e"); }
+    R(0, -24, 9, 8, cD); R(0, -23, 8, 6, c);
+    if (id === "obsidian") { R(6, -24, 3, 2, cL); R(5, -20, 3, 2, cL); R(7, -22, 1, 1, edge); }
+    else if (id === "blood") { R(6, -23, 2, 2, cL); R(6, -19, 2, 1, cL); R(7, -21, 1, 1, cD); R(5, -17, 3, 2, c); }
+    else if (id === "crystal") { R(1, -22, 2, 3, "#ffffff"); R(3, -26, 2, 3, hexA(c, 0.8)); R(6, -22, 2, 5, hexA(edge, 0.8)); }
+    else if (id === "gold") { R(-4, -22, 4, 5, cD); R(-3, -21, 2, 3, c); R(6, -22, 2, 5, cL); R(7, -21, 1, 3, edge); R(0, -21, 2, 2, "#d0455a"); }
+    else { R(6, -23, 2, 6, cL); R(7, -22, 1, 4, edge); }
+    R(1, -23, 6, 1, cL);
+    return;
+  }
+
+  /* haft, shared by rest and swing */
+  R(-2, -30, 4, 28, haft);
+  R(-2, -24, 4, 1, haftD); R(-2, -16, 4, 1, haftD);
+  R(-2, -8, 4, 5, haftD); R(-2, -7, 4, 1, shade(haft, 1.35)); R(-2, -5, 4, 1, shade(haft, 1.35));
+  if (id === "gold") { R(-2, -26, 4, 1, "#f2c14e"); R(-2, -18, 4, 1, "#f2c14e"); R(-2, -3, 4, 2, "#f2c14e"); R(-2, -3, 1, 1, "#fff1c9"); }
+
+  if (pose === "rest") {
+    if (id === "steel") {
+      R(-6, -31, 3, 3, "#7f8aa0"); R(-6, -31, 3, 1, "#aeb7c9");
+      R(-3, -32, 6, 4, "#7f8aa0"); R(-3, -32, 6, 1, "#aeb7c9");
+      R(-1, -36, 12, 13, cD);
+      R(0, -35, 10, 11, c);
+      R(4, -24, 6, 3, c); R(4, -22, 6, 1, cD);
+      R(3, -33, 1, 8, cD);
+      R(8, -35, 3, 11, cL); R(10, -33, 1, 8, edge);
+      R(8, -24, 3, 2, cL); R(10, -23, 1, 2, edge);
+      R(0, -33, 1, 1, "#6f7890"); R(0, -29, 1, 1, "#6f7890"); R(0, -25, 1, 1, "#6f7890");
+    } else if (id === "gold") {
+      R(-1, -40, 2, 4, "#f2c14e"); R(-1, -40, 1, 2, "#fff1c9");
+      R(-7, -35, 6, 10, cD); R(-6, -34, 4, 8, c);
+      R(-7, -34, 1, 8, cL); R(-7, -32, 1, 4, edge);
+      R(1, -37, 10, 14, cD); R(2, -36, 8, 12, c);
+      R(8, -36, 2, 12, cL); R(9, -33, 1, 6, edge);
+      R(8, -36, 2, 2, cD); R(8, -26, 2, 2, cD);
+      R(2, -31, 6, 1, shade(c, 0.75)); R(-6, -31, 3, 1, shade(c, 0.75));
+      R(-1, -33, 3, 3, "#d0455a"); R(-1, -33, 1, 1, "#ff9fae"); R(-1, -31, 3, 1, "#8e2436");
+    } else if (id === "obsidian") {
+      ctx.fillStyle = "rgba(138,92,255,0.16)"; ctx.fillRect(-3, -40, 17, 18);
+      R(1, -40, 3, 2, cD); R(2, -40, 1, 2, c);
+      R(-1, -38, 12, 15, cD); R(0, -37, 10, 13, c);
+      R(2, -35, 1, 3, cL); R(3, -32, 1, 3, cL); R(4, -29, 1, 3, cL);
+      R(9, -37, 3, 3, cL); R(9, -32, 2, 3, cL); R(9, -27, 3, 3, cL);
+      R(11, -36, 1, 1, edge); R(10, -31, 1, 1, edge); R(11, -26, 1, 1, edge);
+      if (Math.sin(t * 5 + seed) > 0.3) R(10, -33, 1, 4, edge);
+    } else if (id === "blood") {
+      R(-3, -32, 6, 3, "#5b4a3a"); R(-3, -32, 6, 1, "#7a6248");
+      R(-1, -34, 13, 11, cD); R(0, -33, 11, 9, c);
+      R(9, -33, 2, 9, cL); R(10, -33, 1, 3, edge);
+      R(9, -30, 3, 2, cD); R(9, -26, 3, 1, cD);
+      R(6, -24, 5, 2, c); R(9, -23, 2, 2, c); R(10, -21, 1, 2, cD);
+      R(6, -24, 4, 1, cL);
+      R(2, -31, 1, 1, "#6e1f30"); R(5, -27, 2, 1, "#6e1f30"); R(3, -25, 1, 1, "#3a1810");
+      R(1, -30, 2, 2, "#8e2436");
+      const dp = (t * 5 + seed * 3) % 6;
+      if (dp < 4) R(10, -20 + dp * 1.5, 1, 2, "#8e0f24");
+    } else if (id === "crystal") {
+      const pl = 0.12 + 0.07 * Math.sin(t * 3 + seed);
+      ctx.fillStyle = `rgba(143,227,255,${pl})`; ctx.fillRect(-3, -42, 17, 21);
+      R(-3, -32, 6, 3, haftD); R(-3, -32, 6, 1, "#9fb8cc");
+      R(1, -42, 2, 4, hexA(c, 0.8)); R(4, -41, 2, 3, hexA(cL, 0.8)); R(7, -40, 2, 2, hexA(c, 0.7));
+      R(-1, -39, 13, 16, hexA(c, 0.35));
+      R(0, -38, 11, 14, hexA(c, 0.55));
+      R(2, -37, 3, 5, hexA(cL, 0.7)); R(5, -33, 3, 5, hexA(cL, 0.7)); R(2, -29, 3, 4, hexA(cL, 0.6));
+      R(3, -33, 2, 4, "#ffffff");
+      R(10, -38, 1, 14, hexA("#ffffff", 0.8));
+      const sp = Math.floor(t * 4 + seed) % 3;
+      const spp = [[2, -36], [7, -31], [4, -26]][sp];
+      R(spp[0] - 1, spp[1], 3, 1, "#ffffff"); R(spp[0], spp[1] - 1, 1, 3, "#ffffff");
+    }
+    if (id === "steel" || id === "gold") {
+      const gp = ((t * 24 + seed * 37) % 110) / 10;
+      if (gp < 3) {
+        const gy = -35 + gp * 3.4;
+        R(id === "gold" ? 8 : 9, gy, 2, 2, "rgba(255,255,255,0.85)");
+        R(id === "gold" ? 7 : 8, gy + 1, 1, 1, "rgba(255,255,255,0.5)");
+      }
+    }
+    return;
+  }
+
+  /* swing: the blade sweeps wide and horizontal */
+  if (id === "crystal") {
+    const pl = 0.1 + 0.06 * Math.sin(t * 3 + seed);
+    ctx.fillStyle = `rgba(143,227,255,${pl})`; ctx.fillRect(-13, -39, 26, 15);
+    R(-11, -37, 22, 11, hexA(c, 0.35));
+    R(-10, -36, 20, 9, hexA(c, 0.55));
+    R(-8, -35, 4, 6, hexA(cL, 0.7)); R(-1, -34, 4, 6, hexA(cL, 0.7)); R(6, -35, 4, 6, hexA(cL, 0.6));
+    R(-2, -33, 3, 3, "#ffffff");
+    R(-10, -28, 20, 1, hexA("#ffffff", 0.8));
+    return;
+  }
+  R(-11, -37, 22, 11, cD);
+  R(-10, -36, 20, 9, c);
+  if (id === "steel") {
+    R(-10, -36, 3, 9, cL); R(7, -36, 3, 9, cL);
+    R(-10, -29, 20, 1, cL); R(-10, -28, 20, 1, edge);
+    R(-1, -36, 2, 9, "#7f8aa0");
+  } else if (id === "gold") {
+    R(-10, -36, 2, 2, cD); R(8, -36, 2, 2, cD);
+    R(-10, -30, 3, 3, cL); R(7, -30, 3, 3, cL);
+    R(-10, -28, 20, 1, cL);
+    R(-7, -36, 1, 8, shade(c, 0.75)); R(6, -36, 1, 8, shade(c, 0.75));
+    R(-1, -34, 3, 3, "#d0455a"); R(-1, -34, 1, 1, "#ff9fae");
+  } else if (id === "obsidian") {
+    ctx.fillStyle = "rgba(138,92,255,0.16)"; ctx.fillRect(-12, -38, 24, 14);
+    R(-8, -28, 3, 2, cL); R(-2, -28, 3, 2, cL); R(4, -28, 3, 2, cL); R(9, -28, 2, 2, cL);
+    R(-7, -26, 1, 1, edge); R(-1, -26, 1, 1, edge); R(5, -26, 1, 1, edge);
+    R(-6, -35, 1, 3, cL); R(0, -34, 1, 3, cL); R(6, -35, 1, 3, cL);
+  } else if (id === "blood") {
+    R(-11, -28, 3, 3, c); R(-12, -26, 2, 2, cD);
+    R(-10, -28, 20, 1, cL);
+    R(-4, -28, 3, 1, cD); R(3, -28, 3, 1, cD);
+    R(-8, -33, 2, 1, "#6e1f30"); R(2, -31, 2, 1, "#6e1f30");
+  }
+}
+
 function drawAdventurer(ctx, m, t) {
   if (m.feast) { drawFeaster(ctx, m, t); return; }
   drawPet(ctx, m, t);
@@ -542,7 +673,8 @@ function drawAdventurer(ctx, m, t) {
   const f = m.walking ? Math.floor(t * 8 + m.seed) % 2 : 0;
   const hair = HAIRS[m.cos.hair].c;
   const outfit = OUTFITS[m.cos.outfit].c;
-  const tint = WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c;
+  const wskin = WEAPON_SKINS.find((w) => w.id === m.cos.weapon);
+  const tint = wskin.c;
   const sty = m.style;
   const oD = shade(outfit, 0.7), oL = shade(outfit, 1.28);
   const tintD = shade(tint, 0.55);
@@ -634,15 +766,7 @@ function drawAdventurer(ctx, m, t) {
   }
   if (sty === "warrior") {
     ctx.save(); ctx.translate(ox - 8, oy - 26); ctx.rotate(-2.3);
-    ctx.fillStyle = "#6b4a32"; ctx.fillRect(-1, -18, 3, 18);
-    ctx.fillStyle = "#513723"; ctx.fillRect(-1, -10, 3, 1);
-    if (m.swing) {
-      ctx.fillStyle = "#7f8aa0"; ctx.fillRect(-7, -23, 14, 6);
-      ctx.fillStyle = "#aeb7c9"; ctx.fillRect(-7, -23, 14, 2);
-    } else {
-      ctx.fillStyle = tint; ctx.fillRect(0, -23, 9, 7);
-      ctx.fillStyle = "#f2f6fc"; ctx.fillRect(7, -23, 2, 7);
-    }
+    drawWarriorAxe(ctx, wskin, "back", t, m.seed);
     ctx.restore();
   }
 
@@ -841,20 +965,7 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 5, -16, 2, 3, SKIN);
     const ang = m.lunge > 0 ? swingAngle(m, -2.1, 1.4, 0.25) : 0.6;
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
-    ctx.fillStyle = "#6b4a32"; ctx.fillRect(-2, -30, 4, 28);
-    ctx.fillStyle = "#513723"; ctx.fillRect(-2, -24, 4, 1); ctx.fillRect(-2, -16, 4, 1);
-    if (m.swing) {
-      ctx.fillStyle = shade("#8b95a8", 0.6); ctx.fillRect(-11, -37, 22, 11);
-      ctx.fillStyle = "#8b95a8"; ctx.fillRect(-10, -36, 20, 9);
-      ctx.fillStyle = "#c6cddb"; ctx.fillRect(-10, -36, 3, 9); ctx.fillRect(7, -36, 3, 9);
-      ctx.fillStyle = tint; ctx.fillRect(-10, -31, 20, 2);
-    } else {
-      ctx.fillStyle = tintD; ctx.fillRect(-1, -35, 12, 12);
-      ctx.fillStyle = tint; ctx.fillRect(0, -34, 10, 10);
-      ctx.fillStyle = "#f2f6fc"; ctx.fillRect(8, -34, 3, 10);
-      ctx.fillStyle = "#7f8aa0"; ctx.fillRect(-5, -31, 4, 4);
-      ctx.fillStyle = "#6f7890"; ctx.fillRect(-1, -34, 2, 6);
-    }
+    drawWarriorAxe(ctx, wskin, m.swing ? "swing" : "rest", t, m.seed);
     ctx.restore();
     if (m.lunge > 0.05) {
       ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 5;
@@ -980,8 +1091,10 @@ function drawAdventurer(ctx, m, t) {
 
   drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair);
   drawAccessory(ctx, ox, oy, m.cos.accessory);
-  px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.28)");
-  px2(ctx, ox, oy, -6, -18, 1, 9, "rgba(15,12,45,0.28)");
+  px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.4)");
+  px2(ctx, ox, oy, 3, -30, 1, 4, "rgba(255,232,190,0.3)");
+  px2(ctx, ox, oy, 4, -19, 1, 6, "rgba(255,232,190,0.2)");
+  px2(ctx, ox, oy, -6, -18, 1, 9, "rgba(15,12,45,0.32)");
   if (m.gear && SLOTS.some((sl) => m.gear[sl] && m.gear[sl].unique)) {
     const tw = Math.floor(t * 7 + m.seed * 3) % 5;
     if (tw < 2) {
