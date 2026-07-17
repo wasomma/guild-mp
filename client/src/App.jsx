@@ -5,7 +5,7 @@ import {
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf,
 } from "@shared/sim.js";
-import { draw } from "./render.js";
+import { draw, drawAdventurer } from "./render.js";
 import { audioInit, audioResume, setAudioMuted, sfx, musicTick } from "./audio.js";
 
 /* In dev (vite on :5173) talk to the server on :8787; in production the
@@ -304,6 +304,47 @@ export default function App() {
 
 /* ===================== UI sections ===================== */
 
+/* Zoomed, animated inspect view of one adventurer: the same drawAdventurer
+   that renders the world, at 4x, minus the HUD bars. This is where earned
+   gear and cosmetics are meant to be admired. */
+function Portrait({ m }) {
+  const cvRef = useRef(null);
+  const mRef = useRef(m);
+  mRef.current = m;
+  useEffect(() => {
+    const cv = cvRef.current;
+    if (!cv) return;
+    const ctx = cv.getContext("2d");
+    let raf;
+    const t0 = performance.now();
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const src = mRef.current;
+      if (!src) return;
+      const t = (performance.now() - t0) / 1000;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = "#141221";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      const grd = ctx.createRadialGradient(cv.width * 0.42, cv.height * 0.62, 10, cv.width * 0.42, cv.height * 0.62, 170);
+      grd.addColorStop(0, "rgba(63,58,96,0.55)");
+      grd.addColorStop(1, "rgba(63,58,96,0)");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.imageSmoothingEnabled = false;
+      const Z = 4;
+      ctx.setTransform(Z, 0, 0, Z, Math.round(cv.width * 0.42), cv.height - 6 * Z);
+      const mp = {
+        ...src, x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
+        chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999, noBars: true,
+      };
+      drawAdventurer(ctx, mp, t);
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={cvRef} width={300} height={400} className="portrait" />;
+}
+
 function PartyList({ g, onSel }) {
   if (!g.members.length) return <div className="dim pad">Nobody is in voice. Use the panel on the left to muster the party.</div>;
   return (
@@ -335,6 +376,9 @@ function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock }) {
         <button className="mini" onClick={onBack}>← back</button>
         <span style={{ color: CLASSES[m.cls].color }}>{CLASSES[m.cls].icon} {m.name} · Lv {m.level} {styleOf(m).name}</span>
         <span className="dim small">dmg {fmt(m.dmgDone)} · heal {fmt(m.healDone)} · kills {m.kills}</span>
+      </div>
+      <div className="inspect">
+        <Portrait m={m} />
       </div>
       <div className="subtabs">
         {["wardrobe", "equipment", "skills"].map((t2) => (
@@ -647,6 +691,8 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .fill { height: 100%; }
 .detail { display: flex; flex-direction: column; gap: 8px; }
 .drow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.inspect { display: flex; justify-content: center; padding: 4px 0 2px; }
+.portrait { width: 190px; height: auto; image-rendering: pixelated; border: 1px solid #2e2947; border-radius: 10px; }
 .subtabs { display: flex; gap: 5px; }
 .cosgroup { margin-bottom: 10px; }
 .coshead { color: #f2c14e; margin-bottom: 5px; }

@@ -879,7 +879,7 @@ function drawMysticStaff(ctx, wk, ox, oy, casting, t, seed) {
   }
 }
 
-function drawAdventurer(ctx, m, t) {
+export function drawAdventurer(ctx, m, t) {
   if (m.feast) { drawFeaster(ctx, m, t); return; }
   drawPet(ctx, m, t);
   let oy = m.y;
@@ -1118,9 +1118,66 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 0, -11, 2, 2, "#f2c14e");
     px2(ctx, ox, oy, 0, -10, 1, 1, "#8a6b26");
   }
-  if (fem) {
+
+  /* body silhouette: masc breadth vs fem taper */
+  if (!fem) {
+    const padC = sty === "warrior" ? SKIN_D : oD;
+    const padL = sty === "warrior" ? SKIN : oL;
+    px2(ctx, ox, oy, -7.5, -19, 2, 3, padC);
+    px2(ctx, ox, oy, 5.5, -19, 2, 3, padC);
+    px2(ctx, ox, oy, -7.5, -19, 2, 1, padL);
+    px2(ctx, ox, oy, 5.5, -19, 2, 1, padL);
+  } else {
+    if (sty === "warrior") {
+      px2(ctx, ox, oy, -6, -18.5, 12, 3, outfit);
+      px2(ctx, ox, oy, -6, -18.5, 12, 1, oL);
+      px2(ctx, ox, oy, -6, -16.5, 12, 1, oD);
+    }
+    const side = shade(sty === "warrior" ? SKIN : outfit, 0.5);
+    px2(ctx, ox, oy, -6, -15.5, 1.5, 3, side);
+    px2(ctx, ox, oy, 4.5, -15.5, 1.5, 3, side);
     px2(ctx, ox, oy, -5, -13, 1, 2, "rgba(16,14,26,0.30)");
     px2(ctx, ox, oy, 4, -13, 1, 2, "rgba(16,14,26,0.30)");
+    if (sty !== "mystic") {
+      px2(ctx, ox, oy, -5.5, -12.5, 11, 0.5, oL);
+      px2(ctx, ox, oy, -5.5, -12, 11, 1, oD);
+    }
+    px2(ctx, ox, oy, -3, -18.5, 2, 1, oL);
+    px2(ctx, ox, oy, 1.5, -18.5, 2, 1, oL);
+  }
+
+  /* earned gear rendered on the body: armor tiers on the shoulders and chest */
+  const grA = m.gear && m.gear.armor;
+  if (grA) {
+    const gtier = grA.unique ? 5 : ["common", "uncommon", "rare", "epic", "legendary"].indexOf((grA.rarity && grA.rarity.id) || "common");
+    const grc = grA.unique ? "#a8f2e2" : (grA.rarity && grA.rarity.color) || "#b6b3c7";
+    if (gtier >= 1) {
+      px2(ctx, ox, oy, -8, -20, 3, 2.5, "#8b95a8");
+      px2(ctx, ox, oy, -8, -20, 3, 1, "#c6cddb");
+      px2(ctx, ox, oy, -8, -18, 3, 0.5, "#6f7890");
+    }
+    if (gtier >= 2) {
+      px2(ctx, ox, oy, 5, -20, 3, 2.5, "#8b95a8");
+      px2(ctx, ox, oy, 5, -20, 3, 1, "#c6cddb");
+      px2(ctx, ox, oy, 5, -18, 3, 0.5, "#6f7890");
+      px2(ctx, ox, oy, -8, -20, 3, 0.5, grc);
+      px2(ctx, ox, oy, 5, -20, 3, 0.5, grc);
+    }
+    if (gtier >= 3) {
+      px2(ctx, ox, oy, -3.5, -17.5, 7, 2.5, "#9aa3b5");
+      px2(ctx, ox, oy, -3.5, -17.5, 7, 1, "#c6cddb");
+      px2(ctx, ox, oy, -3.5, -15.5, 7, 0.5, "#6f7890");
+      px2(ctx, ox, oy, -0.5, -17, 1.5, 1.5, grc);
+    }
+    if (gtier >= 4) {
+      px2(ctx, ox, oy, -8, -20.5, 3, 0.5, grA.unique ? "#a8f2e2" : "#f2a94e");
+      px2(ctx, ox, oy, 5, -20.5, 3, 0.5, grA.unique ? "#a8f2e2" : "#f2a94e");
+      const gpl = 0.12 + 0.08 * Math.sin(t * 3.2 + m.seed);
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = hexA(grA.unique ? "#a8f2e2" : "#f2a94e", gpl);
+      ctx.fillRect(ox - 17, oy - 42, 34, 12);
+      ctx.restore();
+    }
   }
 
   /* head and face */
@@ -1136,6 +1193,16 @@ function drawAdventurer(ctx, m, t) {
   const browC = shade(hair, 0.6);
   px2(ctx, ox, oy, 0, -27, 2, 1, browC);
   px2(ctx, ox, oy, 3, -27, 2, 1, browC);
+  if (!fem) {
+    px2(ctx, ox, oy, -0.5, -27.5, 3, 1, browC);
+    px2(ctx, ox, oy, 2.5, -27.5, 3, 1, browC);
+    px2(ctx, ox, oy, -4.5, -26, 1, 3, shade(hair, 0.8));
+    px2(ctx, ox, oy, -4, -21.5, 1, 1, SKIN_D);
+    px2(ctx, ox, oy, 3.5, -21.5, 1, 1, SKIN_D);
+  } else {
+    px2(ctx, ox, oy, -1, -26.5, 1, 1, "#2b2436");
+    px2(ctx, ox, oy, 5, -26.5, 1, 1, "#2b2436");
+  }
   px2(ctx, ox, oy, 0, -26, 2, 2, "#f7f4ff");
   px2(ctx, ox, oy, 3, -26, 2, 2, "#f7f4ff");
   px2(ctx, ox, oy, 1, -26, 1, 2, "#2b2436");
@@ -1154,6 +1221,26 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 3, -25, 2, 1, "rgba(208,69,90,0.75)");
   }
   drawHair(ctx, ox, oy, m.cos.hairstyle, hair);
+
+  /* trinket charm at the throat, and the weapon-quality glow at the hand */
+  const grT = m.gear && m.gear.trinket;
+  if (grT) {
+    const trc = grT.unique ? "#a8f2e2" : (grT.rarity && grT.rarity.color) || "#b6b3c7";
+    px2(ctx, ox, oy, -1, -20, 3, 0.5, "#513723");
+    px2(ctx, ox, oy, -0.5, -19.5, 1.5, 1.5, trc);
+    if (grT.unique || (grT.rarity && (grT.rarity.id === "epic" || grT.rarity.id === "legendary"))) px2(ctx, ox, oy, -0.5, -19.5, 0.5, 0.5, "#ffffff");
+  }
+  const grW = m.gear && m.gear.weapon;
+  if (grW && (grW.unique || (grW.rarity && (grW.rarity.id === "rare" || grW.rarity.id === "epic" || grW.rarity.id === "legendary")))) {
+    const wrc = grW.unique ? "#a8f2e2" : grW.rarity.color;
+    const wpl = 0.1 + 0.06 * Math.sin(t * 3.6 + m.seed * 2);
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const wg = ctx.createRadialGradient(hx, hy, 1, hx, hy, 14);
+    wg.addColorStop(0, hexA(wrc, wpl + 0.12));
+    wg.addColorStop(1, hexA(wrc, 0));
+    ctx.fillStyle = wg; ctx.beginPath(); ctx.arc(hx, hy, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 
   /* weapons and the near arm */
   if (sty === "paladin") {
@@ -1300,6 +1387,7 @@ function drawAdventurer(ctx, m, t) {
       ctx.fillRect(sxp, syp - 1, 1, 3);
     }
   }
+  if (m.noBars) return; /* inspect portraits draw the sprite without HUD */
   hpBar(ctx, ox, oy - 72, 26, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
   if (m.ult != null) {
     const uw = 26, ur = clamp(m.ult, 0, 1);
