@@ -88,12 +88,12 @@ export const ACCESSORIES = [
 ];
 export const CAPES = [
   { id: "none", name: "No Cape", price: 0 },
-  { id: "traveler", name: "Traveler Cloak", price: 300, c: "#4d5a8a" },
-  { id: "crimson", name: "Crimson Cape", price: 450, c: "#93384a" },
-  { id: "forest", name: "Forest Cloak", price: 450, c: "#3f6d4a" },
-  { id: "shadow", name: "Shadow Cloak", price: 700, c: "#26232b" },
-  { id: "royal", name: "Royal Cape", price: 950, c: "#6a4a9e", trim: "#f2c14e" },
-  { id: "gilded", name: "Gilded Cape", price: 1400, c: "#f2c14e", trim: "#fff1c9" },
+  { id: "traveler", name: "Traveler Cloak", price: 300, c: "#4d5a8a", lining: "#33304f" },
+  { id: "crimson", name: "Crimson Cape", price: 450, c: "#93384a", lining: "#5e2430" },
+  { id: "forest", name: "Forest Cloak", price: 450, c: "#3f6d4a", lining: "#2a4a33" },
+  { id: "shadow", name: "Shadow Cloak", price: 700, c: "#26232b", lining: "#141221" },
+  { id: "royal", name: "Royal Cape", price: 950, c: "#6a4a9e", trim: "#f2c14e", lining: "#4e3675" },
+  { id: "gilded", name: "Gilded Cape", price: 1400, c: "#f2c14e", trim: "#fff1c9", lining: "#c78a3b" },
 ];
 export const PETS = [
   { id: "none", name: "No Pet", price: 0 },
@@ -123,16 +123,16 @@ export const HAIRS = [
 ];
 export const OUTFITS = [
   { name: "Traveler", c: "#4d5a8a", price: 0 },
-  { name: "Forest", c: "#3f6d4a", price: 80 },
-  { name: "Crimson", c: "#93384a", price: 120 },
-  { name: "Midnight", c: "#33304f", price: 120 },
-  { name: "Royal", c: "#6a4a9e", price: 220 },
-  { name: "Sunburst", c: "#c78a3b", price: 220 },
-  { name: "Ivory", c: "#c9c3b8", price: 300 },
-  { name: "Lavender", c: "#9a86c9", price: 160 },
-  { name: "Blush", c: "#d98aa3", price: 160 },
-  { name: "Mint", c: "#8fd0b0", price: 160 },
-  { name: "Wine", c: "#7a2f45", price: 200 },
+  { name: "Forest", c: "#3f6d4a", price: 80, trim: "#8fd069" },
+  { name: "Crimson", c: "#93384a", price: 120, trim: "#f2c14e" },
+  { name: "Midnight", c: "#33304f", price: 120, trim: "#8d87a3" },
+  { name: "Royal", c: "#6a4a9e", price: 220, trim: "#f2c14e", sash: "#f2c14e" },
+  { name: "Sunburst", c: "#c78a3b", price: 220, trim: "#fff1c9", sash: "#93384a" },
+  { name: "Ivory", c: "#c9c3b8", price: 300, trim: "#f2c14e", sash: "#5aa9e6" },
+  { name: "Lavender", c: "#9a86c9", price: 160, trim: "#efeaff" },
+  { name: "Blush", c: "#d98aa3", price: 160, trim: "#fff1c9" },
+  { name: "Mint", c: "#8fd0b0", price: 160, trim: "#efeaff" },
+  { name: "Wine", c: "#7a2f45", price: 200, trim: "#f2c14e", sash: "#33304f" },
 ];
 export const WEAPON_SKINS = [
   { id: "steel", name: "Steel", c: "#cfd6e0", cD: "#7f8aa0", cL: "#eef2f8", edge: "#ffffff", price: 0 },

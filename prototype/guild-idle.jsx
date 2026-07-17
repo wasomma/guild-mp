@@ -90,12 +90,12 @@ const ACCESSORIES = [
 ];
 const CAPES = [
   { id: "none",     name: "No Cape",        price: 0 },
-  { id: "traveler", name: "Traveler Cloak", price: 300,  c: "#4d5a8a" },
-  { id: "crimson",  name: "Crimson Cape",   price: 450,  c: "#93384a" },
-  { id: "forest",   name: "Forest Cloak",   price: 450,  c: "#3f6d4a" },
-  { id: "shadow",   name: "Shadow Cloak",   price: 700,  c: "#26232b" },
-  { id: "royal",    name: "Royal Cape",     price: 950,  c: "#6a4a9e", trim: "#f2c14e" },
-  { id: "gilded",   name: "Gilded Cape",    price: 1400, c: "#f2c14e", trim: "#fff1c9" },
+  { id: "traveler", name: "Traveler Cloak", price: 300,  c: "#4d5a8a", lining: "#33304f" },
+  { id: "crimson",  name: "Crimson Cape",   price: 450,  c: "#93384a", lining: "#5e2430" },
+  { id: "forest",   name: "Forest Cloak",   price: 450,  c: "#3f6d4a", lining: "#2a4a33" },
+  { id: "shadow",   name: "Shadow Cloak",   price: 700,  c: "#26232b", lining: "#141221" },
+  { id: "royal",    name: "Royal Cape",     price: 950,  c: "#6a4a9e", trim: "#f2c14e", lining: "#4e3675" },
+  { id: "gilded",   name: "Gilded Cape",    price: 1400, c: "#f2c14e", trim: "#fff1c9", lining: "#c78a3b" },
 ];
 const PETS = [
   { id: "none",     name: "No Pet",       price: 0 },
@@ -125,16 +125,16 @@ const HAIRS = [
 ];
 const OUTFITS = [
   { name: "Traveler",  c: "#4d5a8a", price: 0 },
-  { name: "Forest",    c: "#3f6d4a", price: 80 },
-  { name: "Crimson",   c: "#93384a", price: 120 },
-  { name: "Midnight",  c: "#33304f", price: 120 },
-  { name: "Royal",     c: "#6a4a9e", price: 220 },
-  { name: "Sunburst",  c: "#c78a3b", price: 220 },
-  { name: "Ivory",     c: "#c9c3b8", price: 300 },
-  { name: "Lavender",  c: "#9a86c9", price: 160 },
-  { name: "Blush",     c: "#d98aa3", price: 160 },
-  { name: "Mint",      c: "#8fd0b0", price: 160 },
-  { name: "Wine",      c: "#7a2f45", price: 200 },
+  { name: "Forest",    c: "#3f6d4a", price: 80,  trim: "#8fd069" },
+  { name: "Crimson",   c: "#93384a", price: 120, trim: "#f2c14e" },
+  { name: "Midnight",  c: "#33304f", price: 120, trim: "#8d87a3" },
+  { name: "Royal",     c: "#6a4a9e", price: 220, trim: "#f2c14e", sash: "#f2c14e" },
+  { name: "Sunburst",  c: "#c78a3b", price: 220, trim: "#fff1c9", sash: "#93384a" },
+  { name: "Ivory",     c: "#c9c3b8", price: 300, trim: "#f2c14e", sash: "#5aa9e6" },
+  { name: "Lavender",  c: "#9a86c9", price: 160, trim: "#efeaff" },
+  { name: "Blush",     c: "#d98aa3", price: 160, trim: "#fff1c9" },
+  { name: "Mint",      c: "#8fd0b0", price: 160, trim: "#efeaff" },
+  { name: "Wine",      c: "#7a2f45", price: 200, trim: "#f2c14e", sash: "#33304f" },
 ];
 const WEAPON_SKINS = [
   { id: "steel",    name: "Steel",    c: "#cfd6e0", cD: "#7f8aa0", cL: "#eef2f8", edge: "#ffffff", price: 0 },
@@ -1518,39 +1518,55 @@ function shade(hex, f) {
 }
 const SKIN_L = "#f6d4a6";
 
-function drawHat(ctx, ox, oy, hat, outfit, tint, hairC) {
+function drawHat(ctx, ox, oy, hat, outfit, tint, hairC, t) {
   const oD = shade(outfit, 0.7), oL = shade(outfit, 1.28);
+  const tt = t || 0;
   if (hat === "helm") {
     px2(ctx, ox, oy, -5, -33, 10, 2, "#aeb7c9");
     px2(ctx, ox, oy, -6, -31, 12, 3, "#9aa3b5");
     px2(ctx, ox, oy, -6, -28, 2, 6, "#9aa3b5");
     px2(ctx, ox, oy, 4, -28, 2, 5, "#9aa3b5");
     px2(ctx, ox, oy, -4, -32, 4, 1, "#e3e8f2");
+    px2(ctx, ox, oy, -5, -33.5, 10, 0.5, "#f2f6fc");
     px2(ctx, ox, oy, -6, -29, 12, 1, "#6f7890");
+    px2(ctx, ox, oy, -6, -27, 1, 1, "#e3e8f2");
+    px2(ctx, ox, oy, 5, -25, 1, 1, "#6f7890");
+    const pw = Math.round(Math.sin(tt * 3) * 0.5);
     px2(ctx, ox, oy, -1, -37, 2, 4, "#d0455a");
     px2(ctx, ox, oy, -2, -35, 1, 2, "#a83648");
+    px2(ctx, ox, oy, -1 + pw, -38, 2, 1, "#e77463");
+    if (((tt * 22) % 90) < 6) px2(ctx, ox, oy, -3, -32.5, 1, 1, "#ffffff");
   } else if (hat === "wizard") {
+    const ws = Math.round(Math.sin(tt * 1.7) * 0.5);
     px2(ctx, ox, oy, -10, -30, 20, 2, "#6a4a9e");
     px2(ctx, ox, oy, -10, -28, 20, 1, "#4e3675");
+    px2(ctx, ox, oy, -10, -30.5, 20, 0.5, "#8a6fe0");
     px2(ctx, ox, oy, -6, -34, 12, 4, "#6a4a9e");
     px2(ctx, ox, oy, -3, -38, 7, 4, "#6a4a9e");
-    px2(ctx, ox, oy, -1, -41, 4, 3, "#6a4a9e");
-    px2(ctx, ox, oy, 1, -43, 3, 2, "#5a3f87");
+    px2(ctx, ox, oy, -1 + ws, -41, 4, 3, "#6a4a9e");
+    px2(ctx, ox, oy, 1 + ws, -43, 3, 2, "#5a3f87");
     px2(ctx, ox, oy, -6, -34, 1, 4, "#8a6fe0");
     px2(ctx, ox, oy, -3, -38, 1, 4, "#8a6fe0");
     px2(ctx, ox, oy, -6, -31, 12, 1, "#8a6fe0");
+    px2(ctx, ox, oy, -4, -33, 1, 1, "#c8d4ff");
     px2(ctx, ox, oy, 2, -36, 2, 2, "#f2c14e");
-    px2(ctx, ox, oy, 3, -37, 1, 1, "#fff1c9");
+    px2(ctx, ox, oy, 3, -37, 1, 1, Math.floor(tt * 3) % 2 ? "#fff1c9" : "#f2c14e");
+    if (Math.floor(tt * 3) % 2) px2(ctx, ox, oy, 2.5 + ws, -44.5, 1, 1, "#fff1c9");
   } else if (hat === "hood") {
     px2(ctx, ox, oy, -6, -32, 12, 3, outfit);
     px2(ctx, ox, oy, -7, -29, 2, 10, outfit);
     px2(ctx, ox, oy, 5, -29, 2, 6, outfit);
     px2(ctx, ox, oy, -5, -32, 4, 1, oL);
+    px2(ctx, ox, oy, -5, -32.5, 8, 0.5, oL);
     px2(ctx, ox, oy, -4, -29, 9, 1, oD);
+    px2(ctx, ox, oy, 2, -28, 3, 1, shade(outfit, 0.5));
     px2(ctx, ox, oy, -9, -25, 2, 7, oD);
     px2(ctx, ox, oy, -8, -19, 2, 2, oD);
+    px2(ctx, ox, oy, -3, -29.5, 0.5, 0.5, oL);
+    px2(ctx, ox, oy, 0.5, -29.5, 0.5, 0.5, oL);
   } else if (hat === "crown") {
     px2(ctx, ox, oy, -5, -33, 10, 3, "#f2c14e");
+    px2(ctx, ox, oy, -5, -33.5, 10, 0.5, "#fff1c9");
     px2(ctx, ox, oy, -5, -31, 10, 1, "#c78a3b");
     px2(ctx, ox, oy, -5, -36, 2, 3, "#f2c14e");
     px2(ctx, ox, oy, -1, -37, 2, 4, "#f2c14e");
@@ -1559,6 +1575,9 @@ function drawHat(ctx, ox, oy, hat, outfit, tint, hairC) {
     px2(ctx, ox, oy, -4, -32, 1, 1, "#d0455a");
     px2(ctx, ox, oy, 0, -32, 2, 1, "#5aa9e6");
     px2(ctx, ox, oy, 4, -32, 1, 1, "#d0455a");
+    const gsel = Math.floor(tt * 2) % 3;
+    const gpos = [[-4, -32.5], [0.5, -32.5], [4, -32.5]][gsel];
+    px2(ctx, ox, oy, gpos[0], gpos[1], 0.5, 0.5, "#ffffff");
   } else if (hat === "horns") {
     px2(ctx, ox, oy, -7, -32, 2, 3, "#d0455a");
     px2(ctx, ox, oy, -9, -35, 2, 3, "#e77463");
@@ -1568,12 +1587,18 @@ function drawHat(ctx, ox, oy, hat, outfit, tint, hairC) {
     px2(ctx, ox, oy, 7, -35, 2, 3, "#e77463");
     px2(ctx, ox, oy, 9, -37, 1, 2, "#f2a08c");
     px2(ctx, ox, oy, 6, -34, 1, 1, "#a83648");
+    const emb = 0.25 + 0.15 * Math.sin(tt * 4);
+    px2(ctx, ox, oy, -10, -37.5, 1, 1, `rgba(255,138,74,${emb})`);
+    px2(ctx, ox, oy, 9, -37.5, 1, 1, `rgba(255,138,74,${emb})`);
   } else if (hat === "halo") {
-    px2(ctx, ox, oy, -4, -37, 8, 1, "#f7e28b");
-    px2(ctx, ox, oy, -5, -36, 1, 1, "#f7e28b");
-    px2(ctx, ox, oy, 4, -36, 1, 1, "#f7e28b");
-    px2(ctx, ox, oy, -3, -38, 6, 1, "rgba(247,226,139,0.4)");
-    px2(ctx, ox, oy, -3, -35, 6, 1, "rgba(247,226,139,0.4)");
+    const hb = Math.sin(tt * 1.8) * 0.5;
+    const ha = 0.3 + 0.18 * Math.sin(tt * 2.5);
+    px2(ctx, ox, oy, -4, -37 + hb, 8, 1, "#f7e28b");
+    px2(ctx, ox, oy, -5, -36 + hb, 1, 1, "#f7e28b");
+    px2(ctx, ox, oy, 4, -36 + hb, 1, 1, "#f7e28b");
+    px2(ctx, ox, oy, -2, -37.5 + hb, 4, 0.5, "#fff6d8");
+    px2(ctx, ox, oy, -3, -38 + hb, 6, 1, `rgba(247,226,139,${ha})`);
+    px2(ctx, ox, oy, -3, -35 + hb, 6, 1, `rgba(247,226,139,${ha})`);
   } else if (hat === "flower") {
     px2(ctx, ox, oy, -5, -31, 10, 1, "#3f6d4a");
     px2(ctx, ox, oy, -6, -32, 1, 1, "#5a8f5f");
@@ -1584,41 +1609,55 @@ function drawHat(ctx, ox, oy, hat, outfit, tint, hairC) {
     px2(ctx, ox, oy, 0, -32, 1, 1, "#f2c14e");
     px2(ctx, ox, oy, 3, -32, 2, 2, "#f2c14e");
     px2(ctx, ox, oy, 4, -32, 1, 1, "#c78a3b");
+    px2(ctx, ox, oy, -2, -33.5, 1, 0.5, "#f2a8ce");
+    const fp = (tt * 1.6) % 7;
+    if (fp < 4) px2(ctx, ox, oy, 6, -30 + fp * 2.2, 0.5, 0.5, "#f2a8ce");
   } else if (hat === "ribbon") {
+    const rs = Math.round(Math.sin(tt * 2.2) * 1);
     px2(ctx, ox, oy, 2, -34, 3, 3, "#e77fb3");
     px2(ctx, ox, oy, 6, -34, 3, 3, "#e77fb3");
     px2(ctx, ox, oy, 5, -33, 1, 2, "#c9506d");
     px2(ctx, ox, oy, 2, -34, 1, 1, "#f2a8ce");
     px2(ctx, ox, oy, 6, -34, 1, 1, "#f2a8ce");
-    px2(ctx, ox, oy, 6, -31, 1, 3, "#e77fb3");
-    px2(ctx, ox, oy, 8, -30, 1, 2, "#c9506d");
+    px2(ctx, ox, oy, 6 + rs * 0.5, -31, 1, 3, "#e77fb3");
+    px2(ctx, ox, oy, 8 + rs, -30, 1, 2, "#c9506d");
+    px2(ctx, ox, oy, 8 + rs, -28.5, 1, 1, "#f2a8ce");
   } else if (hat === "witch") {
+    const ws = Math.round(Math.sin(tt * 1.5) * 1);
     px2(ctx, ox, oy, -12, -29, 24, 2, "#33304f");
     px2(ctx, ox, oy, -12, -27, 24, 1, "#242138");
+    px2(ctx, ox, oy, -12, -29.5, 24, 0.5, "#4c4763");
     px2(ctx, ox, oy, -11, -30, 6, 1, "#4c4763");
     px2(ctx, ox, oy, -6, -33, 12, 4, "#33304f");
     px2(ctx, ox, oy, -3, -37, 7, 4, "#33304f");
     px2(ctx, ox, oy, -1, -40, 4, 3, "#33304f");
-    px2(ctx, ox, oy, 1, -42, 4, 2, "#2b2740");
-    px2(ctx, ox, oy, 4, -43, 2, 1, "#2b2740");
+    px2(ctx, ox, oy, 1 + ws * 0.5, -42, 4, 2, "#2b2740");
+    px2(ctx, ox, oy, 4 + ws, -43, 2, 1, "#2b2740");
     px2(ctx, ox, oy, -6, -33, 1, 4, "#4c4763");
     px2(ctx, ox, oy, -6, -30, 12, 1, "#4c4763");
     px2(ctx, ox, oy, -1, -30, 3, 1, "#f2c14e");
     px2(ctx, ox, oy, 0, -30, 1, 1, "#7a6326");
+    px2(ctx, ox, oy, -5, -30.5, 1, 1, "#c8d4ff");
+    if (((tt * 20) % 80) < 5) px2(ctx, ox, oy, -0.5, -30.5, 1, 1, "#ffffff");
   } else if (hat === "circlet") {
     px2(ctx, ox, oy, -5, -27, 10, 1, "#f2c14e");
+    px2(ctx, ox, oy, -5, -27.5, 10, 0.5, "#fff1c9");
     px2(ctx, ox, oy, 0, -27, 2, 1, "#8fe3ff");
     px2(ctx, ox, oy, -4, -27, 1, 1, "#fff1c9");
+    if (((tt * 20) % 70) < 5) px2(ctx, ox, oy, 0.5, -27.5, 1, 1, "#ffffff");
   } else if (hat === "catears") {
     const cc = hairC || "#3a3550", ccD = shade(cc, 0.7);
-    px2(ctx, ox, oy, -6, -33, 3, 2, cc);
-    px2(ctx, ox, oy, -5, -35, 2, 2, cc);
-    px2(ctx, ox, oy, -4, -33, 1, 1, "#e77fb3");
-    px2(ctx, ox, oy, -3, -33, 1, 2, ccD);
+    const twk = ((tt * 0.9) % 5) < 0.25 ? -1 : 0;
+    px2(ctx, ox, oy, -6, -33 + twk, 3, 2, cc);
+    px2(ctx, ox, oy, -5, -35 + twk, 2, 2, cc);
+    px2(ctx, ox, oy, -4, -33 + twk, 1, 1, "#e77fb3");
+    px2(ctx, ox, oy, -3, -33 + twk, 1, 2, ccD);
+    px2(ctx, ox, oy, -5, -35.5 + twk, 1, 0.5, shade(cc, 1.3));
     px2(ctx, ox, oy, 3, -33, 3, 2, cc);
     px2(ctx, ox, oy, 4, -35, 2, 2, cc);
     px2(ctx, ox, oy, 4, -33, 1, 1, "#e77fb3");
     px2(ctx, ox, oy, 5, -33, 1, 2, ccD);
+    px2(ctx, ox, oy, 4, -35.5, 1, 0.5, shade(cc, 1.3));
   }
 }
 
@@ -1694,19 +1733,26 @@ function drawCape(ctx, ox, oy, capeId, t, walking) {
   if (!cape) return;
   const c = cape.c, cD = shade(c, 0.66), cL = shade(c, 1.25);
   const trim = cape.trim || cD;
+  const lin = cape.lining || shade(c, 0.5);
   const sway = walking ? Math.sin(t * 9) * 2 : Math.sin(t * 2) * 0.8;
   const s1 = Math.round(sway * 0.5), s2 = Math.round(sway);
+  const w1 = Math.round(Math.sin(t * (walking ? 11 : 2.6) + 1.3) * (walking ? 1 : 0.5));
   px2(ctx, ox, oy, -6, -18, 2, 1, trim);                 /* shoulder clasp */
   px2(ctx, ox, oy, -5, -18, 1, 1, "#f2c14e");
+  px2(ctx, ox, oy, -8, -17.5, 3, 1, cL);                 /* collar roll */
   px2(ctx, ox, oy, -8, -17, 3, 13, c);                   /* inner panel */
   px2(ctx, ox, oy, -8, -17, 1, 4, cL);
+  px2(ctx, ox, oy, -6, -8, 1, 4, lin);                   /* lining glimpse */
   px2(ctx, ox, oy, -10 - s1, -15, 2, 11, c);             /* mid fold */
   px2(ctx, ox, oy, -9 - s1, -14, 1, 9, cD);
   px2(ctx, ox, oy, -12 - s2, -12, 2, 8, c);              /* outer fold */
   px2(ctx, ox, oy, -11 - s2, -11, 1, 6, cD);
-  px2(ctx, ox, oy, -8, -5, 3, 1, trim);                  /* hem */
-  px2(ctx, ox, oy, -10 - s1, -5, 2, 1, trim);
-  px2(ctx, ox, oy, -12 - s2, -5, 2, 1, trim);
+  px2(ctx, ox, oy, -11 - s2, -7, 1, 2, lin);             /* lining at the lifted edge */
+  px2(ctx, ox, oy, -8, -5, 3, 1, trim);                  /* hem, rippled by the wave */
+  px2(ctx, ox, oy, -10 - s1, -5 + w1 * 0.5, 2, 1, trim);
+  px2(ctx, ox, oy, -12 - s2, -5 + w1, 2, 1, trim);
+  px2(ctx, ox, oy, -7, -4.5, 1, 0.5, shade(trim, 1.25)); /* stitch dots */
+  px2(ctx, ox, oy, -10 - s1, -4.5 + w1 * 0.5, 1, 0.5, shade(trim, 1.25));
 }
 
 function drawPet(ctx, m, t) {
@@ -2434,6 +2480,27 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 1.5, -18.5, 2, 1, oL);
   }
 
+  /* outfit construction: collar, hem, cuff trim and a sash on finer cloth */
+  const oDef = OUTFITS[m.cos.outfit];
+  if (oDef.trim && !(sty === "warrior" && !fem)) {
+    if (sty === "mystic") {
+      px2(ctx, ox, oy, -7, -1.5, 14, 0.5, oDef.trim);
+      px2(ctx, ox, oy, -1, -19, 2, 0.5, oDef.trim);
+      px2(ctx, ox, oy, -5, -12.5, 10, 0.5, oDef.trim);
+    } else {
+      if (sty !== "warrior") px2(ctx, ox, oy, -4, -19, 8, 0.5, oDef.trim);
+      px2(ctx, ox, oy, -5, -12.5, 10, 0.5, oDef.trim);
+      px2(ctx, ox, oy, -7, -13, 2, 0.5, oDef.trim);
+    }
+  }
+  if (oDef.sash && sty !== "mystic" && !(sty === "warrior" && !fem)) {
+    for (let i = 0; i < 5; i++) px2(ctx, ox, oy, 4 - i * 2, -19 + i * 1.6, 2, 1.6, oDef.sash);
+    px2(ctx, ox, oy, 4, -19, 2, 0.5, shade(oDef.sash, 1.3));
+    px2(ctx, ox, oy, -4.5, -11.5, 2.5, 2, oDef.sash);
+    px2(ctx, ox, oy, -4.5, -11.5, 2.5, 0.5, shade(oDef.sash, 1.3));
+    px2(ctx, ox, oy, -4, -9.5, 1, 2, shade(oDef.sash, 0.7));
+  }
+
   /* earned gear rendered on the body: armor tiers on the shoulders and chest */
   const grA = m.gear && m.gear.armor;
   if (grA) {
@@ -2659,7 +2726,7 @@ function drawAdventurer(ctx, m, t) {
     }
   }
 
-  drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair);
+  drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair, t);
   drawAccessory(ctx, ox, oy, m.cos.accessory);
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.4)");
   px2(ctx, ox, oy, 3, -30, 1, 4, "rgba(255,232,190,0.3)");
@@ -3410,7 +3477,7 @@ function drawFeaster(ctx, m, t) {
     px2(ctx, ox, oy, reach, -18 + yo, 1, 1, SKIN_D);
     if (Math.abs(wob) > 1.6) px2(ctx, ox, oy, 3, -28, 1, 1, "#8fe3ff");
   }
-  drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair);
+  drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);
   drawAccessory(ctx, ox, oy, m.cos.accessory);
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.28)");
   ctx.restore();
