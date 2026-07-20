@@ -570,8 +570,8 @@ function formation(g) {
   // fit check measures the exact leftmost slot, so parties of six or fewer
   // keep the full spread.
   const groups = CLASS_ORDER.map((c) => g.members.filter((m) => m.cls === c)).filter((gp) => gp.length);
-  const FRONT = 224, LEFT = 18;
-  let pitch = 84, gap = 40;
+  const FRONT = 250, LEFT = 18;
+  let pitch = 100, gap = 48;
   const minX = () => {
     let x = FRONT, lo = FRONT;
     for (const gp of groups) {
