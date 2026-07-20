@@ -241,6 +241,7 @@ export default function App() {
               onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
             <button className="pill sound" title={musicOff ? "unmute music" : "mute music"} style={{ opacity: musicOff ? 0.35 : 1 }}
               onClick={() => { audioInit(); audioResume(); setMusicMuted(!musicOff); setMusicOffUI(!musicOff); }}>🎵</button>
+            <a className="pill login" href="https://github.com/wasomma/guild-mp/blob/main/TUTORIAL.md" target="_blank" rel="noopener" title="open the player guide in a new tab">❓ How to play</a>
             {authConfigured && (me
               ? <span className="pill who">
                   {me.avatar && <img className="pfp" src={me.avatar} alt="" />}
