@@ -96,12 +96,15 @@ Open `https://guild.yourdomain.com` in a browser. You should see the world (prob
 
 ## Day-two operations
 
-Updating: copy the new code up, rebuild the client, restart the service:
+Updating: copy or pull the new code, rebuild the client, restart the service:
 
 ```
-cd /opt/guild/app/client && npm run build
+cd /opt/guild/app && git pull
+cd client && npm run build
 systemctl restart guild
 ```
+
+Note: if you run `git pull` as root while the repo is owned by the `guild` user, git refuses with a "dubious ownership" error — and in a piped script that failure is easy to miss, leaving you rebuilding the old code. Allow it once with `git config --global --add safe.directory /opt/guild/app`, and re-run `chown -R guild:guild /opt/guild/app` after pulling so the service user still owns everything.
 
 A restart mid-session is safe: the world saves on shutdown, and anyone in voice is synced back in when the bot reconnects.
 
