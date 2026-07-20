@@ -607,11 +607,22 @@ function spawnEncounter(g) {
 }
 
 function formation(g) {
-  const order = [...g.members].sort((a, b) => CLASS_ORDER.indexOf(a.cls) - CLASS_ORDER.indexOf(b.cls));
-  order.forEach((m, i) => {
-    m.tx = 178 - Math.floor(i / 2) * 50 - (i % 2) * 25;
-    m.y = GROUND - (i % 2) * 12;
-  });
+  // Class-banded ranks: tanks nearest the foe, then DPS, healers rearmost.
+  // Pitch stretches when the party is small so capes, pets, and auras stay
+  // readable, and compresses (never below 38) to keep nine on screen.
+  const groups = CLASS_ORDER.map((c) => g.members.filter((m) => m.cls === c)).filter((gp) => gp.length);
+  const cols = groups.reduce((n, gp) => n + Math.ceil(gp.length / 2), 0);
+  let pitch = 62, gap = 26;
+  const span = () => (cols - 1) * pitch + pitch / 2 + (groups.length - 1) * gap;
+  while (span() > 168 && pitch > 38) { pitch -= 4; gap = Math.max(12, gap - 3); }
+  let x = 192;
+  for (const gp of groups) {
+    gp.forEach((m, i) => {
+      m.tx = x - Math.floor(i / 2) * pitch - (i % 2) * (pitch / 2);
+      m.y = GROUND - (i % 2) * 12;
+    });
+    x -= (Math.ceil(gp.length / 2) - 1) * pitch + pitch / 2 + gap;
+  }
 }
 
 /* ---------------- tick ---------------- */
