@@ -5,6 +5,7 @@ import {
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
+import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer } from "./render.js";
 import { audioInit, audioResume, setSfxMuted, setMusicMuted, sfx, musicTick } from "./audio.js";
 
@@ -15,6 +16,7 @@ const DEV = location.port === "5173";
 const HTTP_BASE = DEV ? `http://${location.hostname}:8787` : location.origin;
 const SERVER_URL = HTTP_BASE.replace(/^http/, "ws");
 const AUTH_URL = `${HTTP_BASE}/auth`;
+document.title = `Guild of the Open Mic - Alpha v${VERSION}`;
 const LERP_KEYS = ["x", "y", "lunge", "hop", "shootT", "castT", "chainT", "hp", "bubble", "stunT", "hitT", "poisonT", "windup", "slamT", "screechT", "cleaveWind", "ult", "ultT"];
 
 function lerpEnts(prev, cur, a, keys) {
@@ -223,7 +225,7 @@ export default function App() {
       <style>{CSS}</style>
       <div className="frame">
         <header>
-          <div className="title">⚔️ GUILD OF THE OPEN MIC - ALPHA</div>
+          <div className="title">⚔️ GUILD OF THE OPEN MIC - ALPHA <span className="ver">v{VERSION}</span></div>
           <div className="hstats">
             {g && <>
               <span className="pill">📖 Chapter {g.prestiges + 1}</span>
@@ -728,6 +730,7 @@ body { background: #0a0812; }
 .frame { width: 100%; background: #100e1a; border-top: 2px solid #2b2740; border-bottom: 2px solid #2b2740; overflow: hidden; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #161326; border-bottom: 2px solid #2b2740; flex-wrap: wrap; }
 .title { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #f2c14e; }
+.title .ver { font-size: 10px; color: #8b84ad; }
 .hstats { display: flex; gap: 6px; flex-wrap: wrap; }
 .pill { background: #1e1a30; border: 1px solid #2b2740; border-radius: 6px; padding: 2px 9px; }
 .pill.gold { color: #f2c14e; } .pill.renown { color: #b07fe0; }

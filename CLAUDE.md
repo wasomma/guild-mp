@@ -71,6 +71,17 @@ Someday (owner-endorsed, no committed order):
 
 Owner's visual reference: the animated concept-sheet artifact (claude.ai, owner's account) documents the weapon/cosmetic direction across passes; its character sections are rendered by bundling the real render.js, so it can be regenerated after any character change.
 
+## Versioning and releases
+
+The game version lives in `shared/version.js` (VERSION) and renders in the client title ("ALPHA vX.Y.Z") and browser tab. Alpha scheme 0.MINOR.PATCH: bump minor for features, patch for fixes. On EVERY deploy to the live server:
+
+1. Bump VERSION in `shared/version.js` in the same commit as (or right after) the change being shipped.
+2. Commit, then tag: `git tag -a vX.Y.Z -m "one-line summary of what shipped"`.
+3. Push with tags: `git push --follow-tags`.
+4. Deploy (pull, client build, restart) — see DEPLOY.md.
+
+Tags are the version archive: `git tag -n` lists every released version with its summary, GitHub shows them under Tags, and any old version can be inspected (`git show vX.Y.Z:path`) or redeployed by checking out the tag on the server and rebuilding. Do not deploy untagged code to live.
+
 ## Configuration
 
 `server/.env` (all optional; absent means dev mode):
