@@ -275,7 +275,7 @@ export function makeMember(g, key, name, cls) {
   const m = {
     id: g.uid++, key, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
-    skills: {}, gear: { weapon: null, armor: null, trinket: null },
+    skills: {}, autoSkill: true, gear: { weapon: null, armor: null, trinket: null },
     cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -334,7 +334,7 @@ export function stats(m, g) {
 export function dehydrateMember(m) {
   return {
     key: m.key, name: m.name, cls: m.cls, style: m.style,
-    level: m.level, xp: m.xp, sp: m.sp,
+    level: m.level, xp: m.xp, sp: m.sp, autoSkill: m.autoSkill,
     skills: m.skills, gear: m.gear, cos: m.cos, owned: m.owned,
     kills: m.kills, dmgDone: m.dmgDone, healDone: m.healDone,
   };
@@ -343,7 +343,7 @@ export function dehydrateMember(m) {
 export function rehydrateMember(g, d) {
   const m = makeMember(g, d.key || d.name, d.name, d.cls);
   Object.assign(m, {
-    style: d.style, level: d.level, xp: d.xp, sp: d.sp,
+    style: d.style, level: d.level, xp: d.xp, sp: d.sp, autoSkill: d.autoSkill !== false,
     skills: d.skills || {}, gear: d.gear, cos: d.cos, owned: d.owned,
     kills: d.kills || 0, dmgDone: d.dmgDone || 0, healDone: d.healDone || 0,
   });
@@ -972,6 +972,18 @@ function castUlt(g, m, foes, alive) {
 }
 
 /* ---------------- the tick ---------------- */
+function autoSpendSkills(g, m) {
+  let spent = 0, last = null;
+  while (m.sp > 0) {
+    const open = SKILLS[m.cls].filter((s) => (m.skills[s.id] || 0) < MAX_RANK);
+    if (!open.length) break;
+    last = pick(open);
+    m.skills[last.id] = (m.skills[last.id] || 0) + 1; m.sp--; spent++;
+  }
+  if (spent === 1) addLog(g, `${m.name} instinctively hones ${last.name} (rank ${m.skills[last.id]})`, "#8b84ad");
+  else if (spent > 1) addLog(g, `${m.name} instinctively spends ${spent} skill points`, "#8b84ad");
+}
+
 export function tick(g, dt) {
   g.time += dt;
   const qday = Math.floor(Date.now() / 86400000);
@@ -1039,6 +1051,7 @@ export function tick(g, dt) {
   formation(g);
 
   for (const m of g.members) {
+    if (m.autoSkill && m.sp > 0) autoSpendSkills(g, m);
     m._st = stats(m, g);
     m.hp = Math.min(m.hp, m._st.hp);
     m.lunge = Math.max(0, m.lunge - dt);
@@ -1353,6 +1366,20 @@ export function applyIntent(g, msg) {
       if (!m) break;
       const sk = SKILLS[m.cls].find((s) => s.id === msg.skillId);
       if (sk && m.sp > 0 && (m.skills[sk.id] || 0) < MAX_RANK) { m.skills[sk.id] = (m.skills[sk.id] || 0) + 1; m.sp--; }
+      break;
+    }
+    case "respecSkills": {
+      const m = byId(msg.memberId);
+      if (!m) break;
+      const spent = Object.values(m.skills).reduce((a, b) => a + b, 0);
+      m.sp += spent; m.skills = {}; m.autoSkill = false;
+      m._st = stats(m, g);
+      addLog(g, `${m.name} meditates: ${spent} skill point${spent === 1 ? "" : "s"} reclaimed to spend freely.`, "#8fd069");
+      break;
+    }
+    case "setAutoSkill": {
+      const m = byId(msg.memberId);
+      if (m) m.autoSkill = !!msg.on;
       break;
     }
     case "setClass": {

@@ -535,6 +535,22 @@ function Skills({ g, m, send, lock }) {
   return (
     <div className="skills">
       <div className="dim small pad">Skill points: <b style={{ color: "#f2c14e" }}>{m.sp}</b></div>
+      <div className="skrow">
+        <div>
+          <div>🎲 Auto-assign</div>
+          <div className="dim small">{m.autoSkill ? "Points spend themselves as they are earned." : "Off — spend your points below."}</div>
+        </div>
+        <button className="mini" disabled={!!lock}
+          onClick={() => send({ a: "setAutoSkill", memberId: m.id, on: !m.autoSkill })}>{m.autoSkill ? "turn off" : "turn on"}</button>
+      </div>
+      <div className="skrow">
+        <div>
+          <div>↺ Reset points</div>
+          <div className="dim small">Reclaim all spent points and assign them yourself (turns auto off).</div>
+        </div>
+        <button className="mini" disabled={!!lock}
+          onClick={() => send({ a: "respecSkills", memberId: m.id })}>reset</button>
+      </div>
       {SKILLS[m.cls].map((sk) => {
         const r = m.skills[sk.id] || 0;
         return (

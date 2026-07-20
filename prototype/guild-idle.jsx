@@ -257,7 +257,7 @@ function makeMember(name, cls) {
   const m = {
     id: UID++, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
-    skills: {}, gear: { weapon: null, armor: null, trinket: null },
+    skills: {}, autoSkill: true, gear: { weapon: null, armor: null, trinket: null },
     cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -866,6 +866,18 @@ function enemyCleave(g, e, party) {
   burst(g, e.x, e.y - 12 * s, "#ffb24a", 16, 2.2);
 }
 
+function autoSpendSkills(g, m) {
+  let spent = 0, last = null;
+  while (m.sp > 0) {
+    const open = SKILLS[m.cls].filter((s) => (m.skills[s.id] || 0) < MAX_RANK);
+    if (!open.length) break;
+    last = pick(open);
+    m.skills[last.id] = (m.skills[last.id] || 0) + 1; m.sp--; spent++;
+  }
+  if (spent === 1) addLog(g, `${m.name} instinctively hones ${last.name} (rank ${m.skills[last.id]})`, "#8b84ad");
+  else if (spent > 1) addLog(g, `${m.name} instinctively spends ${spent} skill points`, "#8b84ad");
+}
+
 function tick(g, dt) {
   g.time += dt;
   const qday = Math.floor(Date.now() / 86400000);
@@ -910,6 +922,7 @@ function tick(g, dt) {
   formation(g);
 
   for (const m of g.members) {
+    if (m.autoSkill && m.sp > 0) autoSpendSkills(g, m);
     m._st = stats(m, g);
     m.hp = Math.min(m.hp, m._st.hp);
     m.lunge = Math.max(0, m.lunge - dt);
@@ -4060,6 +4073,20 @@ export default function GuildIdle() {
   const skillPanel = (m) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ color: "#8b84ad" }}>Skill points: <span style={{ color: "#f2c14e" }}>{m.sp}</span> (earn 1 per level)</div>
+      <div style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <div>
+          <div>🎲 Auto-assign</div>
+          <div style={{ fontSize: 15, color: "#8b84ad" }}>{m.autoSkill ? "Points spend themselves as they are earned." : "Off — spend your points below."}</div>
+        </div>
+        <button className="gi-btn" onClick={() => { m.autoSkill = !m.autoSkill; force((v) => v + 1); }}>{m.autoSkill ? "turn off" : "turn on"}</button>
+      </div>
+      <div style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <div>
+          <div>↺ Reset points</div>
+          <div style={{ fontSize: 15, color: "#8b84ad" }}>Reclaim all spent points and assign them yourself (turns auto off).</div>
+        </div>
+        <button className="gi-btn" onClick={() => { m.sp += Object.values(m.skills).reduce((a, b) => a + b, 0); m.skills = {}; m.autoSkill = false; force((v) => v + 1); }}>reset</button>
+      </div>
       {SKILLS[m.cls].map((sk) => {
         const r = m.skills[sk.id] || 0;
         return (
