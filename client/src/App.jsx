@@ -49,7 +49,6 @@ export default function App() {
   const [selId, setSelId] = useState(null);
   const [wardTab, setWardTab] = useState("wardrobe");
   const [confirmPrestige, setConfirmPrestige] = useState(false);
-  const [newName, setNewName] = useState("");
   const [me, setMe] = useState(null);
   const [muted, setMutedUI] = useState(false);
   const [authConfigured, setAuthConfigured] = useState(false);
@@ -250,29 +249,16 @@ export default function App() {
         </header>
         <div className="main">
           <aside className="voice">
-            <div className="vhead">🔊 General Voice <span className="dim">(dev stand-in)</span></div>
-            {g && g.users.map((u) => (
-              <div key={u.key || u.name} className={"vuser" + (u.inVoice ? " in" : "")}>
+            <div className="vhead">🔊 Voice Channel</div>
+            {g && g.users.filter((u) => u.inVoice).map((u) => (
+              <div key={u.key || u.name} className="vuser in">
                 <span className="avatar" style={{ background: u.color }}>{u.name[0]}</span>
                 <span className="uname">{u.name}</span>
-                {u.discord
-                  ? <span className="dtag">discord</span>
-                  : <button className="mini" onClick={() => send({ a: u.inVoice ? "leaveVoice" : "joinVoice", name: u.name, key: u.key })}>
-                      {u.inVoice ? "Leave" : "Join"}
-                    </button>}
               </div>
             ))}
-            <div className="vadd">
-              <input value={newName} maxLength={16} placeholder="new user..."
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) { send({ a: "joinVoice", name: newName.trim() }); setNewName(""); } }} />
-              <button className="mini" onClick={() => { if (newName.trim()) { send({ a: "joinVoice", name: newName.trim() }); setNewName(""); } }}>+</button>
-            </div>
-            <label className="sim">
-              <input type="checkbox" checked={!!(g && g.autoSim)} onChange={(e) => send({ a: "autoSim", on: e.target.checked })} />
-              simulate voice traffic
-            </label>
-            <div className="note">This panel becomes the real Discord bot in step 4. Everything it does already flows through the same join and leave intents the bot will send.</div>
+            {g && !g.users.some((u) => u.inVoice) && (
+              <div className="dim">The hall is quiet. Join the Discord voice channel to enter the world.</div>
+            )}
           </aside>
           <section className="stage">
             <canvas ref={canvasRef} width={W} height={H} />
@@ -688,16 +674,12 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .mini:disabled { opacity: 0.4; cursor: default; }
 .mini.big { font-size: 18px; padding: 5px 12px; margin-top: 6px; }
 .mini.warn { background: #5c2430; border-color: #93384a; }
-.vadd { display: flex; gap: 5px; }
-.vadd input { flex: 1; min-width: 0; font-family: 'VT323', monospace; font-size: 16px; background: #1c1830; border: 1px solid #3a3550; border-radius: 5px; color: #efeaff; padding: 3px 7px; }
 .pill.login { color: #8a6fe0; text-decoration: none; }
 .pill.login:hover { background: #26213c; }
 .pill.who { display: inline-flex; align-items: center; gap: 6px; }
 .pfp { width: 18px; height: 18px; border-radius: 50%; }
 .linkish { background: none; border: none; color: #8b84ad; font-family: 'VT323', monospace; font-size: 14px; cursor: pointer; text-decoration: underline; padding: 0; }
 .lockmsg { background: #1c1830; border: 1px solid #3a3550; border-radius: 6px; padding: 6px 10px; color: #b8b2d4; }
-.dtag { font-size: 13px; color: #8a6fe0; border: 1px solid #3a3550; border-radius: 4px; padding: 0 4px; }
-.sim { display: flex; gap: 6px; align-items: center; color: #8b84ad; font-size: 16px; }
 .note { color: #6d6790; font-size: 14px; line-height: 1.25; margin-top: auto; }
 .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; border-bottom: 2px solid #2b2740; }
