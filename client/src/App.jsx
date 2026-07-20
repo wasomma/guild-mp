@@ -273,11 +273,6 @@ export default function App() {
               )}
             </div>
           </section>
-          {g && sel && (
-            <aside className="rightcol">
-              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
-            </aside>
-          )}
           {g && (
             <aside className="bossrail">
               <div className="vhead">Next Boss</div>
@@ -286,6 +281,11 @@ export default function App() {
               <div className="bosswaves">
                 {g.stage % 5 === 0 ? "⚔️ HERE NOW" : `${5 - (g.stage % 5)} wave${5 - (g.stage % 5) > 1 ? "s" : ""} left`}
               </div>
+            </aside>
+          )}
+          {g && sel && (
+            <aside className="rightcol">
+              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
             </aside>
           )}
         </div>
