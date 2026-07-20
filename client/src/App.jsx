@@ -253,7 +253,9 @@ export default function App() {
             {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); setTab(null); }} />}
           </aside>
           <section className="stage">
-            <canvas ref={canvasRef} width={W} height={H} />
+            <div className="canvaswrap">
+              <canvas ref={canvasRef} width={W} height={H} />
+            </div>
             {g && (
               <div className="worldbar">
                 <div className="wgroup">
@@ -742,7 +744,7 @@ const CSS = `
 * { box-sizing: border-box; margin: 0; }
 body { background: #0a0812; }
 .app { min-height: 100vh; display: flex; background: #0a0812; font-family: 'VT323', monospace; color: #efeaff; font-size: 19px; }
-.frame { width: 100%; background: #100e1a; border-top: 2px solid #2b2740; border-bottom: 2px solid #2b2740; overflow: hidden; }
+.frame { width: 100%; background: #100e1a; border-top: 2px solid #2b2740; border-bottom: 2px solid #2b2740; overflow: hidden; display: flex; flex-direction: column; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #161326; border-bottom: 2px solid #2b2740; flex-wrap: wrap; }
 .title { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #f2c14e; }
 .title .ver { font-size: 10px; color: #8b84ad; }
@@ -753,7 +755,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .pill.ok { color: #7fd069; } .pill.bad { color: #ef6461; }
 .pill.sound { cursor: pointer; font-family: inherit; font-size: 15px; color: #efeaff; }
 .pill.sound:hover { background: #26213c; }
-.main { display: flex; min-height: 560px; }
+.main { display: flex; min-height: 560px; flex: 1; }
 .voice { width: 240px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
 .voice .plist { grid-template-columns: 1fr; }
 .rightcol { width: 340px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; overflow-y: auto; position: sticky; top: 0; max-height: 100vh; align-self: flex-start; }
@@ -790,7 +792,8 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .worldbar .wgroup { display: flex; gap: 16px; flex-wrap: wrap; }
 .wgold { color: #f2c14e; } .wrenown { color: #b07fe0; }
 .chorusline { color: #8fe3ff; font-size: 16px; }
-canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; border-bottom: 2px solid #2b2740; }
+.canvaswrap { flex: 1; min-height: 0; display: flex; align-items: center; background: #000; border-bottom: 2px solid #2b2740; }
+canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; }
 .tabs { display: flex; gap: 4px; padding: 8px 10px; }
 .tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-radius: 7px; padding: 4px 12px; cursor: pointer; }
 .tab.on { background: #1e1a30; color: #efeaff; }
