@@ -758,8 +758,8 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .main { display: flex; min-height: 560px; flex: 1; }
 .voice { width: 240px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
 .voice .plist { grid-template-columns: 1fr; }
-.rightcol { width: 340px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; overflow-y: auto; position: sticky; top: 0; max-height: 100vh; align-self: flex-start; }
-.bossrail { width: 130px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; overflow-y: auto; position: sticky; top: 0; max-height: 100vh; align-self: flex-start; }
+.rightcol { width: 340px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 56px); align-self: flex-start; }
+.bossrail { width: 130px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 56px); align-self: flex-start; }
 .bossent { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-bottom: 1px solid #2b2740; width: 100%; opacity: 0.7; }
 .bossent:last-child { border-bottom: none; }
 .bossent.first { opacity: 1; }
