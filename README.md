@@ -2,6 +2,8 @@
 
 **A Discord-native, presence-driven idle RPG.** When people join a Discord voice channel, their persistent characters walk into a shared 2.5D pixel-art world and fight as a party. When the last person leaves, the world freezes mid-swing and waits. The game is a side effect of hanging out: you don't play it so much as it plays alongside you while you talk.
 
+**Play it in your browser right now: https://wasomma.github.io/guild-mp/** — the single-player prototype as one self-contained page, no install, no server. The multiplayer world below is the real thing and needs a server.
+
 ## The design intent
 
 1. **Presence is the input device.** No controller, no clicks required. Joining voice *is* joining the game. The simulation only advances while someone is present, so there is no offline grind and no FOMO — the world's story only moves when the group is actually together.
@@ -26,7 +28,7 @@ The decisions worth knowing:
 - **Server-authoritative, intent-based networking.** Clients send `{a: "buyPotion"}`-style intents; the server validates everything. A modified client can *ask* but cannot *take*.
 - **Hibernation as an architectural feature.** Worlds load on first join, tick while occupied, write through on significant actions, and unload after the last leave. The ops cost of an idle community is zero, and one process shards to hundreds of guilds because worlds share nothing.
 - **Boring, durable persistence:** one SQLite file, additive guarded migrations, characters keyed by Discord snowflake so identity survives nickname changes, device switches, and disconnects. Backup is copying one file.
-- **Two deliberately duplicated codebases.** A single-file prototype (`prototype/guild-idle.jsx`, for instant sandboxed iteration in claude.ai artifacts) and the multiplayer build share *textually identical* game logic and sprite code, differing mechanically only at the I/O seams (direct sfx calls vs. emitted events). Every change lands in both — see the cardinal rule in CLAUDE.md.
+- **Two deliberately duplicated codebases.** A single-file prototype (`prototype/guild-idle.jsx`, for instant sandboxed iteration in claude.ai artifacts) and the multiplayer build share *textually identical* game logic and sprite code, differing mechanically only at the I/O seams (direct sfx calls vs. emitted events). Every change lands in both — see the cardinal rule in CLAUDE.md. The prototype also ships as `prototype/guild-of-the-open-mic.html`, a self-contained playable page (React bundled inline) that GitHub Pages serves at the link above.
 - **Testing without a framework:** headless sim scripts drive `joinVoice`/`tick`/`applyIntent` and assert on world state; a mock-canvas soak runs the *real* draw code through 24 scenarios; geometry tests verify layout invariants like formation spacing never clipping pet sprites.
 
 Want to *see* it? Two commands (below) put the live world in your browser. For the full design rationale read [ARCHITECTURE.md](ARCHITECTURE.md); for contributor conventions read [CLAUDE.md](CLAUDE.md); for the why behind recent decisions read [docs/SESSION-JOURNAL.md](docs/SESSION-JOURNAL.md); for hosting see [DEPLOY.md](DEPLOY.md).

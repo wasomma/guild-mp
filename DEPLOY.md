@@ -2,6 +2,8 @@
 
 This guide takes the project from your PC to a small server on the internet, so your friends can open a normal URL and see the shared world. The game is a single lightweight Node process, so the cheapest tier of any VPS provider is more than enough.
 
+(This is all for the multiplayer world. The single-player prototype needs none of it — it is already hosted as a static page on GitHub Pages at https://wasomma.github.io/guild-mp/.)
+
 What you will end up with: one always-on Linux machine running the game server as a background service, Caddy in front of it providing HTTPS, a domain name pointing at it, and the Discord bot and login working against your real community. Total cost is roughly 5 dollars a month for the VPS plus a domain if you do not already have one.
 
 ## 1. Get a server and a domain
