@@ -73,7 +73,7 @@ Owner's visual reference: the animated concept-sheet artifact (claude.ai, owner'
 
 ## Versioning and releases
 
-The game version lives in `shared/version.js` (VERSION) and renders in the client title ("ALPHA vX.Y.Z") and browser tab. Alpha scheme 0.MINOR.PATCH: bump minor for features, patch for fixes. On EVERY deploy to the live server:
+The game version lives in `shared/version.js` (VERSION) and renders in the client title ("ALPHA vX.Y.Z") and browser tab. Alpha scheme 0.MINOR.PATCH: bump the PATCH number for normal releases (0.1.1, 0.1.2, ...), however feature-sized; bump MINOR only when the owner declares a major baseline change. On EVERY deploy to the live server:
 
 1. Bump VERSION in `shared/version.js` in the same commit as (or right after) the change being shipped.
 2. Commit, then tag: `git tag -a vX.Y.Z -m "one-line summary of what shipped"`.
