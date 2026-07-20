@@ -223,7 +223,7 @@ export default function App() {
       <style>{CSS}</style>
       <div className="frame">
         <header>
-          <div className="title">⚔️ GUILD OF THE OPEN MIC</div>
+          <div className="title">⚔️ GUILD OF THE OPEN MIC - ALPHA</div>
           <div className="hstats">
             {g && <>
               <span className="pill">📖 Chapter {g.prestiges + 1}</span>
