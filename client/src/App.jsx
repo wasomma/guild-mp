@@ -650,8 +650,8 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 * { box-sizing: border-box; margin: 0; }
 body { background: #0a0812; }
-.app { min-height: 100vh; display: flex; justify-content: center; padding: 14px; background: #0a0812; font-family: 'VT323', monospace; color: #efeaff; font-size: 19px; }
-.frame { width: 100%; max-width: 1060px; background: #100e1a; border: 2px solid #2b2740; border-radius: 10px; overflow: hidden; }
+.app { min-height: 100vh; display: flex; background: #0a0812; font-family: 'VT323', monospace; color: #efeaff; font-size: 19px; }
+.frame { width: 100%; background: #100e1a; border-top: 2px solid #2b2740; border-bottom: 2px solid #2b2740; overflow: hidden; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #161326; border-bottom: 2px solid #2b2740; flex-wrap: wrap; }
 .title { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #f2c14e; }
 .hstats { display: flex; gap: 6px; flex-wrap: wrap; }
