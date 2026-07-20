@@ -39,6 +39,9 @@ export function formatChronicle(world) {
   if (s2.levelUps) spoils.push(`⬆️ ${s2.levelUps} level-up${s2.levelUps > 1 ? "s" : ""}${s2.topLevel ? ` (${s2.topLevel.name} reached ${s2.topLevel.level})` : ""}`);
   lines.push(spoils.join(" · "));
   if (s2.uniques.length) lines.push(`★ Uniques claimed: ${s2.uniques.join(", ")}`);
+  if (s2.bossLoot && s2.bossLoot.length) {
+    for (const d of s2.bossLoot) lines.push(`👑 ${d.boss} dropped ${d.item} (${d.rarity}) → ${d.to}${d.kept ? "" : " (salvaged)"}`);
+  }
   if (s2.quests) lines.push(`📜 ${s2.quests} guild quest${s2.quests > 1 ? "s" : ""} fulfilled`);
   if (s2.deaths) lines.push(`💀 ${s2.deaths} fall${s2.deaths > 1 ? "s" : ""} in battle`);
   if (s2.cleaves) lines.push(`🌀 ${s2.cleaves} cleave${s2.cleaves > 1 ? "s" : ""} weathered`);

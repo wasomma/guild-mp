@@ -533,8 +533,10 @@ function dropLoot(g, uniqueChance) {
     if (g.chapter) g.chapter.uniques.push(item.name);
   }
   const cur = m.gear[item.slot];
+  let kept = false;
   if (!cur || item.power > cur.power) {
     m.gear[item.slot] = item;
+    kept = true;
     sfx.loot();
     addLog(g, `${m.name} equipped ${item.name} (${item.rarity.name}, +${item.power})`, item.rarity.color);
     addFloat(g, m.x, m.y - 92, item.name, item.rarity.color);
@@ -544,6 +546,7 @@ function dropLoot(g, uniqueChance) {
     questProg(g, "gold", val);
     addLog(g, `${m.name} salvaged ${item.name} for ${val}g`, "#8b84ad");
   }
+  return { item, m, kept };
 }
 
 function makeEnemy(g, tier) {
@@ -1223,7 +1226,12 @@ function killEnemy(g, killer, e) {
   const alive = g.members.filter((m) => m.alive);
   const share = Math.round((e.xp / Math.max(1, alive.length) + e.xp * 0.4) * (1 + 0.15 * g.legacy.scholar));
   for (const m of alive) gainXp(g, m, share);
-  if (e.boss) { dropLoot(g, 0.10); if (Math.random() < 0.6) dropLoot(g, 0.10); addLog(g, `${e.name} defeated! The path ahead opens.`, "#f2a94e"); }
+  if (e.boss) {
+    const drops = [dropLoot(g, 0.10)];
+    if (Math.random() < 0.6) drops.push(dropLoot(g, 0.10));
+    if (g.session) for (const d of drops) if (d) (g.session.bossLoot = g.session.bossLoot || []).push({ boss: e.name, item: d.item.name, rarity: d.item.rarity.name, to: d.m.name, kept: d.kept });
+    addLog(g, `${e.name} defeated! The path ahead opens.`, "#f2a94e");
+  }
   else if (e.elite) { dropLoot(g, 0.05); addLog(g, `${e.name} slain! It drops its prize.`, "#b07fe0"); }
   else if (Math.random() < 0.13) dropLoot(g, 0.01);
 }
