@@ -87,7 +87,7 @@ A discord.js client with the `Guilds` and `GuildVoiceStates` intents (neither is
 
 Spectating requires nothing. Acting on a character (spending gold, allocating skill points) requires proving which Discord user you are, which is solved with "Log in with Discord" OAuth2, implemented in `server/auth.js`. The game server doubles as a small HTTP server: `/auth/login` redirects to Discord's consent screen with only the identify scope, `/auth/callback` exchanges the code, fetches the user's identity, mints a random session token stored in the SQLite sessions table, and bounces the browser back to the client with the token in the URL fragment. The client stores it and presents it over the WebSocket, binding the socket to that Discord user.
 
-Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character require the socket to be bound to that exact snowflake; guild-wide intents (potions, prestige, legacy upgrades) and the dev sidebar require any authenticated user; dev-sidebar characters remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
+Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character require the socket to be bound to that exact snowflake; guild-wide intents (potions, prestige, legacy upgrades) require any authenticated user; characters not owned by a Discord identity (from open dev mode) remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
 
 An alternative packaging is a Discord Activity, where the game runs in an iframe inside the voice channel itself and identity arrives from the Activities SDK for free. Everything server-side stays the same; only the client shell and auth flow change. The standalone web client should be built first because the Activity can be layered on top of the identical backend later.
 
@@ -103,7 +103,7 @@ One idle simulation is computationally trivial, so a single Node process comfort
 
 Step 1, extract the simulation into a shared module: done in this repository (`shared/sim.js`).
 
-Step 2, authoritative server with WebSocket broadcast and a thin rendering client: done in this repository (`server/index.js`, `client/`). The Discord sidebar in the client is now a development stand-in that sends the same join and leave intents the bot will send.
+Step 2, authoritative server with WebSocket broadcast and a thin rendering client: done in this repository (`server/index.js`, `client/`). The client's early dev stand-in sidebar (manual join/leave buttons) has since been retired; the sidebar now shows the live party, and presence flows only through the bot's intents.
 
 Step 3, persistence and the wake/sleep lifecycle: done in this repository. SQLite (`server/guild.db`) holds the worlds and characters tables, the tick loop is presence-gated, characters survive departure in the roster, and important intents persist immediately. The old JSON save migrates automatically.
 

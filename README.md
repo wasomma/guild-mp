@@ -61,7 +61,7 @@ Open the URL Vite prints (usually http://localhost:5173). Open it in two browser
 
 `server/index.js` runs the world at 20Hz, broadcasts snapshots at 10Hz over WebSockets, validates every client intent, and freezes the simulation whenever nobody is in the party (the hibernation rule). `server/db.js` persists everything to SQLite (`server/guild.db`): every 20 seconds, on shutdown, and instantly whenever a purchase, skill point, prestige, or departure happens.
 
-`client/` renders snapshots on a canvas with interpolation, turns server events into particles and floating numbers locally, and sends every button press to the server as an intent. The voice panel in the sidebar is a development stand-in; users who arrive through the real Discord bot show a "discord" badge there instead of Join and Leave buttons, since only real voice presence may control them.
+`client/` renders snapshots on a canvas with interpolation, turns server events into particles and floating numbers locally, and sends every button press to the server as an intent. The sidebar lists a party card for everyone currently in the voice channel; clicking one opens that character's detail column (stats, equipment, skills, wardrobe) on the right. Presence is driven entirely by the Discord bot — the client has no manual join controls.
 
 `server/bot.js` is the Discord bot. It runs inside the game server process and turns voice-channel presence into party membership, keyed by Discord user IDs.
 
@@ -98,7 +98,7 @@ CLIENT_URL=http://localhost:5173
 
 3. Restart the server. It logs "Discord OAuth is ON".
 
-From then on a "Log in with Discord" button appears in the client header. Anyone can spectate without logging in, but acting requires identity: your own character's wardrobe, skills, and respec are yours alone; guild-wide actions (potions, prestige, legacy upgrades) require any logged-in member; characters created from the dev sidebar are manageable by any logged-in user. Locked panels say who owns the character. Sessions are stored server-side in SQLite and survive restarts; the logout link revokes them.
+From then on a "Log in with Discord" button appears in the client header. Anyone can spectate without logging in, but acting requires identity: your own character's wardrobe, skills, and respec are yours alone; guild-wide actions (potions, prestige, legacy upgrades) require any logged-in member; characters not owned by a Discord identity (created back in open dev mode) are manageable by any logged-in user. Locked panels say who owns the character. Sessions are stored server-side in SQLite and survive restarts; the logout link revokes them.
 
 ## Persistence
 

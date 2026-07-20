@@ -35,7 +35,7 @@ The practical consequence: **gold is a per-campaign currency and cosmetics are i
 - **Potions** (the tactical sink): Healing Potion 30g, Poison Vial 40g, Armor Elixir 45g, Phoenix Draught 140g. All are auto-consumed (toggleable per type).
 - **Cosmetics** (the long-horizon sink): prices run from 60g accents to the 4,000g Golden Aura — hats to 1,600g, capes to 1,400g, pets to 2,000g, auras 1,800–4,000g, weapon skins to 680g, plus outfits, hairstyles, colors, and accessories. Purchases are per-character and permanent.
 
-There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys consumables and looks only.
+There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys consumables and looks only. Skill points auto-assign at random by default (idle-first); resetting reclaims every rank and switches that character to manual assignment until auto is turned back on.
 
 ## Renown
 

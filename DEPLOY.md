@@ -112,6 +112,6 @@ Backups: the entire game state is the single file `/opt/guild/app/server/guild.d
 
 Troubleshooting: `journalctl -u guild -f` shows the game log. "Discord login failed" at boot means the bot token is wrong. "Invalid OAuth state" or a failed login usually means the redirect URL in the Discord portal does not exactly match OAUTH_REDIRECT_URI. If the page loads but stays on CONNECTING, Caddy is likely not proxying to 8787 or the service is not running.
 
-## The dev sidebar in production
+## Dev mode in production
 
-The simulated voice panel still exists in the deployed client, but with OAuth on it requires a logged-in user to do anything, and it can never touch real Discord players. If you would rather hide it entirely for your community, that is a small UI change; the server-side rules already make it harmless.
+The client no longer ships the simulated voice sidebar — presence comes only from the Discord bot. If the server runs without Discord credentials it falls back to open dev mode (no login, no bot), which is fine on a laptop but not on a public host: set the `.env` values from step 4 so OAuth and the bot are always on in production.
