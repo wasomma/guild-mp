@@ -31,7 +31,7 @@ The decisions worth knowing:
 - **Two deliberately duplicated codebases.** A single-file prototype (`prototype/guild-idle.jsx`, for instant sandboxed iteration in claude.ai artifacts) and the multiplayer build share *textually identical* game logic and sprite code, differing mechanically only at the I/O seams (direct sfx calls vs. emitted events). Every change lands in both — see the cardinal rule in CLAUDE.md. The prototype also ships as `prototype/guild-of-the-open-mic.html`, a self-contained playable page (React bundled inline) that GitHub Pages serves at the link above.
 - **Testing without a framework:** headless sim scripts drive `joinVoice`/`tick`/`applyIntent` and assert on world state; a mock-canvas soak runs the *real* draw code through 24 scenarios; geometry tests verify layout invariants like formation spacing never clipping pet sprites.
 
-Want to *see* it? Two commands (below) put the live world in your browser. For the full design rationale read [ARCHITECTURE.md](ARCHITECTURE.md); for contributor conventions read [CLAUDE.md](CLAUDE.md); for the why behind recent decisions read [docs/SESSION-JOURNAL.md](docs/SESSION-JOURNAL.md); for hosting see [DEPLOY.md](DEPLOY.md).
+Want to *see* it? Two commands (below) put the live world in your browser. For the full design rationale read [ARCHITECTURE.md](ARCHITECTURE.md); for every economy and combat number read [BALANCE.md](BALANCE.md); for contributor conventions read [CLAUDE.md](CLAUDE.md); for the why behind recent decisions read [docs/SESSION-JOURNAL.md](docs/SESSION-JOURNAL.md); for hosting see [DEPLOY.md](DEPLOY.md).
 
 ## Running it
 
