@@ -227,17 +227,6 @@ export default function App() {
         <header>
           <div className="title">⚔️ GUILD OF THE OPEN MIC - ALPHA <span className="ver">v{VERSION}</span></div>
           <div className="hstats">
-            {g && <>
-              <span className="pill">📖 Chapter {g.prestiges + 1}</span>
-              <span className="pill">🏰 Stage {g.stage}{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""}</span>
-              <span className="pill">🗺️ {zone.name}</span>
-              <span className="pill gold">🪙 {fmt(g.gold)}</span>
-              <span className="pill renown">✨ {fmt(g.renown)}</span>
-              {g.members.length >= 2 && <span className="pill chorus" title={`Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP`}>🎵 +{Math.min(g.members.length - 1, 9) * 4}%</span>}
-              {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
-                <span key={mu.id} className="pill" style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
-              ))}
-            </>}
             <span className={"pill " + (connected ? "ok" : "bad")}>{connected ? "● LIVE" : "○ OFFLINE"}</span>
             <button className="pill sound" title={sfxOff ? "unmute sounds" : "mute sounds"}
               onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
@@ -256,10 +245,31 @@ export default function App() {
         <div className="main">
           <aside className="voice">
             <div className="vhead">🔊 Voice Channel</div>
+            {g && g.members.length >= 2 && (
+              <div className="chorusline" title="Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP">
+                🎵 Chorus +{Math.min(g.members.length - 1, 9) * 4}% dmg/heal · +{Math.min(g.members.length - 1, 9) * 3}% HP
+              </div>
+            )}
             {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); }} />}
           </aside>
           <section className="stage">
             <canvas ref={canvasRef} width={W} height={H} />
+            {g && (
+              <div className="worldbar">
+                <div className="wgroup">
+                  <span>📖 Chapter {g.prestiges + 1}</span>
+                  <span>🏰 Stage {g.stage}{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""}</span>
+                  <span>🗺️ {zone.name}</span>
+                  {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
+                    <span key={mu.id} style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
+                  ))}
+                </div>
+                <div className="wgroup">
+                  <span className="wgold">🪙 {fmt(g.gold)}</span>
+                  <span className="wrenown">✨ {fmt(g.renown)}</span>
+                </div>
+              </div>
+            )}
             <div className="tabs">
               {["guild", "shop", "log"].map((t2) => (
                 <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => setTab(t2)}>
@@ -771,6 +781,10 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .lockmsg { background: #1c1830; border: 1px solid #3a3550; border-radius: 6px; padding: 6px 10px; color: #b8b2d4; }
 .note { color: #6d6790; font-size: 14px; line-height: 1.25; margin-top: auto; }
 .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.worldbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 5px 12px; background: #161326; border-bottom: 1px solid #2b2740; }
+.worldbar .wgroup { display: flex; gap: 16px; flex-wrap: wrap; }
+.wgold { color: #f2c14e; } .wrenown { color: #b07fe0; }
+.chorusline { color: #8fe3ff; font-size: 16px; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; border-bottom: 2px solid #2b2740; }
 .tabs { display: flex; gap: 4px; padding: 8px 10px 0; }
 .tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-bottom: none; border-radius: 7px 7px 0 0; padding: 4px 12px; cursor: pointer; }
