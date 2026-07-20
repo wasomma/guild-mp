@@ -122,6 +122,7 @@ const HAIRS = [
   { name: "Arcane",   c: "#8a6fe0", price: 150 },
   { name: "Seafoam",  c: "#69d2c8", price: 150 },
   { name: "Rose",     c: "#e77fb3", price: 150 },
+  { name: "Lime",     c: "#a6e34d", price: 150 },
 ];
 const OUTFITS = [
   { name: "Traveler",  c: "#4d5a8a", price: 0 },
