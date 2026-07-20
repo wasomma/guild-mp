@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  W, H, CLASSES, STYLES, styleOf, SKILLS, MAX_RANK,
+  W, H, CLASSES, STYLES, styleOf, stats, SKILLS, MAX_RANK,
   BODIES, HATS, HAIRS, HAIRSTYLES, OUTFITS, WEAPON_SKINS, ACCESSORIES, CAPES, PETS, AURAS,
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
@@ -253,7 +253,7 @@ export default function App() {
         <div className="main">
           <aside className="voice">
             <div className="vhead">🔊 Voice Channel</div>
-            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("wardrobe"); }} />}
+            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); }} />}
           </aside>
           <section className="stage">
             <canvas ref={canvasRef} width={W} height={H} />
@@ -383,16 +383,60 @@ function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock }) {
         <Portrait m={m} />
       </div>
       <div className="subtabs">
-        {["wardrobe", "equipment", "skills"].map((t2) => (
+        {["stats", "equipment", "skills", "wardrobe"].map((t2) => (
           <button key={t2} className={"tab sm" + (wardTab === t2 ? " on" : "")} onClick={() => setWardTab(t2)}>
-            {{ wardrobe: "👗 Wardrobe", equipment: "🗡️ Equipment", skills: "📚 Skills" }[t2]}
+            {{ stats: "📊 Stats", equipment: "🗡️ Equipment", skills: "📚 Skills", wardrobe: "👗 Wardrobe" }[t2]}
           </button>
         ))}
       </div>
       {lock && <div className="lockmsg">🔒 {lock}</div>}
-      {wardTab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} />}
+      {wardTab === "stats" && <StatsPanel g={g} m={m} />}
       {wardTab === "equipment" && <Equipment m={m} />}
       {wardTab === "skills" && <Skills g={g} m={m} send={send} lock={lock} />}
+      {wardTab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} />}
+    </div>
+  );
+}
+
+function StatsPanel({ g, m }) {
+  const st = stats(m, g);
+  const pct = (v) => `${Math.round(v * 100)}%`;
+  const rows = [];
+  const add = (label, value, color) => rows.push({ label, value, color });
+  add("Class", `${CLASSES[m.cls].icon} ${CLASSES[m.cls].name}`, CLASSES[m.cls].color);
+  add("Fighting Style", styleOf(m).name);
+  add("Level", `${m.level}  (XP ${fmt(m.xp)}/${fmt(xpNeed(m.level))})`);
+  add("Health", `${fmt(Math.round(m.hp))} / ${fmt(st.hp)}`);
+  add("Damage", fmt(Math.round(st.dmg)));
+  add("Attack Speed", `every ${st.spd.toFixed(2)}s`);
+  add("Crit Chance", `${Math.round(st.crit)}%`);
+  if (st.critDmg > 0) add("Crit Damage", `+${pct(st.critDmg)}`);
+  if (st.heal > 0) add("Healing Power", fmt(Math.round(st.heal)));
+  add("Armor", fmt(Math.round(st.armor)));
+  if (st.dr > 0) add("Damage Reduction", pct(st.dr));
+  if (st.stun > 0) add("Stun Chance", pct(st.stun));
+  if (st.splash > 0) add("Splash Healing", pct(st.splash));
+  if (st.ls > 0) add("Lifesteal", pct(st.ls));
+  if (st.thorns > 0) add("Thorns", pct(st.thorns));
+  if (st.goldF > 0) add("Gold Find", `+${pct(st.goldF)}`);
+  if (st.chorus > 0) add("Chorus of Courage", `${st.chorus} voice${st.chorus > 1 ? "s" : ""} · +${st.chorus * 4}% dmg/heal · +${st.chorus * 3}% HP`, "#8fd069");
+  return (
+    <div>
+      <div className="statgrid">
+        {rows.map((r) => (
+          <React.Fragment key={r.label}>
+            <span className="dim">{r.label}</span>
+            <span style={r.color ? { color: r.color } : undefined}>{r.value}</span>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="coshead" style={{ marginTop: 10 }}>Lifetime Deeds</div>
+      <div className="statgrid">
+        <span className="dim">Kills</span><span>{fmt(m.kills)}</span>
+        <span className="dim">Damage Dealt</span><span>{fmt(m.dmgDone)}</span>
+        <span className="dim">Healing Done</span><span>{fmt(m.healDone)}</span>
+        <span className="dim">Skill Points</span><span>{m.sp > 0 ? `★ ${m.sp} unspent` : "none unspent"}</span>
+      </div>
     </div>
   );
 }
@@ -720,6 +764,8 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .bar { height: 7px; background: #131022; border-radius: 4px; margin: 5px 0; overflow: hidden; }
 .fill { height: 100%; }
 .detail { display: flex; flex-direction: column; gap: 8px; }
+.statgrid { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; align-items: baseline; }
+.statgrid span:nth-child(even) { text-align: right; }
 .drow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .inspect { display: flex; justify-content: center; padding: 4px 0 2px; }
 .portrait { width: 190px; height: auto; image-rendering: pixelated; border: 1px solid #2e2947; border-radius: 10px; }
