@@ -45,7 +45,7 @@ export default function App() {
   });
   const [snap, setSnap] = useState(null);       // latest snapshot, drives the React UI
   const [connected, setConnected] = useState(false);
-  const [tab, setTab] = useState("party");
+  const [tab, setTab] = useState("guild");
   const [selId, setSelId] = useState(null);
   const [wardTab, setWardTab] = useState("wardrobe");
   const [confirmPrestige, setConfirmPrestige] = useState(false);
@@ -250,31 +250,19 @@ export default function App() {
         <div className="main">
           <aside className="voice">
             <div className="vhead">🔊 Voice Channel</div>
-            {g && g.users.filter((u) => u.inVoice).map((u) => (
-              <div key={u.key || u.name} className="vuser in">
-                <span className="avatar" style={{ background: u.color }}>{u.name[0]}</span>
-                <span className="uname">{u.name}</span>
-              </div>
-            ))}
-            {g && !g.users.some((u) => u.inVoice) && (
-              <div className="dim">The hall is quiet. Join the Discord voice channel to enter the world.</div>
-            )}
+            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("wardrobe"); }} />}
           </aside>
           <section className="stage">
             <canvas ref={canvasRef} width={W} height={H} />
             <div className="tabs">
-              {["party", "guild", "shop", "log"].map((t2) => (
-                <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => { setTab(t2); setSelId(null); }}>
-                  {{ party: "⚔️ Party", guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[t2]}
+              {["guild", "shop", "log"].map((t2) => (
+                <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => setTab(t2)}>
+                  {{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[t2]}
                 </button>
               ))}
             </div>
             <div className="panel">
               {!g && <div className="dim pad">Waiting for the server...</div>}
-              {g && tab === "party" && !sel && <PartyList g={g} onSel={(id) => { setSelId(id); setWardTab("wardrobe"); }} />}
-              {g && tab === "party" && sel && (
-                <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
-              )}
               {g && tab === "guild" && <GuildHall g={g} send={send} confirm={confirmPrestige} setConfirm={setConfirmPrestige} lock={guildLock} me={me} authConfigured={authConfigured} />}
               {g && tab === "shop" && <Shop g={g} send={send} lock={guildLock} />}
               {g && tab === "log" && (
@@ -285,6 +273,11 @@ export default function App() {
               )}
             </div>
           </section>
+          {g && sel && (
+            <aside className="rightcol">
+              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
+            </aside>
+          )}
         </div>
       </div>
     </div>
@@ -335,7 +328,7 @@ function Portrait({ m }) {
 }
 
 function PartyList({ g, onSel }) {
-  if (!g.members.length) return <div className="dim pad">Nobody is in voice. Use the panel on the left to muster the party.</div>;
+  if (!g.members.length) return <div className="dim">The hall is quiet. Join the Discord voice channel to enter the world.</div>;
   return (
     <div className="plist">
       {g.members.map((m) => {
@@ -362,7 +355,7 @@ function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock }) {
   return (
     <div className="detail">
       <div className="drow">
-        <button className="mini" onClick={onBack}>← back</button>
+        <button className="mini" onClick={onBack}>✕ close</button>
         <span style={{ color: CLASSES[m.cls].color }}>{CLASSES[m.cls].icon} {m.name} · Lv {m.level} {styleOf(m).name}</span>
         <span className="dim small">dmg {fmt(m.dmgDone)} · heal {fmt(m.healDone)} · kills {m.kills}</span>
       </div>
@@ -662,7 +655,9 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .pill.sound { cursor: pointer; font-family: inherit; font-size: 15px; color: #efeaff; }
 .pill.sound:hover { background: #26213c; }
 .main { display: flex; min-height: 560px; }
-.voice { width: 210px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+.voice { width: 240px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
+.voice .plist { grid-template-columns: 1fr; }
+.rightcol { width: 340px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; overflow-y: auto; position: sticky; top: 0; max-height: 100vh; align-self: flex-start; }
 .vhead { color: #8b84ad; font-size: 17px; }
 .dim { color: #8b84ad; } .small { font-size: 15px; } .pad { padding: 8px; }
 .vuser { display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 6px; opacity: 0.55; }
@@ -726,5 +721,5 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .mini.aye { border-color: #7fd069; color: #7fd069; }
 .mini.nay { border-color: #ef6461; color: #ef6461; }
 .auto { display: flex; align-items: center; gap: 4px; }
-@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } }
+@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } .rightcol { width: 100%; border-left: none; border-top: 2px solid #2b2740; } }
 `;
