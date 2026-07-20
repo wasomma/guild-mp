@@ -6,7 +6,7 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { draw, drawAdventurer } from "./render.js";
-import { audioInit, audioResume, setAudioMuted, sfx, musicTick } from "./audio.js";
+import { audioInit, audioResume, setSfxMuted, setMusicMuted, sfx, musicTick } from "./audio.js";
 
 /* In dev (vite on :5173) talk to the server on :8787; in production the
    page is served by the game server itself, so use the same origin and
@@ -50,7 +50,8 @@ export default function App() {
   const [wardTab, setWardTab] = useState("wardrobe");
   const [confirmPrestige, setConfirmPrestige] = useState(false);
   const [me, setMe] = useState(null);
-  const [muted, setMutedUI] = useState(false);
+  const [sfxOff, setSfxOffUI] = useState(false);
+  const [musicOff, setMusicOffUI] = useState(false);
   const [authConfigured, setAuthConfigured] = useState(false);
   const tokenRef = useRef(null);
 
@@ -236,8 +237,10 @@ export default function App() {
               ))}
             </>}
             <span className={"pill " + (connected ? "ok" : "bad")}>{connected ? "● LIVE" : "○ OFFLINE"}</span>
-            <button className="pill sound" title={muted ? "unmute" : "mute"}
-              onClick={() => { audioInit(); audioResume(); setAudioMuted(!muted); setMutedUI(!muted); }}>{muted ? "🔇" : "🔊"}</button>
+            <button className="pill sound" title={sfxOff ? "unmute sounds" : "mute sounds"}
+              onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
+            <button className="pill sound" title={musicOff ? "unmute music" : "mute music"} style={{ opacity: musicOff ? 0.35 : 1 }}
+              onClick={() => { audioInit(); audioResume(); setMusicMuted(!musicOff); setMusicOffUI(!musicOff); }}>🎵</button>
             {authConfigured && (me
               ? <span className="pill who">
                   {me.avatar && <img className="pfp" src={me.avatar} alt="" />}

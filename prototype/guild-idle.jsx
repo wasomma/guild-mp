@@ -314,23 +314,25 @@ function stats(m, g) {
 const xpNeed = (lvl) => Math.round(26 * Math.pow(lvl, 1.35));
 
 /* ===== chiptune audio engine (Web Audio, no dependencies) ===== */
-const AUDIO = { ctx: null, master: null, muted: false, musicT: 0 };
+const AUDIO = { ctx: null, master: null, sfxMuted: false, musicMuted: false, inMusic: false, musicT: 0 };
+const gated = () => (AUDIO.inMusic ? AUDIO.musicMuted : AUDIO.sfxMuted);
 function audioInit() {
   if (AUDIO.ctx) return true;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     AUDIO.ctx = new AC();
     AUDIO.master = AUDIO.ctx.createGain();
-    AUDIO.master.gain.value = AUDIO.muted ? 0 : 0.5;
+    AUDIO.master.gain.value = 0.5;
     const comp = AUDIO.ctx.createDynamicsCompressor();
     AUDIO.master.connect(comp); comp.connect(AUDIO.ctx.destination);
     return true;
   } catch { return false; }
 }
 function audioResume() { if (AUDIO.ctx && AUDIO.ctx.state === "suspended") AUDIO.ctx.resume(); }
-function setAudioMuted(m) { AUDIO.muted = m; if (AUDIO.master) AUDIO.master.gain.value = m ? 0 : 0.5; }
+function setSfxMuted(m) { AUDIO.sfxMuted = m; }
+function setMusicMuted(m) { AUDIO.musicMuted = m; }
 function tone(freq, dur, type, vol, slide, delay) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || gated()) return;
   const t0 = AUDIO.ctx.currentTime + (delay || 0);
   const o = AUDIO.ctx.createOscillator();
   const gn = AUDIO.ctx.createGain();
@@ -344,7 +346,7 @@ function tone(freq, dur, type, vol, slide, delay) {
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
 function noiseHit(dur, vol, delay, hp) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || gated()) return;
   const t0 = AUDIO.ctx.currentTime + (delay || 0);
   const len = Math.max(1, Math.floor(AUDIO.ctx.sampleRate * dur));
   const buf = AUDIO.ctx.createBuffer(1, len, AUDIO.ctx.sampleRate);
@@ -398,7 +400,11 @@ const ZONE_SCALES = [
   [262, 311, 349, 392, 466, 523],
 ];
 function musicTick(g, dt) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || AUDIO.musicMuted) return;
+  AUDIO.inMusic = true;
+  try { musicStep(g, dt); } finally { AUDIO.inMusic = false; }
+}
+function musicStep(g, dt) {
   if (!g.members || !g.members.length) return;
   AUDIO.musicT -= dt;
   if (AUDIO.musicT > 0) return;
@@ -3895,7 +3901,8 @@ export default function GuildIdle() {
   const [subTab, setSubTab] = useState("style");
   const [nameInput, setNameInput] = useState("");
   const [autoSim, setAutoSim] = useState(false);
-  const [muted, setMutedUI] = useState(false);
+  const [sfxOff, setSfxOffUI] = useState(false);
+  const [musicOff, setMusicOffUI] = useState(false);
   const [confirmP, setConfirmP] = useState(false);
 
   useEffect(() => { autoSimRef.current = autoSim; }, [autoSim]);
@@ -4181,8 +4188,10 @@ export default function GuildIdle() {
             ))}
             <span style={{ color: "#8b84ad", fontSize: 16 }}>🧪{g.stock.heal} 🛡️{g.stock.armor} ☠️{g.stock.poison} 🔥{g.stock.res}</span>
             {g.members.length >= 2 && <span style={{ color: "#8fe3ff", fontSize: 16 }} title={`Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP`}>🎵 +{Math.min(g.members.length - 1, 9) * 4}%</span>}
-            <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px" }} title={muted ? "unmute" : "mute"}
-              onClick={() => { audioInit(); audioResume(); setAudioMuted(!muted); setMutedUI(!muted); }}>{muted ? "🔇" : "🔊"}</button>
+            <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px" }} title={sfxOff ? "unmute sounds" : "mute sounds"}
+              onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
+            <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px", opacity: musicOff ? 0.35 : 1 }} title={musicOff ? "unmute music" : "mute music"}
+              onClick={() => { audioInit(); audioResume(); setMusicMuted(!musicOff); setMusicOffUI(!musicOff); }}>🎵</button>
           </header>
 
           <div style={{ background: "#100e1a", padding: "6px 10px" }}>

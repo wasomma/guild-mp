@@ -1,23 +1,25 @@
 import { rand } from "@shared/sim.js";
 
 /* ===== chiptune audio engine (Web Audio, no dependencies) ===== */
-const AUDIO = { ctx: null, master: null, muted: false, musicT: 0 };
+const AUDIO = { ctx: null, master: null, sfxMuted: false, musicMuted: false, inMusic: false, musicT: 0 };
+const gated = () => (AUDIO.inMusic ? AUDIO.musicMuted : AUDIO.sfxMuted);
 export function audioInit() {
   if (AUDIO.ctx) return true;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     AUDIO.ctx = new AC();
     AUDIO.master = AUDIO.ctx.createGain();
-    AUDIO.master.gain.value = AUDIO.muted ? 0 : 0.5;
+    AUDIO.master.gain.value = 0.5;
     const comp = AUDIO.ctx.createDynamicsCompressor();
     AUDIO.master.connect(comp); comp.connect(AUDIO.ctx.destination);
     return true;
   } catch { return false; }
 }
 export function audioResume() { if (AUDIO.ctx && AUDIO.ctx.state === "suspended") AUDIO.ctx.resume(); }
-export function setAudioMuted(m) { AUDIO.muted = m; if (AUDIO.master) AUDIO.master.gain.value = m ? 0 : 0.5; }
+export function setSfxMuted(m) { AUDIO.sfxMuted = m; }
+export function setMusicMuted(m) { AUDIO.musicMuted = m; }
 function tone(freq, dur, type, vol, slide, delay) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || gated()) return;
   const t0 = AUDIO.ctx.currentTime + (delay || 0);
   const o = AUDIO.ctx.createOscillator();
   const gn = AUDIO.ctx.createGain();
@@ -31,7 +33,7 @@ function tone(freq, dur, type, vol, slide, delay) {
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
 function noiseHit(dur, vol, delay, hp) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || gated()) return;
   const t0 = AUDIO.ctx.currentTime + (delay || 0);
   const len = Math.max(1, Math.floor(AUDIO.ctx.sampleRate * dur));
   const buf = AUDIO.ctx.createBuffer(1, len, AUDIO.ctx.sampleRate);
@@ -85,7 +87,11 @@ const ZONE_SCALES = [
   [262, 311, 349, 392, 466, 523],
 ];
 export function musicTick(g, dt) {
-  if (!AUDIO.ctx || AUDIO.muted) return;
+  if (!AUDIO.ctx || AUDIO.musicMuted) return;
+  AUDIO.inMusic = true;
+  try { musicStep(g, dt); } finally { AUDIO.inMusic = false; }
+}
+function musicStep(g, dt) {
   if (!g.members || !g.members.length) return;
   AUDIO.musicT -= dt;
   if (AUDIO.musicT > 0) return;
