@@ -47,7 +47,7 @@ export default function App() {
   });
   const [snap, setSnap] = useState(null);       // latest snapshot, drives the React UI
   const [connected, setConnected] = useState(false);
-  const [tab, setTab] = useState("guild");
+  const [tab, setTab] = useState(null);
   const [selId, setSelId] = useState(null);
   const [wardTab, setWardTab] = useState("wardrobe");
   const [confirmPrestige, setConfirmPrestige] = useState(false);
@@ -250,7 +250,7 @@ export default function App() {
                 🎵 Chorus +{Math.min(g.members.length - 1, 9) * 4}% dmg/heal · +{Math.min(g.members.length - 1, 9) * 3}% HP
               </div>
             )}
-            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); }} />}
+            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); setTab(null); }} />}
           </aside>
           <section className="stage">
             <canvas ref={canvasRef} width={W} height={H} />
@@ -272,21 +272,10 @@ export default function App() {
             )}
             <div className="tabs">
               {["guild", "shop", "log"].map((t2) => (
-                <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => setTab(t2)}>
+                <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => { setTab(tab === t2 ? null : t2); setSelId(null); }}>
                   {{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[t2]}
                 </button>
               ))}
-            </div>
-            <div className="panel">
-              {!g && <div className="dim pad">Waiting for the server...</div>}
-              {g && tab === "guild" && <GuildHall g={g} send={send} confirm={confirmPrestige} setConfirm={setConfirmPrestige} lock={guildLock} me={me} authConfigured={authConfigured} />}
-              {g && tab === "shop" && <Shop g={g} send={send} lock={guildLock} />}
-              {g && tab === "log" && (
-                <div className="logbox">
-                  {g.log.map((l, i) => <div key={i} className="logline" style={{ color: l.color }}>{l.text}</div>)}
-                  {!g.log.length && <div className="dim pad">The chronicle is empty. Deeds await.</div>}
-                </div>
-              )}
             </div>
           </section>
           {g && (
@@ -309,6 +298,22 @@ export default function App() {
           {g && sel && (
             <aside className="rightcol">
               <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
+            </aside>
+          )}
+          {g && !sel && tab && (
+            <aside className="rightcol">
+              <div className="drow">
+                <button className="mini" onClick={() => setTab(null)}>✕ close</button>
+                <span>{{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[tab]}</span>
+              </div>
+              {tab === "guild" && <GuildHall g={g} send={send} confirm={confirmPrestige} setConfirm={setConfirmPrestige} lock={guildLock} me={me} authConfigured={authConfigured} />}
+              {tab === "shop" && <Shop g={g} send={send} lock={guildLock} />}
+              {tab === "log" && (
+                <div className="logbox">
+                  {g.log.map((l, i) => <div key={i} className="logline" style={{ color: l.color }}>{l.text}</div>)}
+                  {!g.log.length && <div className="dim pad">The chronicle is empty. Deeds await.</div>}
+                </div>
+              )}
             </aside>
           )}
         </div>
@@ -786,11 +791,10 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .wgold { color: #f2c14e; } .wrenown { color: #b07fe0; }
 .chorusline { color: #8fe3ff; font-size: 16px; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; border-bottom: 2px solid #2b2740; }
-.tabs { display: flex; gap: 4px; padding: 8px 10px 0; }
-.tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-bottom: none; border-radius: 7px 7px 0 0; padding: 4px 12px; cursor: pointer; }
+.tabs { display: flex; gap: 4px; padding: 8px 10px; }
+.tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-radius: 7px; padding: 4px 12px; cursor: pointer; }
 .tab.on { background: #1e1a30; color: #efeaff; }
 .tab.sm { font-size: 16px; border-radius: 6px; border: 1px solid #2b2740; }
-.panel { flex: 1; background: #1e1a30; border-top: 1px solid #2b2740; padding: 10px; overflow-y: auto; max-height: 300px; }
 .plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
 .pcard { font-family: 'VT323', monospace; font-size: 18px; text-align: left; background: #17142a; color: #efeaff; border: 1px solid; border-radius: 8px; padding: 8px; cursor: pointer; }
 .pcard:hover { background: #201c36; }
