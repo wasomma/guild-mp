@@ -77,10 +77,11 @@ Owner's visual reference: the animated concept-sheet artifact (claude.ai, owner'
 The game version lives in `shared/version.js` (VERSION) and renders in the client title ("ALPHA vX.Y.Z") and browser tab. Alpha scheme 0.MINOR.PATCH: bump the PATCH number for normal releases (0.1.1, 0.1.2, ...), however feature-sized; bump MINOR only when the owner declares a major baseline change. On EVERY deploy to the live server:
 
 1. Bump VERSION in `shared/version.js` in the same commit as (or right after) the change being shipped.
-2. Add a `CHANGELOG.md` entry for the version (newest first, dated, a summary a player could read — bullets for feature releases, a sentence for small fixes) in that same commit.
-3. Commit, then tag: `git tag -a vX.Y.Z -m "one-line summary of what shipped"`.
-4. Push with tags: `git push --follow-tags`.
-5. Deploy (pull, client build, restart) — see DEPLOY.md.
+2. Doc sweep: check every `.md` for statements the change just made stale and fix them in the same commit. Player-facing rules → TUTORIAL.md; numbers, formulas, or what-resets-when → BALANCE.md; systems, persistence fields, or intents → ARCHITECTURE.md and the README; conventions, repo map, or roadmap state → this file; hosting steps → DEPLOY.md. A quick `grep -ril` across `*.md` for the feature's old terms (e.g. "vote" after the prestige split) catches most of it.
+3. Add a `CHANGELOG.md` entry for the version (newest first, dated, a summary a player could read — bullets for feature releases, a sentence for small fixes) in that same commit.
+4. Commit, then tag: `git tag -a vX.Y.Z -m "one-line summary of what shipped"`.
+5. Push with tags: `git push --follow-tags`.
+6. Deploy (pull, client build, restart) — see DEPLOY.md.
 
 Tags are the version archive: `git tag -n` lists every released version with its summary, GitHub shows them under Tags, and any old version can be inspected (`git show vX.Y.Z:path`) or redeployed by checking out the tag on the server and rebuilding. `CHANGELOG.md` is the human-readable expansion of the tag list — if a version is live, it has an entry. Do not deploy untagged code to live.
 
