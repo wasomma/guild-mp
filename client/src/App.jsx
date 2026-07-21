@@ -50,7 +50,7 @@ export default function App() {
   const [tab, setTab] = useState(null);
   const [selId, setSelId] = useState(null);
   const [wardTab, setWardTab] = useState("wardrobe");
-  const [confirmPrestige, setConfirmPrestige] = useState(false);
+  const [confirmRetell, setConfirmRetell] = useState(null); // member id awaiting confirm
   const [me, setMe] = useState(null);
   const [sfxOff, setSfxOffUI] = useState(false);
   const [musicOff, setMusicOffUI] = useState(false);
@@ -170,7 +170,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "vote", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -308,7 +308,7 @@ export default function App() {
                 <button className="mini" onClick={() => setTab(null)}>✕ close</button>
                 <span>{{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[tab]}</span>
               </div>
-              {tab === "guild" && <GuildHall g={g} send={send} confirm={confirmPrestige} setConfirm={setConfirmPrestige} lock={guildLock} me={me} authConfigured={authConfigured} />}
+              {tab === "guild" && <GuildHall g={g} send={send} confirm={confirmRetell} setConfirm={setConfirmRetell} lock={guildLock} lockOf={lockOf} />}
               {tab === "shop" && <Shop g={g} send={send} lock={guildLock} />}
               {tab === "log" && (
                 <div className="logbox">
@@ -598,17 +598,10 @@ function Skills({ g, m, send, lock }) {
   );
 }
 
-function GuildHall({ g, send, confirm, setConfirm, lock, me, authConfigured }) {
-  const can = g.stage >= 21 && !lock;
+function GuildHall({ g, send, confirm, setConfirm, lock, lockOf }) {
   const muDef = MUTATORS.find((x) => x.id === g.mutator);
-  const earn = Math.round(renownEarn(g.stage) * (muDef ? muDef.renownMult : 1));
-  const partyKeys = [...new Set(g.members.map((m) => m.key))];
-  const multi = partyKeys.length > 1;
-  const v = g.vote;
-  const yesN = v ? v.yes.filter((k) => partyKeys.includes(k)).length : 0;
-  const noN = v ? v.no.filter((k) => partyKeys.includes(k)).length : 0;
-  const myMember = me && g.members.find((m) => m.key === me.key);
-  const myBallot = v && me ? (v.yes.includes(me.key) ? "Aye" : v.no.includes(me.key) ? "Nay" : null) : null;
+  const mult = muDef ? muDef.renownMult : 1;
+  const chapterEarn = Math.round(renownEarn(20) * mult);
   const hoursLeft = g.questDay ? Math.max(0, Math.ceil(((g.questDay + 1) * 86400000 - Date.now()) / 3600000)) : 0;
   return (
     <div className="guild">
@@ -626,55 +619,50 @@ function GuildHall({ g, send, confirm, setConfirm, lock, me, authConfigured }) {
         {!(g.quests || []).length && <div className="dim small">The board refreshes when the world wakes.</div>}
         <div className="dim small">New contracts at daybreak{hoursLeft ? ` (about ${hoursLeft}h)` : ""}.</div>
       </div>
-      {v ? (
-        <div className="prestigebox votebox">
-          <div className="coshead">📖 Vote: Retell the Tale</div>
-          <div className="dim small">
-            {v.byName} calls for a new chapter, worth <b style={{ color: "#f2c14e" }}>{earn} renown</b>.
-            A majority of the party must agree. <b style={{ color: "#b07fe0" }}>{Math.ceil(Math.max(0, v.t))}s</b> remain.
-          </div>
-          <div className="drow">
-            <span className="pill">Aye {yesN} · Nay {noN} · of {partyKeys.length}</span>
-          </div>
-          {authConfigured ? (
-            myMember ? (
-              <div className="drow">
-                <button className="mini big" onClick={() => send({ a: "vote", v: true })}>Aye, retell it</button>
-                <button className="mini big warn" onClick={() => send({ a: "vote", v: false })}>Nay, fight on</button>
-                {myBallot && <span className="dim small">You voted {myBallot}.</span>}
-              </div>
-            ) : <div className="dim small">Your adventurer must be in the party to vote.</div>
-          ) : (
-            <div className="votegrid">
-              {g.members.map((m) => {
-                const b = v.yes.includes(m.key) ? "y" : v.no.includes(m.key) ? "n" : "";
-                return (
-                  <div key={m.id} className="voterow">
-                    <span style={{ color: CLASSES[m.cls].color }}>{m.name}</span>
-                    <button className={"mini" + (b === "y" ? " aye" : "")} onClick={() => send({ a: "vote", v: true, key: m.key })}>✓</button>
-                    <button className={"mini" + (b === "n" ? " nay" : "")} onClick={() => send({ a: "vote", v: false, key: m.key })}>✗</button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ) : (
       <div className="prestigebox">
-        <div className="coshead">📖 Retell the Tale</div>
+        <div className="coshead">📖 Chapter {g.prestiges + 1}</div>
         <div className="dim small">
-          End this chapter to earn <b style={{ color: "#f2c14e" }}>{earn} renown</b>. Levels, gear, gold, and stage reset.
-          Cosmetics, styles, renown, and legacy upgrades endure. {can ? "" : "Reach stage 21 to unlock."}
-          {multi ? " With a full party this calls a vote: the majority decides." : ""}
+          When the Stage 20 King falls, the chapter ends on its own: the guild feasts and earns{" "}
+          <b style={{ color: "#f2c14e" }}>{chapterEarn} renown</b>
+          {muDef ? <> (×{muDef.renownMult} for braving the <span style={{ color: muDef.c }}>{muDef.name}</span>)</> : null}.
+          Heroes keep their levels and gear.
         </div>
-        {!confirm
-          ? <button className="mini big" disabled={!can} onClick={() => setConfirm(true)}>{multi ? "Call the vote" : "Retell the Tale"}</button>
-          : <div className="drow">
-              <button className="mini big warn" onClick={() => { send({ a: "prestige" }); setConfirm(false); }}>{multi ? "Confirm: put it to the party" : `Confirm: end Chapter ${g.prestiges + 1}`}</button>
-              <button className="mini" onClick={() => setConfirm(false)}>cancel</button>
-            </div>}
+        <div className="qbar"><div className="qfill" style={{ width: `${Math.min(100, (g.stage / 20) * 100)}%`, background: "#b07fe0" }} /></div>
+        <div className="dim small">Stage {g.stage} of 20</div>
       </div>
-      )}
+      <div className="prestigebox">
+        <div className="coshead">🔄 Retell your Tale</div>
+        <div className="dim small">
+          A hero of level 21+ may retell their own tale: back to level 1, and their gear, skills, and XP
+          become renown for the guild. Cosmetics, styles, and renown endure.
+        </div>
+        {g.members.map((m) => {
+          const mlock = lockOf(m);
+          const earn = Math.round(renownEarn(m.level) * mult);
+          const ready = m.level >= 21;
+          const busy = g.phase === "feast";
+          return (
+            <div key={m.id} className="skrow">
+              <div>
+                <div>
+                  <span style={{ color: CLASSES[m.cls].color }}>{m.name}</span>{" "}
+                  <span className="dim small">Lv {m.level}{m.retellings ? ` · retold ×${m.retellings}` : ""}</span>
+                </div>
+                <div className="dim small">{ready ? `Worth ${earn}✨ now` : `Ready at level 21`}</div>
+              </div>
+              {confirm === m.id
+                ? <div className="drow">
+                    <button className="mini warn" disabled={!!mlock || !ready || busy}
+                      onClick={() => { send({ a: "retell", memberId: m.id }); setConfirm(null); }}>Confirm: {earn}✨</button>
+                    <button className="mini" onClick={() => setConfirm(null)}>cancel</button>
+                  </div>
+                : <button className="mini" disabled={!!mlock || !ready || busy} title={mlock || ""}
+                    onClick={() => setConfirm(m.id)}>Retell</button>}
+            </div>
+          );
+        })}
+        {!g.members.length && <div className="dim small">The hall stands empty; heroes must gather first.</div>}
+      </div>
       {lock && <div className="lockmsg">🔒 {lock}</div>}
       <div className="coshead pad">Legacy Upgrades <span className="dim small">✨ {fmt(g.renown)} renown</span></div>
       {LEGACY.map((u) => {
@@ -827,16 +815,10 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .logbox { display: flex; flex-direction: column; gap: 3px; }
 .logline { font-size: 17px; }
 .prestigebox { background: #17142a; border: 1px solid #3a3550; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-.votebox { border-color: #b07fe0; }
 .questrow { background: #131022; border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
 .qtop { display: flex; justify-content: space-between; gap: 8px; }
 .qbar { height: 5px; background: #26213c; border-radius: 3px; overflow: hidden; }
 .qfill { height: 100%; }
-.votegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 5px; }
-.voterow { display: flex; align-items: center; gap: 6px; background: #131022; border-radius: 6px; padding: 3px 7px; }
-.voterow span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mini.aye { border-color: #7fd069; color: #7fd069; }
-.mini.nay { border-color: #ef6461; color: #ef6461; }
 .auto { display: flex; align-items: center; gap: 4px; }
 @media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } .rightcol { width: 100%; border-left: none; border-top: 2px solid #2b2740; } .bossrail { width: 100%; border-left: none; border-top: 2px solid #2b2740; } }
 `;

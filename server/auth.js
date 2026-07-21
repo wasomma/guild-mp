@@ -117,8 +117,8 @@ export function handleAuthHttp(req, res) {
 }
 
 /* ---- intent authorization ---- */
-const MEMBER_INTENTS = new Set(["skillUp", "respecSkills", "setAutoSkill", "setClass", "setStyle", "setBody", "cosmetic"]);
-const GUILD_INTENTS = new Set(["buyPotion", "toggleAuto", "prestige", "vote", "legacyUp", "joinVoice", "leaveVoice", "autoSim"]);
+const MEMBER_INTENTS = new Set(["skillUp", "respecSkills", "setAutoSkill", "setClass", "setStyle", "setBody", "cosmetic", "retell"]);
+const GUILD_INTENTS = new Set(["buyPotion", "toggleAuto", "legacyUp", "joinVoice", "leaveVoice", "autoSim"]);
 
 export function authorizeIntent(sock, msg, world) {
   if (!oauthConfigured()) return true; // local dev mode: everything open

@@ -28,7 +28,7 @@ globalThis.document = {
 /* ---------- imports (after document mock) ---------- */
 const render = await import("/tmp/render.bundle.mjs");
 const sim = await import("./shared/sim.js");
-const { newWorld, joinVoice, tick, applyIntent, doPrestige, snapshot, STYLES, GROUND } = sim;
+const { newWorld, joinVoice, tick, applyIntent, endChapter, snapshot, STYLES, GROUND } = sim;
 
 let scenarios = 0, failures = [];
 function runDraw(name, g, frames = 30) {
@@ -107,23 +107,20 @@ for (const K of KINGS) {
   runDraw("boss " + boss.kind + " King mid-special/phase", g, 40);
 }
 
-/* ---------- 4. active vote ---------- */
+/* ---------- 4. chapter finale: stage-20 timeline tome + finale pulse ---------- */
 {
   const g = makeWorld(3);
-  tickUntil(g, (w) => w.phase === "combat", 30);
-  g.stage = 25; g.best = 25;
-  applyIntent(g, { a: "prestige", voter: "u0" });
-  if (!g.vote) g.vote = { yes: ["u0"], t: 42 };
-  runDraw("active retell vote overlay", g, 40);
+  forceStage(g, 20);
+  runDraw("stage 20 finale timeline", g, 40);
 }
 
 /* ---------- 5. feast, six members incl. wrestle pair, all activities ---------- */
 {
   const g = makeWorld(6);
   tickUntil(g, (w) => w.phase === "combat", 30);
-  g.stage = 30; g.best = 30;
-  doPrestige(g);
-  if (g.phase !== "feast") failures.push({ name: "feast setup", e: new Error("doPrestige did not enter feast; phase=" + g.phase) });
+  g.stage = 20; g.best = 20;
+  endChapter(g);
+  if (g.phase !== "feast") failures.push({ name: "feast setup", e: new Error("endChapter did not enter feast; phase=" + g.phase) });
   const acts = new Set(g.members.map((m) => m.feast && m.feast.act));
   console.log("note: feast activities present: " + [...acts].join(", "));
   for (let i = 0; i < 60; i++) tick(g, 0.05); // let feast animate a bit
@@ -190,7 +187,7 @@ for (const cls of Object.keys(STYLES)) {
     for (let i = 0; i < 20 * 60 * 10; i++) { // 10 sim-minutes at 20Hz
       tick(g, 0.05);
       if (i % 2 === 0) render.draw(ctx, snapView(), 0.05);
-      if (i === 4000) { g.stage = 24; g.best = 24; doPrestige(g); }
+      if (i === 4000) { g.stage = 20; g.best = 20; endChapter(g); }
       if (i === 8000 && g.members.length > 2) sim.leaveVoice(g, "u4");
       if (i === 9000) joinVoice(g, "u9", "Latecomer", null);
     }

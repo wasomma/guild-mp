@@ -45,7 +45,8 @@ export function formatChronicle(world) {
   if (s2.quests) lines.push(`📜 ${s2.quests} guild quest${s2.quests > 1 ? "s" : ""} fulfilled`);
   if (s2.deaths) lines.push(`💀 ${s2.deaths} fall${s2.deaths > 1 ? "s" : ""} in battle`);
   if (s2.cleaves) lines.push(`🌀 ${s2.cleaves} cleave${s2.cleaves > 1 ? "s" : ""} weathered`);
-  if (s2.chapters) lines.push(`📖 ${s2.chapters} chapter${s2.chapters > 1 ? "s" : ""} retold at the feast`);
+  if (s2.chapters) lines.push(`📖 ${s2.chapters} chapter${s2.chapters > 1 ? "s" : ""} closed at the feast`);
+  if (s2.retellings) lines.push(`🔄 ${s2.retellings} tale${s2.retellings > 1 ? "s" : ""} retold anew`);
   const mu = MUTATORS.find((x) => x.id === world.mutator);
   if (mu) lines.push(`🌗 The tale continues under the ${mu.name} (${mu.desc})`);
   lines.push("_The world sleeps until the party gathers again._");
@@ -126,7 +127,7 @@ export async function startBot({ world, save }) {
   // milestone announcer: boss and elite kills, chapter transitions
   if (announceId) {
     let lastT = Date.now();
-    const worthy = (l) => l.text.includes("defeated!") || l.text.includes("slain!") || l.text.includes("The tale is told");
+    const worthy = (l) => l.text.includes("defeated!") || l.text.includes("slain!") || l.text.includes("The tale is told") || l.text.includes("retells their tale");
     setInterval(async () => {
       const fresh = world.log.filter((l) => l.t > lastT && worthy(l));
       if (!fresh.length) return;

@@ -45,7 +45,7 @@ function checkSnap(s, who) {
       if (typeof m[f] !== "number" || !isFinite(m[f])) problems.push(who + ": member " + m.name + " non-finite " + f + " = " + m[f]);
     }
   }
-  for (const f of ["phase", "stage", "vote", "feastT", "quests", "questDay", "log", "users", "enemies", "projectiles"]) {
+  for (const f of ["phase", "stage", "feastT", "quests", "questDay", "log", "users", "enemies", "projectiles"]) {
     if (!(f in s)) problems.push(who + ": snapshot missing world field '" + f + "'");
   }
 }
@@ -92,8 +92,8 @@ const last = A.got[A.got.length - 1];
 const rt = JSON.parse(JSON.stringify(last));
 if (JSON.stringify(rt) !== JSON.stringify(last)) problems.push("snapshot not JSON-stable");
 
-// Drive a vote so the vote field crosses the wire.
-A.send({ a: "cheatStage" }); // probably unsupported; harmless if ignored
+// Send an unsupported intent; harmless if ignored.
+A.send({ a: "cheatStage" });
 await sleep(100);
 
 A.ws.close(); B.ws.close();

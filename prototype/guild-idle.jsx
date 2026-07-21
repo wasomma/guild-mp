@@ -257,7 +257,7 @@ function makeMember(name, cls) {
   const m = {
     id: UID++, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
-    skills: {}, autoSkill: true, gear: { weapon: null, armor: null, trinket: null },
+    skills: {}, autoSkill: true, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
     cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -972,6 +972,7 @@ function tick(g, dt) {
     return;
   }
   if (!foes.length) {
+    if (g.stage % 20 === 0) { endChapter(g); return; }
     g.stage++; g.best = Math.max(g.best, g.stage);
     g.everBest = Math.max(g.everBest, g.stage);
     if (g.session) g.session.best = Math.max(g.session.best, g.stage);
@@ -1323,12 +1324,21 @@ function setupFeast(g) {
   addLog(g, "The guild hall doors swing wide. A feast in honor of the tale!", "#f2c14e");
 }
 
-function doPrestige(g) {
+function resetChar(g, m) {
+  m.level = 1; m.xp = 0; m.sp = 0; m.skills = {};
+  m.gear = { weapon: null, armor: null, trinket: null };
+  m.kills = 0; m.dmgDone = 0; m.healDone = 0;
+  m.ult = 0; m.ultT = 0;
+  m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
+}
+
+function endChapter(g) {
   const mu = mutatorOf(g);
   const earn = Math.round(renownEarn(g.stage) * (mu ? mu.renownMult : 1));
   g.renown += earn; g.prestiges++;
   sfx.prestige();
   if (g.session) g.session.chapters++;
+  if (g.session) g.session.best = Math.max(g.session.best, g.stage);
   g.everBest = Math.max(g.everBest, g.stage);
   /* enshrine the finished chapter in the Hall of Legends */
   const mvp = [...g.members].sort((a, b) => (b.dmgDone + b.healDone) - (a.dmgDone + a.healDone))[0] || null;
@@ -1349,22 +1359,28 @@ function doPrestige(g) {
   g.mutator = next.id;
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
-  g.gold = 150;
+  /* the feast restocks the pantry: top potions up to the stipend baseline */
   const st = g.legacy.stipend * 2;
-  g.stock = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
+  const refill = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
+  for (const k of Object.keys(refill)) g.stock[k] = Math.max(g.stock[k] || 0, refill[k]);
   g.enemies = []; g.projectiles = []; g.pending = []; g.floaters = []; g.buffT = 0;
   g.prestigeT = 3;
   if (g.members.length) { g.phase = "feast"; setupFeast(g); }
   else { g.phase = "advance"; g.advanceT = 2.5; }
-  for (const m of g.members) {
-    m.level = 1; m.xp = 0; m.sp = 0; m.skills = {};
-    m.gear = { weapon: null, armor: null, trinket: null };
-    m.kills = 0; m.dmgDone = 0; m.healDone = 0;
-    m.ult = 0; m.ultT = 0;
-    m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
-  }
   addLog(g, `The tale is told! The guild earns ${earn} renown${mu ? ` (×${mu.renownMult} for braving the ${mu.name})` : ""} and begins Chapter ${g.prestiges + 1}.`, "#f2c14e");
   addLog(g, `The next tale is a ${next.name}: ${next.desc}`, next.c);
+}
+
+function retellMember(g, m) {
+  if (!m || m.level < 21 || g.phase === "feast") return;
+  const mu = mutatorOf(g);
+  const earn = Math.round(renownEarn(m.level) * (mu ? mu.renownMult : 1));
+  g.renown += earn;
+  m.retellings = (m.retellings || 0) + 1;
+  if (g.session) g.session.retellings = (g.session.retellings || 0) + 1;
+  resetChar(g, m);
+  sfx.prestige();
+  addLog(g, `${m.name} retells their tale! The guild gains ${earn} renown, and a hero is born anew.`, "#b07fe0");
 }
 
 /* ---------------- drawing ---------------- */
@@ -3641,11 +3657,11 @@ function drawTimeline(ctx, g) {
   ctx.fillRect(92, y, right - 92, 2);
   ctx.font = "7px 'Press Start 2P', monospace";
   ctx.textAlign = "left";
-  const ready = g.stage >= 21;
+  const ready = g.stage % 20 === 0;
   ctx.fillStyle = ready ? ("rgba(242,193,78," + (0.7 + 0.3 * Math.sin(g.time * 4)).toFixed(3) + ")") : "#f2c14e";
   ctx.fillText("STAGE " + g.stage, 6, 16);
   const hits = [];
-  /* pulsing tome beside the label once the tale can be retold */
+  /* pulsing tome beside the label on the chapter's finale stage */
   if (ready) {
     const bx = 6 + ctx.measureText("STAGE " + g.stage).width + 7;
     if (bx < 76) {
@@ -3665,8 +3681,8 @@ function drawTimeline(ctx, g) {
     if (x < 96 || x > right - 4) continue;
     const zc = ZONES[Math.floor((st - 1) / 5) % ZONES.length].top;
     ctx.globalAlpha = x < x0 ? 0.35 : 1;
-    if (st === 21 && g.stage <= 21) {
-      /* the prestige threshold: a purple tome on the road */
+    if (st % 20 === 0 && st !== g.stage) {
+      /* the chapter finale ahead: a purple tome on the road */
       ctx.fillStyle = "rgba(176,127,224," + (0.2 + 0.12 * Math.sin(g.time * 3)).toFixed(3) + ")";
       ctx.fillRect(x - 7, 1, 14, 15);
       ctx.fillStyle = "#6a4a9e"; ctx.fillRect(x - 4, 3, 8, 9);
@@ -3723,13 +3739,13 @@ function drawTimeline(ctx, g) {
     l1 = "YOUR PARTY"; c1 = "#f2c14e";
     l2 = "Stage " + g.stage + " · " + zoneOf(g).name;
   } else if (best.kind === "ready") {
-    l1 = "RETELL THE TALE: READY"; c1 = "#b07fe0";
-    l2 = "Visit the Guild Hall to prestige";
+    l1 = "CHAPTER FINALE"; c1 = "#b07fe0";
+    l2 = "Fell the King to end the chapter";
   } else {
     const z = ZONES[Math.floor((best.st - 1) / 5) % ZONES.length];
     if (best.kind === "tale") {
-      l1 = "STAGE 21 · RETELL THE TALE"; c1 = "#b07fe0";
-      l2 = "Prestige unlocks here: earn renown";
+      l1 = "STAGE " + best.st + " · CHAPTER FINALE"; c1 = "#b07fe0";
+      l2 = "The tale ends here: feast and renown";
     } else if (best.kind === "boss") {
       l1 = "STAGE " + best.st + " · BOSS"; c1 = "#f2c14e";
       l2 = z.label + " King · rich loot awaits";
@@ -3916,7 +3932,7 @@ export default function GuildIdle() {
   const [autoSim, setAutoSim] = useState(false);
   const [sfxOff, setSfxOffUI] = useState(false);
   const [musicOff, setMusicOffUI] = useState(false);
-  const [confirmP, setConfirmP] = useState(false);
+  const [confirmP, setConfirmP] = useState(false); // member id awaiting retell confirm
 
   useEffect(() => { autoSimRef.current = autoSim; }, [autoSim]);
 
@@ -4319,26 +4335,44 @@ export default function GuildIdle() {
                   <span style={{ color: "#8b84ad" }}>Chapter {g.prestiges + 1} · Best stage ever {g.everBest}</span>
                 </div>
                 <div style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 10 }}>
-                  <div style={{ color: "#f2c14e", marginBottom: 4 }}>Retell the Tale</div>
+                  <div style={{ color: "#f2c14e", marginBottom: 4 }}>Chapter {g.prestiges + 1}</div>
                   <div style={{ fontSize: 16, color: "#8b84ad", marginBottom: 8 }}>
-                    End the campaign to earn renown based on your deepest stage. The party resets to level 1 and loses gear, gold, and potions. Cosmetics, fighting styles, and guild upgrades are kept forever.
+                    When the Stage 20 King falls, the chapter ends on its own: the guild feasts and earns ✦ {Math.round(renownEarn(20) * (mutatorOf(g) ? mutatorOf(g).renownMult : 1))}. Heroes keep their levels and gear.
                   </div>
-                  {g.stage >= 21 ? (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                      <span style={{ color: "#7fd069" }}>Retiring at stage {g.stage} earns ✦ {Math.round(renownEarn(g.stage) * (mutatorOf(g) ? mutatorOf(g).renownMult : 1))}</span>
-                      {!confirmP
-                        ? <button className="gi-btn" style={{ borderColor: "#f2c14e", color: "#f2c14e" }} onClick={() => setConfirmP(true)}>Retell the Tale</button>
-                        : <>
-                            <button className="gi-btn" style={{ borderColor: "#ef6461", color: "#ef6461" }}
-                              onClick={() => { doPrestige(g); setConfirmP(false); setSelId(null); force((v) => v + 1); }}>
-                              Confirm reset
-                            </button>
-                            <button className="gi-btn" onClick={() => setConfirmP(false)}>Cancel</button>
-                          </>}
-                    </div>
-                  ) : (
-                    <span style={{ color: "#8b84ad" }}>Unlocks after conquering the stage 20 boss. Currently at stage {g.stage}.</span>
-                  )}
+                  <div style={{ height: 5, background: "#141221" }}>
+                    <div style={{ height: "100%", width: `${Math.min(100, (g.stage / 20) * 100)}%`, background: "#b07fe0" }} />
+                  </div>
+                  <div style={{ color: "#8b84ad", fontSize: 16, marginTop: 4 }}>Stage {g.stage} of 20</div>
+                </div>
+                <div style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 10 }}>
+                  <div style={{ color: "#b07fe0", marginBottom: 4 }}>🔄 Retell your Tale</div>
+                  <div style={{ fontSize: 16, color: "#8b84ad", marginBottom: 8 }}>
+                    A hero of level 21+ may retell their own tale: back to level 1, and their gear, skills, and XP become renown for the guild. Cosmetics, styles, and renown endure.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {g.members.map((m) => {
+                      const earn = Math.round(renownEarn(m.level) * (mutatorOf(g) ? mutatorOf(g).renownMult : 1));
+                      const ready = m.level >= 21 && g.phase !== "feast";
+                      return (
+                        <div key={m.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ color: CLASSES[m.cls].color, minWidth: 110 }}>{m.name}</span>
+                          <span style={{ color: "#8b84ad", fontSize: 16 }}>Lv {m.level}{m.retellings ? ` · retold ×${m.retellings}` : ""}</span>
+                          <span style={{ color: ready ? "#7fd069" : "#8b84ad", fontSize: 16 }}>{m.level >= 21 ? `worth ✦ ${earn}` : "ready at level 21"}</span>
+                          {confirmP === m.id
+                            ? <>
+                                <button className="gi-btn" style={{ borderColor: "#ef6461", color: "#ef6461" }} disabled={!ready}
+                                  onClick={() => { retellMember(g, m); setConfirmP(false); force((v) => v + 1); }}>
+                                  Confirm: ✦ {earn}
+                                </button>
+                                <button className="gi-btn" onClick={() => setConfirmP(false)}>Cancel</button>
+                              </>
+                            : <button className="gi-btn" style={{ borderColor: "#b07fe0", color: "#b07fe0" }} disabled={!ready}
+                                onClick={() => setConfirmP(m.id)}>Retell</button>}
+                        </div>
+                      );
+                    })}
+                    {!g.members.length && <span style={{ color: "#8b84ad", fontSize: 16 }}>The hall stands empty; heroes must gather first.</span>}
+                  </div>
                 </div>
                 <div className="gi-h" style={{ fontSize: 10, color: "#c9a24b" }}>📜 QUEST BOARD · new contracts at daybreak</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

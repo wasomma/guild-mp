@@ -13,7 +13,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 ## Reading the screen
 
 - **Left sidebar** — the party: a card for each person currently in voice, with class, level, HP, and XP. Click a card to open their character sheet.
-- **Center** — the world itself, rendered live. Below it, three tabs: **🏛️ Guild Hall** (prestige, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
+- **Center** — the world itself, rendered live. Below it, three tabs: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
 - **Right edge** — the **boss timeline**: the next ten Kings and how many waves remain before each.
 - **Character column** — clicking a party card opens it on the far right, with four tabs: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe**.
 - **Header** — chapter, wave, zone, guild gold 🪙, renown ✨, and separate mute buttons for sound effects (🔊) and music (🎵).
@@ -55,19 +55,26 @@ Gold is a **guild pool**, spent on:
 
 The Guild Hall board posts **three contracts each day** — slay foes, defeat elites, fell Kings, earn gold, gain levels. They complete themselves as the guild plays and pay out gold and renown. Fulfillments are counted in the chronicle.
 
-## Prestige: Retell the Tale
+## Chapters end at the feast
 
-The campaign's endgame loop. Once the party reaches **wave 21 or beyond**, the Guild Hall offers **"Retell the Tale"**:
+The campaign runs in **Chapters**, and a chapter ends itself: when the party fells the **wave 20 King** — the fourth King, closing the full tour of all four zones — the guild hall doors swing wide, a **feast** breaks out (mugs clink, a jig plays), the guild earns **✨ renown**, and a new chapter begins from wave 1. No votes, no buttons — just fight your way to the finale.
 
-- With 2+ people in voice it becomes a **60-second majority vote** — democracy in the mead hall.
-- On success the guild throws a **feast** in its hall (mugs clink, a jig plays), then the world begins a new **Chapter** from wave 1.
-- The deeper your best run, the more **✨ renown** the retelling earns — the only permanent currency. Spend it on **legacy upgrades** that multiply gold, XP, damage, and HP for every future chapter. This is how the guild snowballs.
-- From Chapter 2 on, each chapter carries a **mutator** — a twist like tougher bosses or faster ultimates — shown as a pill in the header, and worth bonus renown at the next retelling.
-- Every finished chapter is enshrined as a plaque in the **Hall of Legends**: its final wave, mutator, MVP, heroes, and uniques, forever.
+- **Heroes keep their levels, gear, and skills** across chapters. Only the world resets; you march into the new chapter as strong as you left the old one.
+- The feast also **restocks the pantry** — potion stocks are topped up to the guild's baseline.
+- From Chapter 2 on, each chapter carries a **mutator** — a twist like tougher bosses or faster ultimates — shown as a pill in the header, and worth bonus renown at the chapter's end.
+- Every finished chapter is enshrined as a plaque in the **Hall of Legends**: its mutator, MVP, heroes, and uniques, forever.
+
+## Prestige: Retell your Tale
+
+Renown's real engine is personal. Once **your hero** reaches **level 21**, the Guild Hall offers **"Retell your Tale"** — your own choice, on your own schedule, no vote:
+
+- Your hero returns to **level 1**: gear, skills, and XP are given up, transmuted into **✨ renown for the whole guild**. The higher your level when you retell, the more renown it's worth.
+- Cosmetics, fighting styles, and your retelling count endure — and every chapter's mutator multiplies what a retelling earns.
+- Renown is the only permanent currency. Spend it on **legacy upgrades** that multiply gold, XP, damage, and HP for every hero, forever. This is how the guild snowballs: level high, cash in, rise again.
 
 ## When everyone leaves
 
-About a minute after the voice channel empties, the bot posts a **session chronicle** to the guild's Discord: how long you played, waves conquered, foes and Kings slain, gold earned, level-ups, uniques claimed, boss spoils and who won them, quests fulfilled, falls in battle, feasts held. Then the world sleeps until the party gathers again.
+About a minute after the voice channel empties, the bot posts a **session chronicle** to the guild's Discord: how long you played, waves conquered, foes and Kings slain, gold earned, level-ups, uniques claimed, boss spoils and who won them, quests fulfilled, falls in battle, feasts held, tales retold. Then the world sleeps until the party gathers again.
 
 ## Quick reference
 
@@ -81,7 +88,8 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Loot | Auto-equips upgrades, salvages the rest |
 | Potions | Bought with guild gold, used automatically |
 | Party buff | +4% dmg/heal, +3% HP per extra voice (max 9) |
-| Prestige | Wave 21+, majority vote, earns renown |
+| Chapter end | Automatic when the wave 20 King falls; feast + renown; heroes keep everything |
+| Retell your Tale | Level 21+, personal; resets your hero, earns renown scaled to level |
 | Renown | Permanent; buys legacy multipliers |
 
 Now get in voice — the guild needs you.

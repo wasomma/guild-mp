@@ -255,7 +255,6 @@ export function newWorld() {
     healCd: 0, buffT: 0, time: 0, mutator: null,
     hall: [], chapter: { kills: 0, gold: 0, uniques: [] },
     autoSim: false, simT: 8,
-    vote: null,
     session: null,
     quests: [], questDay: 0,
     users: [
@@ -275,7 +274,7 @@ export function makeMember(g, key, name, cls) {
   const m = {
     id: g.uid++, key, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
-    skills: {}, autoSkill: true, gear: { weapon: null, armor: null, trinket: null },
+    skills: {}, autoSkill: true, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
     cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -337,6 +336,7 @@ export function dehydrateMember(m) {
     level: m.level, xp: m.xp, sp: m.sp, autoSkill: m.autoSkill,
     skills: m.skills, gear: m.gear, cos: m.cos, owned: m.owned,
     kills: m.kills, dmgDone: m.dmgDone, healDone: m.healDone,
+    retellings: m.retellings || 0,
   };
 }
 
@@ -346,6 +346,7 @@ export function rehydrateMember(g, d) {
     style: d.style, level: d.level, xp: d.xp, sp: d.sp, autoSkill: d.autoSkill !== false,
     skills: d.skills || {}, gear: d.gear, cos: d.cos, owned: d.owned,
     kills: d.kills || 0, dmgDone: d.dmgDone || 0, healDone: d.healDone || 0,
+    retellings: d.retellings || 0,
   });
   m._st = stats(m, g); m.hp = m._st.hp;
   return m;
@@ -364,7 +365,7 @@ export function joinVoice(g, key, name, discord) {
   u.name = name; // nicknames may change; the key never does
   if (u.inVoice) return;
   u.inVoice = true;
-  if (!g.session) g.session = { startedAt: Date.now(), startStage: g.stage, startChapter: g.prestiges + 1, names: [], kills: 0, bossKills: [], eliteKills: 0, gold: 0, levelUps: 0, topLevel: null, uniques: [], bossLoot: [], deaths: 0, cleaves: 0, chapters: 0, best: g.stage };
+  if (!g.session) g.session = { startedAt: Date.now(), startStage: g.stage, startChapter: g.prestiges + 1, names: [], kills: 0, bossKills: [], eliteKills: 0, gold: 0, levelUps: 0, topLevel: null, uniques: [], bossLoot: [], deaths: 0, cleaves: 0, chapters: 0, retellings: 0, best: g.stage };
   if (!g.session.names.includes(name)) g.session.names.push(name);
   let m = g.roster[key];
   if (m) {
@@ -397,7 +398,6 @@ export function leaveVoice(g, key) {
     addLog(g, `${m.name} left voice. Their adventurer will await their return.`, "#8b84ad");
     if (g.members.length >= 2) addLog(g, `The chorus quiets: ${g.members.length} voices remain.`, "#8b84ad");
     else if (g.members.length === 1) addLog(g, `The chorus falls silent. ${g.members[0].name} fights on alone.`, "#8b84ad");
-    if (!g.members.length) g.vote = null;
   }
 }
 
@@ -704,12 +704,21 @@ function setupFeast(g) {
   addLog(g, "The guild hall doors swing wide. A feast in honor of the tale!", "#f2c14e");
 }
 
-export function doPrestige(g) {
+export function resetChar(g, m) {
+  m.level = 1; m.xp = 0; m.sp = 0; m.skills = {};
+  m.gear = { weapon: null, armor: null, trinket: null };
+  m.kills = 0; m.dmgDone = 0; m.healDone = 0;
+  m.ult = 0; m.ultT = 0;
+  m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
+}
+
+export function endChapter(g) {
   const mu = mutatorOf(g);
   const earn = Math.round(renownEarn(g.stage) * (mu ? mu.renownMult : 1));
   g.renown += earn; g.prestiges++;
   sfxEv(g, "prestige");
   if (g.session) g.session.chapters++;
+  if (g.session) g.session.best = Math.max(g.session.best, g.stage);
   g.everBest = Math.max(g.everBest, g.stage);
   /* enshrine the finished chapter in the Hall of Legends */
   const mvp = [...g.members].sort((a, b) => (b.dmgDone + b.healDone) - (a.dmgDone + a.healDone))[0] || null;
@@ -730,22 +739,14 @@ export function doPrestige(g) {
   g.mutator = next.id;
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
-  g.gold = 150;
+  /* the feast restocks the pantry: top potions up to the stipend baseline */
   const st = g.legacy.stipend * 2;
-  g.stock = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
+  const refill = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
+  for (const k of Object.keys(refill)) g.stock[k] = Math.max(g.stock[k] || 0, refill[k]);
   g.enemies = []; g.projectiles = []; g.pending = []; g.buffT = 0;
   g.prestigeT = 3;
   if (g.members.length) { g.phase = "feast"; setupFeast(g); }
   else { g.phase = "advance"; g.advanceT = 2.5; }
-  const resetChar = (m) => {
-    m.level = 1; m.xp = 0; m.sp = 0; m.skills = {};
-    m.gear = { weapon: null, armor: null, trinket: null };
-    m.kills = 0; m.dmgDone = 0; m.healDone = 0;
-    m.ult = 0; m.ultT = 0;
-    m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
-  };
-  for (const m of g.members) resetChar(m);
-  for (const name of Object.keys(g.roster)) resetChar(g.roster[name]);
   addLog(g, `The tale is told! The guild earns ${earn} renown${mu ? ` (×${mu.renownMult} for braving the ${mu.name})` : ""} and begins Chapter ${g.prestiges + 1}.`, "#f2c14e");
   addLog(g, `The next tale is a ${next.name}: ${next.desc}`, next.c);
 }
@@ -1003,24 +1004,6 @@ export function tick(g, dt) {
       }
     }
   }
-  if (g.vote) {
-    g.vote.t -= dt;
-    const keys = [...new Set(g.members.map((m) => m.key))];
-    const yes = g.vote.yes.filter((k) => keys.includes(k)).length;
-    const no = g.vote.no.filter((k) => keys.includes(k)).length;
-    const n = Math.max(1, keys.length);
-    if (yes * 2 > n) {
-      addLog(g, `The vote passes (${yes} of ${n})! The tale shall be retold.`, "#b07fe0");
-      g.vote = null;
-      doPrestige(g);
-    } else if (no * 2 >= n) {
-      addLog(g, `The vote fails (${no} of ${n} against). The tale goes on.`, "#8b84ad");
-      g.vote = null;
-    } else if (g.vote.t <= 0) {
-      addLog(g, "The vote to retell the tale expires. The tale goes on.", "#8b84ad");
-      g.vote = null;
-    }
-  }
   if (g.buffT > 0 && Math.random() < dt * 8) {
     const a = g.members.filter((m) => m.alive);
     if (a.length) { const m = pick(a); sparkle(g, m.x, m.y, "#5aa9e6", 1); }
@@ -1097,6 +1080,7 @@ export function tick(g, dt) {
     return;
   }
   if (!foes.length) {
+    if (g.stage % 20 === 0) { endChapter(g); return; }
     g.stage++; g.best = Math.max(g.best, g.stage);
     g.everBest = Math.max(g.everBest, g.stage);
     if (g.session) g.session.best = Math.max(g.session.best, g.stage);
@@ -1424,23 +1408,17 @@ export function applyIntent(g, msg) {
       }
       break;
     }
-    case "prestige": {
-      if (g.stage < 21 || g.vote) break;
-      const keys = [...new Set(g.members.map((m) => m.key))];
-      if (keys.length <= 1) { doPrestige(g); break; }
-      const starter = keys.includes(msg.voter) ? msg.voter : (keys.includes(msg.key) ? msg.key : null);
-      const byName = starter ? (g.members.find((m) => m.key === starter) || {}).name : "The guild";
-      g.vote = { kind: "prestige", t: 60, yes: starter ? [starter] : [], no: [], by: starter, byName };
-      addLog(g, `${byName} calls a vote to retell the tale! A majority must agree within 60 seconds.`, "#b07fe0");
-      break;
-    }
-    case "vote": {
-      if (!g.vote) break;
-      const key = msg.voter || msg.key;
-      if (!key || !g.members.some((m) => m.key === key)) break;
-      g.vote.yes = g.vote.yes.filter((k) => k !== key);
-      g.vote.no = g.vote.no.filter((k) => k !== key);
-      (msg.v ? g.vote.yes : g.vote.no).push(key);
+    case "retell": {
+      const m = byId(msg.memberId);
+      if (!m || m.level < 21 || g.phase === "feast") break;
+      const mu = mutatorOf(g);
+      const earn = Math.round(renownEarn(m.level) * (mu ? mu.renownMult : 1));
+      g.renown += earn;
+      m.retellings = (m.retellings || 0) + 1;
+      if (g.session) g.session.retellings = (g.session.retellings || 0) + 1;
+      resetChar(g, m);
+      sfxEv(g, "prestige");
+      addLog(g, `${m.name} retells their tale! The guild gains ${earn} renown, and a hero is born anew.`, "#b07fe0");
       break;
     }
     case "legacyUp": {
@@ -1468,7 +1446,6 @@ export function snapshot(g, events) {
     hall: (g.hall || []).slice(-25),
     bossT: g.bossT, prestigeT: g.prestigeT, buffT: g.buffT,
     autoSim: g.autoSim,
-    vote: g.vote,
     feastT: g.feastT || 0,
     session: g.session,
     quests: g.quests,

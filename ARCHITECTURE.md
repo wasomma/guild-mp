@@ -34,7 +34,7 @@ The critical property is that the simulation lives in exactly one place. Browser
 
 ## The shared simulation module
 
-All game rules live in `shared/sim.js`: classes, fighting styles, combat resolution, loot generation, the prestige system, the cosmetic catalog, and the `tick(world, dt)` function that advances one frame of the world. The module has no rendering code and no I/O. It runs identically under Node on the server and could run in the browser for local prototyping.
+All game rules live in `shared/sim.js`: classes, fighting styles, combat resolution, loot generation, the automatic chapter cycle and personal retelling (prestige) system, the cosmetic catalog, and the `tick(world, dt)` function that advances one frame of the world. The module has no rendering code and no I/O. It runs identically under Node on the server and could run in the browser for local prototyping.
 
 The simulation communicates visual moments through an event queue rather than by mutating visual state. When a crit lands, the sim pushes `{t: "burst", x, y, color, ...}` and `{t: "float", text: "142!", ...}` onto `world.events`. The server drains this queue into each broadcast, and clients translate events into particles, floating numbers, and screen shake locally. This keeps the wire format small (events describe moments, not every particle) and keeps rendering at full frame rate even though state arrives at only 10Hz.
 
@@ -56,13 +56,13 @@ Live: people come and go. Each join adds their persistent character to the party
 
 Sleep: the last person leaves. After a short grace period to forgive network hiccups, the server writes a final snapshot and unloads the instance. While asleep, the world consumes nothing and changes nothing.
 
-Crash safety comes from periodic snapshots (every 20 seconds while awake), a save on shutdown signal, and immediate write-through of significant intents such as purchases, skill points, prestiges, and departures, so a hard crash loses seconds of idle progress at most and no deliberate player action.
+Crash safety comes from periodic snapshots (every 20 seconds while awake), a save on shutdown signal, and immediate write-through of significant intents such as purchases, skill points, retellings, and departures, so a hard crash loses seconds of idle progress at most and no deliberate player action.
 
 ## Identity and character persistence
 
 A character is keyed by the player's Discord user ID (their snowflake), which is permanent and globally unique. The database's `user_key` column holds it. The same person always gets the same character regardless of device, browser, or how many times they disconnect. The current repository uses display names as the key because the bot is not wired in yet; swapping the key to the Discord ID is a one-line change in `joinVoice` and `leaveVoice` once the bot supplies it.
 
-The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, prestige count, legacy upgrade ranks, potion stock, and auto-use settings.
+The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, the retelling count, and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, prestige count, legacy upgrade ranks, potion stock, and auto-use settings.
 
 The data model is two tables:
 
@@ -87,7 +87,7 @@ A discord.js client with the `Guilds` and `GuildVoiceStates` intents (neither is
 
 Spectating requires nothing. Acting on a character (spending gold, allocating skill points) requires proving which Discord user you are, which is solved with "Log in with Discord" OAuth2, implemented in `server/auth.js`. The game server doubles as a small HTTP server: `/auth/login` redirects to Discord's consent screen with only the identify scope, `/auth/callback` exchanges the code, fetches the user's identity, mints a random session token stored in the SQLite sessions table, and bounces the browser back to the client with the token in the URL fragment. The client stores it and presents it over the WebSocket, binding the socket to that Discord user.
 
-Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character require the socket to be bound to that exact snowflake; guild-wide intents (potions, prestige, legacy upgrades) require any authenticated user; characters not owned by a Discord identity (from open dev mode) remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
+Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character (skills, wardrobe, retelling their tale) require the socket to be bound to that exact snowflake; guild-wide intents (potions, legacy upgrades) require any authenticated user; characters not owned by a Discord identity (from open dev mode) remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
 
 An alternative packaging is a Discord Activity, where the game runs in an iframe inside the voice channel itself and identity arrives from the Activities SDK for free. Everything server-side stays the same; only the client shell and auth flow change. The standalone web client should be built first because the Activity can be layered on top of the identical backend later.
 

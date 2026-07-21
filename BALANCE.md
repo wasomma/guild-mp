@@ -4,11 +4,12 @@ This document explains the current state of the two coupled gameplay loops — *
 
 ## The shape of the loop
 
-Damage throughput drives everything downstream: kills pay gold and XP, gold buys potions (survival) and cosmetics (vanity), XP buys levels and skill points (more damage), and loot drops raise gear power (more damage again). That inner loop runs inside a campaign. The outer loop is prestige: reaching stage 21+ lets the guild "Retell the Tale," converting the campaign's furthest stage into **renown**, the only permanent currency, which buys **legacy upgrades** that multiply gold, XP, damage, and HP for every future campaign.
+Damage throughput drives everything downstream: kills pay gold and XP, gold buys potions (survival) and cosmetics (vanity), XP buys levels and skill points (more damage), and loot drops raise gear power (more damage again). That inner loop runs inside a chapter, and the chapter ends itself: felling the stage-20 King (the fourth King, one full tour of the four zones) triggers the feast, pays a fixed chapter renown, and restarts the world — heroes keep everything. The outer loop is personal prestige: a hero at level 21+ may "Retell their Tale," converting their level into **renown** for the guild pool, the only permanent currency, which buys **legacy upgrades** that multiply gold, XP, damage, and HP for every hero forever.
 
 ```
-damage → kills → gold + XP → gear/skills/potions → more damage   (per campaign)
-stage reached → prestige → renown → legacy upgrades → everything ↑ (forever)
+damage → kills → gold + XP → gear/skills/potions → more damage   (per chapter; heroes carry over)
+stage 20 King falls → chapter ends → feast + fixed renown drip           (automatic)
+hero level → personal retell → renown → legacy upgrades → everything ↑   (each player's choice)
 ```
 
 ## What persists and what resets
@@ -16,10 +17,11 @@ stage reached → prestige → renown → legacy upgrades → everything ↑ (fo
 | Event | Resets | Survives |
 |---|---|---|
 | Party wipe | stage −1, party revives at 60% HP | everything else (no gold loss) |
-| Prestige | stage → 1 + 2×(Veteran Paths rank), gold → 150, potion stock → base + 2×(Stipend rank), every character → level 1, no gear, no skills | renown, legacy ranks, **cosmetics owned**, Hall of Legends, daily quests, `everBest` |
+| Chapter end (automatic at stage 20) | stage → 1 + 2×(Veteran Paths rank) | **every character** (levels, gear, skills), gold, renown, legacy ranks, cosmetics, Hall of Legends, daily quests, `everBest`; potion stock is topped **up** to base + 2×(Stipend rank), never down |
+| Personal retell (level 21+, per player) | that hero → level 1, no gear, no skills, no XP | everyone else entirely; the hero's cosmetics, style, autoSkill, and retelling count |
 | Server restart | nothing (SQLite) | everything |
 
-The practical consequence: **gold is a per-campaign currency and cosmetics are its only purchase that outlives the campaign.** Unspent gold and potion stock evaporate at prestige, so banking gold past what the next few stages need is waste — spend it or lose it.
+The practical consequence: **gold and characters now flow across chapters.** Nothing evaporates at a chapter end — the only reset a player ever loses progress to is the one they choose for their own hero, priced in renown.
 
 ## Gold
 
@@ -28,7 +30,7 @@ The practical consequence: **gold is a per-campaign currency and cosmetics are i
 - **Kills** — every enemy carries `(10 + stage×4) × tier` gold, tier being **×8 boss / ×3.5 elite / ×1 normal**. On the kill it is further multiplied by `(1 + 0.15 × Merchant Contacts rank)` and the killer's **gold find** affix total. The Gilded Road mutator multiplies base enemy gold by 1.4.
 - **Salvage** — a drop that doesn't beat the receiver's equipped power converts to `power × 2.5` gold.
 - **Quests** — each completed daily contract pays `(120 + everBest×22) × kind multiplier` (kill ×1, gold ×1.2, level-up ×1.3, elite ×1.6, boss ×2.2). Because it scales on `everBest` (best stage ever, across all chapters), quest income grows permanently as the guild's record improves.
-- **Campaign start** — every campaign opens with 150g.
+- **World start** — a brand-new world opens with 150g; chapter ends no longer touch gold.
 
 ### Sinks
 
@@ -39,7 +41,8 @@ There is no gold cost on respec, skill points, or style changes — builds are f
 
 ## Renown
 
-- **Earned at prestige**: `floor((stage − 1)^1.12 / 3)`, multiplied by the chapter mutator's bonus (×1.25 or ×1.5; chapter 1 has no mutator). At the minimum prestige stage (21) that is 9 renown; the superlinear exponent rewards pushing deeper before retelling.
+- **Earned at each chapter end**: `floor((stage − 1)^1.12 / 3)` at the fixed finale stage 20 = **9 renown**, multiplied by the chapter mutator's bonus (×1.25 or ×1.5; chapter 1 has no mutator) — a steady drip per 20-stage cycle.
+- **Earned at a personal retell**: the same curve on the hero's level — `floor((level − 1)^1.12 / 3)`, mutator-multiplied (level 21 → 9, level 40 → 20, level 60 → 32). The superlinear exponent rewards leveling higher before cashing in; since heroes persist across chapters, level — not stage — is now the unbounded axis.
 - **Earned from quests**: +2 (kill/gold/level-up), +3 (elite), +4 (boss) per completed contract — a slow drip that matters early.
 - **Spent on legacy upgrades**, costing `(rank + 1) × 2` renown per rank (2, 4, 6, 8, 10 — 30 total to max a 5-rank track):
 
@@ -136,7 +139,7 @@ The Poison Vial adds `2 + stage×0.7` damage per second for 8s to the whole enem
 
 ## Daily quests
 
-Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes, defeat 2–4 elites, fell 1–2 Kings, gain 4–8 level-ups, or earn `(300 + everBest×45)` gold (rounded to 10s; kill gold *and* salvage both count). Rewards are the gold/renown formulas in the Gold and Renown sections. Quests complete automatically and survive prestige — a chapter reset mid-quest loses nothing.
+Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes, defeat 2–4 elites, fell 1–2 Kings, gain 4–8 level-ups, or earn `(300 + everBest×45)` gold (rounded to 10s; kill gold *and* salvage both count). Rewards are the gold/renown formulas in the Gold and Renown sections. Quests complete automatically and survive the chapter end — the automatic reset mid-quest loses nothing.
 
 ## Tuning knobs, by location
 

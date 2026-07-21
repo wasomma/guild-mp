@@ -35,7 +35,7 @@ const TICK_MS = 50;          // 20Hz simulation
 const BROADCAST_EVERY = 2;   // every 2nd tick = 10Hz state to clients
 const SAVE_EVERY_MS = 20000; // crash-safety snapshot cadence
 // intents worth persisting the moment they happen
-const SAVE_ON = new Set(["leaveVoice", "prestige", "cosmetic", "legacyUp", "buyPotion", "skillUp", "setClass"]);
+const SAVE_ON = new Set(["leaveVoice", "retell", "cosmetic", "legacyUp", "buyPotion", "skillUp", "setClass"]);
 
 /* ---- one-time migration from the old JSON save ---- */
 const LEGACY_JSON = path.join(path.dirname(fileURLToPath(import.meta.url)), "world.json");

@@ -2262,11 +2262,11 @@ function drawTimeline(ctx, g) {
   ctx.fillRect(92, y, right - 92, 2);
   ctx.font = "7px 'Press Start 2P', monospace";
   ctx.textAlign = "left";
-  const ready = g.stage >= 21;
+  const ready = g.stage % 20 === 0;
   ctx.fillStyle = ready ? ("rgba(242,193,78," + (0.7 + 0.3 * Math.sin(g.time * 4)).toFixed(3) + ")") : "#f2c14e";
   ctx.fillText("STAGE " + g.stage, 6, 16);
   const hits = [];
-  /* pulsing tome beside the label once the tale can be retold */
+  /* pulsing tome beside the label on the chapter's finale stage */
   if (ready) {
     const bx = 6 + ctx.measureText("STAGE " + g.stage).width + 7;
     if (bx < 76) {
@@ -2286,8 +2286,8 @@ function drawTimeline(ctx, g) {
     if (x < 96 || x > right - 4) continue;
     const zc = ZONES[Math.floor((st - 1) / 5) % ZONES.length].top;
     ctx.globalAlpha = x < x0 ? 0.35 : 1;
-    if (st === 21 && g.stage <= 21) {
-      /* the prestige threshold: a purple tome on the road */
+    if (st % 20 === 0 && st !== g.stage) {
+      /* the chapter finale ahead: a purple tome on the road */
       ctx.fillStyle = "rgba(176,127,224," + (0.2 + 0.12 * Math.sin(g.time * 3)).toFixed(3) + ")";
       ctx.fillRect(x - 7, 1, 14, 15);
       ctx.fillStyle = "#6a4a9e"; ctx.fillRect(x - 4, 3, 8, 9);
@@ -2344,13 +2344,13 @@ function drawTimeline(ctx, g) {
     l1 = "YOUR PARTY"; c1 = "#f2c14e";
     l2 = "Stage " + g.stage + " · " + zoneOf(g).name;
   } else if (best.kind === "ready") {
-    l1 = "RETELL THE TALE: READY"; c1 = "#b07fe0";
-    l2 = "Visit the Guild Hall to prestige";
+    l1 = "CHAPTER FINALE"; c1 = "#b07fe0";
+    l2 = "Fell the King to end the chapter";
   } else {
     const z = ZONES[Math.floor((best.st - 1) / 5) % ZONES.length];
     if (best.kind === "tale") {
-      l1 = "STAGE 21 · RETELL THE TALE"; c1 = "#b07fe0";
-      l2 = "Prestige unlocks here: earn renown";
+      l1 = "STAGE " + best.st + " · CHAPTER FINALE"; c1 = "#b07fe0";
+      l2 = "The tale ends here: feast and renown";
     } else if (best.kind === "boss") {
       l1 = "STAGE " + best.st + " · BOSS"; c1 = "#f2c14e";
       l2 = z.label + " King · rich loot awaits";
@@ -2429,16 +2429,6 @@ export function draw(ctx, g, dt) {
   ctx.restore();
   ctx.restore();
   if (g.phase === "feast") drawFeastBanner(ctx, g); else drawTimeline(ctx, g);
-  if (g.vote) {
-    ctx.font = "7px 'Press Start 2P', monospace"; ctx.textAlign = "left";
-    const keys = new Set(g.members.map((m) => m.key));
-    const yes = g.vote.yes.filter((k) => keys.has(k)).length;
-    const txt = "RETELL VOTE " + yes + "/" + keys.size + " AYE · " + Math.ceil(Math.max(0, g.vote.t)) + "s";
-    const w2 = ctx.measureText(txt).width + 12;
-    ctx.fillStyle = "rgba(16,14,26,0.9)"; ctx.fillRect(4, 25, w2, 14);
-    ctx.fillStyle = "#b07fe0"; ctx.fillRect(4, 25, w2, 1);
-    ctx.fillStyle = "#b07fe0"; ctx.fillText(txt, 10, 35);
-  }
   if (g.bossT > 0) {
     ctx.fillStyle = `rgba(190,50,50,${Math.min(0.22, g.bossT * 0.12)})`;
     ctx.fillRect(0, 0, W, H);

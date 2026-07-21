@@ -7,7 +7,7 @@
 ## The design intent
 
 1. **Presence is the input device.** No controller, no clicks required. Joining voice *is* joining the game. The simulation only advances while someone is present, so there is no offline grind and no FOMO — the world's story only moves when the group is actually together.
-2. **One shared canon, not parallel saves.** A single persistent campaign per Discord server. Everyone watching sees the same authoritative entities. Prestige ("Retell the Tale") is a majority *vote*; finished chapters are enshrined in a Hall of Legends with MVPs and loot records; sessions end with an auto-posted Discord chronicle. Social memory is a first-class system.
+2. **One shared canon, not parallel saves.** A single persistent campaign per Discord server. Everyone watching sees the same authoritative entities. Chapters end *automatically* at the stage-20 finale with a feast in the guild hall; prestige ("Retell your Tale") is each player's own choice, converting their hero's levels into renown for the whole guild; finished chapters are enshrined in a Hall of Legends with MVPs and loot records; sessions end with an auto-posted Discord chronicle. Social memory is a first-class system.
 3. **Cooperative texture without APM.** The design problem is making a zero-input game legible and social: tank-focused aggro plus telegraphed party-wide cleaves (so healers visibly matter), interruptible boss windups, chapter mutators that twist each prestige run's rules, and presence buffs that scale with the number of people in voice.
 4. **HD-2D presentation on a strict pixel grid** (Octopath-inspired): depth-blurred scene layers, tilt-shift banding, bloom, material-ramped weapon models, rarity-visible gear rendered on the sprite, and a zoomed inspect portrait — because the reward loop is *seeing* the rare thing you earned.
 
@@ -59,7 +59,7 @@ Open the URL Vite prints (usually http://localhost:5173). Open it in two browser
 
 `shared/sim.js` holds every game rule and no rendering. The server ticks it; the Discord bot calls its `joinVoice` and `leaveVoice` functions directly.
 
-`server/index.js` runs the world at 20Hz, broadcasts snapshots at 10Hz over WebSockets, validates every client intent, and freezes the simulation whenever nobody is in the party (the hibernation rule). `server/db.js` persists everything to SQLite (`server/guild.db`): every 20 seconds, on shutdown, and instantly whenever a purchase, skill point, prestige, or departure happens.
+`server/index.js` runs the world at 20Hz, broadcasts snapshots at 10Hz over WebSockets, validates every client intent, and freezes the simulation whenever nobody is in the party (the hibernation rule). `server/db.js` persists everything to SQLite (`server/guild.db`): every 20 seconds, on shutdown, and instantly whenever a purchase, skill point, retelling, or departure happens.
 
 `client/` renders snapshots on a canvas with interpolation, turns server events into particles and floating numbers locally, and sends every button press to the server as an intent. The sidebar lists a party card for everyone currently in the voice channel; clicking one opens that character's detail column (stats, equipment, skills, wardrobe) on the right. Presence is driven entirely by the Discord bot — the client has no manual join controls.
 
@@ -98,7 +98,7 @@ CLIENT_URL=http://localhost:5173
 
 3. Restart the server. It logs "Discord OAuth is ON".
 
-From then on a "Log in with Discord" button appears in the client header. Anyone can spectate without logging in, but acting requires identity: your own character's wardrobe, skills, and respec are yours alone; guild-wide actions (potions, prestige, legacy upgrades) require any logged-in member; characters not owned by a Discord identity (created back in open dev mode) are manageable by any logged-in user. Locked panels say who owns the character. Sessions are stored server-side in SQLite and survive restarts; the logout link revokes them.
+From then on a "Log in with Discord" button appears in the client header. Anyone can spectate without logging in, but acting requires identity: your own character's wardrobe, skills, respec, and retelling are yours alone; guild-wide actions (potions, legacy upgrades) require any logged-in member; characters not owned by a Discord identity (created back in open dev mode) are manageable by any logged-in user. Locked panels say who owns the character. Sessions are stored server-side in SQLite and survive restarts; the logout link revokes them.
 
 ## Persistence
 
