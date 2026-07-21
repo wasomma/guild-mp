@@ -137,7 +137,10 @@ export default function App() {
         const net = netRef.current;
         net.prev = net.cur; net.tPrev = net.tCur;
         net.cur = data; net.tCur = performance.now();
-        applyEvents(data.events || []);
+        /* rAF is paused in hidden tabs, so fx pushed here would pile up
+           undecayed and replay as a burst on refocus — skip them; the
+           snapshot state itself is always current */
+        if (!document.hidden) applyEvents(data.events || []);
         setSnap(data);
       };
     };

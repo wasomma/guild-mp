@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.8 — 2026-07-21
+
+Fixed the "fast forward" burst after returning to a backgrounded tab: while hidden, snapshots kept queuing visual effects (floaters, particle bursts, screen shake, sounds) that the paused render loop never drained, so refocusing replayed the whole backlog at once. Effects are now skipped while the tab is hidden — the world state itself was always current — and a background tab is now fully silent, matching the music.
+
 ## v0.1.7 — 2026-07-21
 
 Fixed the feast's arm-wrestling pair drawing their reach across the whole hall: the arm was anchored to the table while the wrestlers were still walking to it, stretching until they arrived. Wrestlers now walk with arms at their sides and only lock hands once seated (plus a sanity cap on arm length).
