@@ -3577,14 +3577,20 @@ function drawFeaster(ctx, m, t) {
   } else if (act === "wrestle") {
     px2(ctx, ox, oy, -7, -17, 2, 5, oD);
     px2(ctx, ox, oy, -7, -12, 2, 2, SKIN);
-    const wob = Math.sin(t * 7 + (fs.pairSeed || 0)) * 2;
-    const yo = Math.round((fs.face === -1 ? -wob : wob));
-    const reach = Math.max(6, Math.round(Math.abs((fs.midX || (m.x + 22)) - m.x) / 2));
-    px2(ctx, ox, oy, 4, -17, 3, 2, oD);
-    px2(ctx, ox, oy, 6, -17 + yo * 0.5, reach - 6, 2, SKIN);
-    px2(ctx, ox, oy, reach - 1, -18 + yo, 3, 3, SKIN);
-    px2(ctx, ox, oy, reach, -18 + yo, 1, 1, SKIN_D);
-    if (Math.abs(wob) > 1.6) px2(ctx, ox, oy, 3, -28, 1, 1, "#8fe3ff");
+    if (m.walking) {
+      /* still striding to the table: arms at the sides, no reach yet */
+      px2(ctx, ox, oy, 6, -17, 2, 5, oD);
+      px2(ctx, ox, oy, 6, -12, 2, 2, SKIN);
+    } else {
+      const wob = Math.sin(t * 7 + (fs.pairSeed || 0)) * 2;
+      const yo = Math.round((fs.face === -1 ? -wob : wob));
+      const reach = Math.min(16, Math.max(6, Math.round(Math.abs((fs.midX || (m.x + 22)) - m.x) / 2)));
+      px2(ctx, ox, oy, 4, -17, 3, 2, oD);
+      px2(ctx, ox, oy, 6, -17 + yo * 0.5, reach - 6, 2, SKIN);
+      px2(ctx, ox, oy, reach - 1, -18 + yo, 3, 3, SKIN);
+      px2(ctx, ox, oy, reach, -18 + yo, 1, 1, SKIN_D);
+      if (Math.abs(wob) > 1.6) px2(ctx, ox, oy, 3, -28, 1, 1, "#8fe3ff");
+    }
   }
   drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);
   drawAccessory(ctx, ox, oy, m.cos.accessory);
