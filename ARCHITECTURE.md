@@ -60,24 +60,29 @@ Crash safety comes from periodic snapshots (every 20 seconds while awake), a sav
 
 ## Identity and character persistence
 
-A character is keyed by the player's Discord user ID (their snowflake), which is permanent and globally unique. The database's `user_key` column holds it. The same person always gets the same character regardless of device, browser, or how many times they disconnect. The current repository uses display names as the key because the bot is not wired in yet; swapping the key to the Discord ID is a one-line change in `joinVoice` and `leaveVoice` once the bot supplies it.
+A character is keyed by the player's Discord user ID (their snowflake), which is permanent and globally unique. The database's `user_key` column holds it. The same person always gets the same character regardless of device, browser, or how many times they disconnect. With the bot wired in, `user_key` holds the real snowflake; characters created in open dev mode (no bot) fall back to display names as keys and remain manageable by any logged-in user.
 
-The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, the retelling count, and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, prestige count, legacy upgrade ranks, potion stock, and auto-use settings.
+The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, lifetime combat totals, the retelling count, and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, chapter (prestige) count, legacy upgrade ranks, potion stock and auto-use settings, the user roster, daily quests, the active mutator, the Hall of Legends, and the running chapter accumulators.
 
-The data model is two tables:
+The data model is three tables (see `server/db.js`; columns added after launch arrive via guarded `ALTER TABLE` migrations):
 
 ```
 worlds
-  guild_id (pk)   stage   best   ever_best   gold   renown
-  prestiges       legacy (json)  stock (json)  auto (json)
+  guild_id (pk)   stage   best   ever_best   gold   renown   prestiges
+  join_count   auto_sim   legacy (json)   stock (json)   auto (json)
+  users (json)   quests (json)   quest_day   mutator   hall (json)
+  chapter (json)   updated_at
 
 characters
-  discord_user_id + guild_id (pk)
-  name  class  style  level  xp  sp
-  skills (json)  gear (json)  cos (json)  owned (json)
+  guild_id + user_key (pk, user_key = Discord snowflake)
+  name  class  style  level  xp  sp  kills  dmg_done  heal_done  retellings
+  skills (json)  gear (json)  cos (json)  owned (json)  updated_at
+
+sessions
+  token (pk)   user_key   name   avatar   created_at   -- web OAuth sessions
 ```
 
-SQLite is sufficient for a single community and keeps operations at zero. The current repository persists the whole world (including the roster of offline characters) as a JSON file on the same cadence, which is the same shape with less ceremony; migrating to SQLite is mechanical.
+SQLite is sufficient for a single community and keeps operations at zero. A `world.json` from the earliest builds migrates into the database automatically on first boot.
 
 ## The Discord bot
 

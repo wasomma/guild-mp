@@ -1,5 +1,7 @@
 # QA handoff: "party no longer appears" investigation (in progress)
 
+> **Historical handoff** — this document records the investigation as it stood at the time and is kept as a record; the sections below describe the codebase of that era. Since then (v0.1.6, 2026-07-21): the vote system was removed, so the render soak's "active vote overlay" scenario is now a "stage 20 finale timeline" scenario; `doPrestige` was renamed `endChapter` (with `resetChar` hoisted to module level); and `qa-chapter-retell.mjs` was added covering the automatic chapter end and personal retellings. The test assets and run commands in "Test assets added" otherwise remain current.
+
 ## Reported bug
 The party stopped rendering. Location not yet confirmed: chat artifact paste, or local MP run on the owner's Windows PC. STILL THE FIRST QUESTION for the owner: where did you see it, and are there errors in the browser console (F12)?
 

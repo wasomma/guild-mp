@@ -13,10 +13,10 @@ The world only moves while someone is in voice. When the last person leaves, tim
 ## Reading the screen
 
 - **Left sidebar** — the party: a card for each person currently in voice, with class, level, HP, and XP. Click a card to open their character sheet.
-- **Center** — the world itself, rendered live. Below it, three tabs: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
+- **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, zone, the active mutator, guild gold 🪙, and renown ✨. Below that, three tabs that open as right-side panels: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
 - **Right edge** — the **boss timeline**: the next ten Kings and how many waves remain before each.
 - **Character column** — clicking a party card opens it on the far right, with four tabs: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe**.
-- **Header** — chapter, wave, zone, guild gold 🪙, renown ✨, and separate mute buttons for sound effects (🔊) and music (🎵).
+- **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵), this guide (❓ How to play), and the Discord login.
 
 ## Your character
 
