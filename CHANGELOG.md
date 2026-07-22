@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.9 — 2026-07-21
+
+**Generated background art and the Kitsune cosmetic set.** The first fruits of the new AI-assisted art pipeline (see docs/ART-PIPELINE.md).
+
+- **Every scene has a painted backdrop** — all four zones (a sunlit pine valley for Verdant Fields, a glowing root-tunnel for Gloomwood, a moonlit vaulted colonnade for the Forgotten Crypt, a molten lava valley for Emberdeep) and the mead hall's timber wall are now pixel-art plates generated to each zone's palette, sitting under the engine's live sun, god rays, fog, and depth blur. Plates load from `assets/zones/` with the old procedural backgrounds as automatic fallback (the standalone prototype keeps the procedural look).
+- **The Kitsune set** — five new cosmetics that compose into a fox-spirit hero: Kitsune Crown hairstyle (tapered fox ears with a star stud), Foxfire hair (the first two-tone dye, green fading to magenta), Fox Markings whisker stripes, the Nine-Tails cape (a fan of swaying pink-tipped tails), and the Starfire Aura (golden glow with rising star twinkles).
+- New art-direction docs (ART-BIBLE.md, ART-PIPELINE.md, KITSUNE-CHARACTER.md) and dev tools: a cosmetic/biome preview harness (`qa-kitsune-preview.mjs` + `prototype/kitsune-preview.html`) and a kitsune render regression check (`qa-kitsune-set.mjs`).
+
 ## v0.1.8 — 2026-07-21
 
 Fixed the "fast forward" burst after returning to a backgrounded tab: while hidden, snapshots kept queuing visual effects (floaters, particle bursts, screen shake, sounds) that the paused render loop never drained, so refocusing replayed the whole backlog at once. Effects are now skipped while the tab is hidden — the world state itself was always current — and a background tab is now fully silent, matching the music.

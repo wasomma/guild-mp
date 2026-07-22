@@ -77,6 +77,7 @@ export const HAIRSTYLES = [
   { id: "bun", name: "War Bun", price: 180 },
   { id: "twin", name: "Twintails", price: 220 },
   { id: "braid", name: "Battle Braid", price: 260 },
+  { id: "kitsune", name: "Kitsune Crown", price: 320 },
 ];
 export const ACCESSORIES = [
   { id: "none", name: "None", price: 0 },
@@ -85,6 +86,7 @@ export const ACCESSORIES = [
   { id: "earrings", name: "Gold Earrings", price: 140 },
   { id: "scarf", name: "Silk Scarf", price: 200 },
   { id: "pendant", name: "Ruby Pendant", price: 220 },
+  { id: "foxmarks", name: "Fox Markings", price: 180 },
 ];
 export const CAPES = [
   { id: "none", name: "No Cape", price: 0 },
@@ -94,6 +96,7 @@ export const CAPES = [
   { id: "shadow", name: "Shadow Cloak", price: 700, c: "#26232b", lining: "#141221" },
   { id: "royal", name: "Royal Cape", price: 950, c: "#6a4a9e", trim: "#f2c14e", lining: "#4e3675" },
   { id: "gilded", name: "Gilded Cape", price: 1400, c: "#f2c14e", trim: "#fff1c9", lining: "#c78a3b" },
+  { id: "ninetails", name: "Nine-Tails", price: 1600, c: "#5cc94a", tip: "#e05aa8", lining: "#3a7a35" },
 ];
 export const PETS = [
   { id: "none", name: "No Pet", price: 0 },
@@ -111,6 +114,7 @@ export const AURAS = [
   { id: "verdant", name: "Verdant Aura", price: 1800, c: "#8fd069" },
   { id: "arcane", name: "Arcane Aura", price: 2600, c: "#b07fe0" },
   { id: "golden", name: "Golden Aura", price: 4000, c: "#f2c14e" },
+  { id: "starfire", name: "Starfire Aura", price: 4200, c: "#f2c14e" },
 ];
 export const HAIRS = [
   { name: "Chestnut", c: "#6b4a32", price: 0 },
@@ -121,6 +125,7 @@ export const HAIRS = [
   { name: "Seafoam", c: "#69d2c8", price: 150 },
   { name: "Rose", c: "#e77fb3", price: 150 },
   { name: "Lime", c: "#a6e34d", price: 150 },
+  { name: "Foxfire", c: "#5cc94a", c2: "#e05aa8", price: 260 },
 ];
 export const OUTFITS = [
   { name: "Traveler", c: "#4d5a8a", price: 0 },

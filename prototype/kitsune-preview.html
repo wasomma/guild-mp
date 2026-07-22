@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- DEV HARNESS (not shipped): renders the real draw code with the full
+     Kitsune cosmetic set, plus a 4x inspect zoom of the first member.
+     Regenerate kitsune-view.json with the scratchpad make-kitsune-view.mjs. -->
+<html>
+<head><meta charset="utf-8"><title>Kitsune preview</title>
+<style>
+  body { background: #14121f; margin: 0; padding: 12px; font: 12px monospace; color: #cfc9e0; }
+  canvas { image-rendering: pixelated; display: block; margin-bottom: 10px; border: 1px solid #333; }
+</style></head>
+<body>
+<div>scene (640x300)</div>
+<canvas id="scene" width="640" height="300"></canvas>
+<div>4x inspect of the kitsune (idle)</div>
+<canvas id="zoom" width="480" height="400"></canvas>
+<script type="module">
+  const render = await import("./render.bundle.mjs");
+  const view = await (await fetch("./kitsune-view.json")).json();
+  for (const [zoneName, file] of Object.entries({
+    "Verdant Fields": "zone-verdant.png",
+    "Gloomwood": "zone-gloomwood.png",
+    "Forgotten Crypt": "zone-forgotten-crypt.png",
+    "Emberdeep": "zone-emberdeep.png",
+    "Feast Hall": "zone-feast-hall.png",
+  })) {
+    const img = new Image();
+    img.onload = () => render.registerBgPlate(zoneName, img);
+    img.src = "./" + file;
+  }
+  const scene = document.getElementById("scene").getContext("2d");
+  const zoomC = document.getElementById("zoom");
+  const zoom = zoomC.getContext("2d");
+  zoom.imageSmoothingEnabled = false;
+  const kit = view.members[0];
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    view.time += dt;
+    render.draw(scene, view, dt);
+    /* 4x zoom crop centered on the kitsune */
+    zoom.fillStyle = "#14121f"; zoom.fillRect(0, 0, 480, 400);
+    zoom.drawImage(scene.canvas, kit.x - 60, kit.y - 85, 120, 100, 0, 0, 480, 400);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

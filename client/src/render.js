@@ -15,6 +15,13 @@ function getLayer(g, key) {
   return g[key];
 }
 
+/* Generated background plates, keyed by zone name (docs/ART-PIPELINE.md).
+   Registered at startup by the client shell; a missing plate falls back to
+   the procedural sky and mountain ranges. Plates replace sky+ranges only —
+   the sun, god ray, ambient motes, clouds, and fog stay live on top. */
+export const BG_PLATES = {};
+export function registerBgPlate(zoneName, img) { BG_PLATES[zoneName] = img; }
+
 function drawRange(c, off, baseY, amp, wgap, color) {
   c.fillStyle = color;
   for (let i = -1; i < Math.ceil(W / wgap) + 2; i++) {
@@ -32,9 +39,14 @@ function drawScene(ctx, g) {
   const t = g.time;
   const bg = getLayer(g, "_bg"), b = bg.getContext("2d");
   b.clearRect(0, 0, W, H);
-  const grad = b.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, zone.sky[0]); grad.addColorStop(0.55, zone.sky[1]); grad.addColorStop(1, zone.sky[2]);
-  b.fillStyle = grad; b.fillRect(0, 0, W, H);
+  const plate = BG_PLATES[zone.name];
+  if (plate) {
+    b.drawImage(plate, 0, 0, W, H);
+  } else {
+    const grad = b.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, zone.sky[0]); grad.addColorStop(0.55, zone.sky[1]); grad.addColorStop(1, zone.sky[2]);
+    b.fillStyle = grad; b.fillRect(0, 0, W, H);
+  }
   const mg = b.createRadialGradient(552, 52, 4, 552, 52, 46);
   mg.addColorStop(0, `rgba(${zone.ray},0.85)`); mg.addColorStop(0.25, `rgba(${zone.ray},0.30)`); mg.addColorStop(1, `rgba(${zone.ray},0)`);
   b.fillStyle = mg; b.fillRect(500, 0, 110, 110);
@@ -49,11 +61,11 @@ function drawScene(ctx, g) {
     b.fillRect(cx, 36 + i * 22, 90 + i * 18, 8);
     b.fillRect(cx + 16, 30 + i * 22, 50, 8);
   }
-  drawRange(b, (g.scroll * 0.12) % 190, 208, 66, 190, zone.far);
+  if (!plate) drawRange(b, (g.scroll * 0.12) % 190, 208, 66, 190, zone.far);
   const fog = b.createLinearGradient(0, 150, 0, 214);
   fog.addColorStop(0, `rgba(${zone.fogC},0)`); fog.addColorStop(1, `rgba(${zone.fogC},0.30)`);
   b.fillStyle = fog; b.fillRect(0, 150, W, 64);
-  drawRange(b, (g.scroll * 0.22) % 150, 216, 88, 150, zone.near);
+  if (!plate) drawRange(b, (g.scroll * 0.22) % 150, 216, 88, 150, zone.near);
   ctx.save(); ctx.filter = "blur(2.2px)"; ctx.drawImage(bg, 0, 0); ctx.restore();
 
   const md = getLayer(g, "_mid"), mm = md.getContext("2d");
@@ -373,7 +385,7 @@ function drawHat(ctx, ox, oy, hat, outfit, tint, hairC, t) {
   }
 }
 
-function drawHair(ctx, ox, oy, style, c) {
+function drawHair(ctx, ox, oy, style, c, c2) {
   const cD = shade(c, 0.68), cL = shade(c, 1.3);
   /* base cap over the scalp */
   px2(ctx, ox, oy, -5, -31, 10, 2, c);
@@ -436,6 +448,28 @@ function drawHair(ctx, ox, oy, style, c) {
     px2(ctx, ox, oy, -8, -15, 3, 3, c);
     px2(ctx, ox, oy, -9, -12, 2, 2, cD);
     px2(ctx, ox, oy, -9, -10, 2, 1, "#f2c14e");
+  } else if (style === "kitsune") {
+    const cT = c2 || cD;                          /* fall/tip color: gradient hairs supply c2 */
+    px2(ctx, ox, oy, -5, -32, 3, 1, c);           /* fox ears: tapered, flicked outward */
+    px2(ctx, ox, oy, -5, -34, 2, 2, c);
+    px2(ctx, ox, oy, -6, -35, 1, 1, cL);
+    px2(ctx, ox, oy, -4, -33, 1, 2, "#d87aa8");   /* inner */
+    px2(ctx, ox, oy, 2, -32, 3, 1, c);
+    px2(ctx, ox, oy, 3, -34, 2, 2, c);
+    px2(ctx, ox, oy, 5, -35, 1, 1, cL);
+    px2(ctx, ox, oy, 3, -33, 1, 2, "#d87aa8");
+    px2(ctx, ox, oy, -3, -31, 1, 1, "#f2c14e");   /* star stud at the ear base */
+    px2(ctx, ox, oy, -8, -29, 3, 12, c);          /* long fall, fading into the tip color */
+    px2(ctx, ox, oy, -8, -17, 3, 6, cT);
+    px2(ctx, ox, oy, -7, -11, 2, 2, shade(cT, 0.8));
+    px2(ctx, ox, oy, -6, -28, 1, 10, cD);
+    px2(ctx, ox, oy, -8, -27, 1, 8, cL);
+    px2(ctx, ox, oy, 5, -29, 2, 9, c);
+    px2(ctx, ox, oy, 5, -20, 2, 4, cT);
+    px2(ctx, ox, oy, 5, -23, 1, 2, cD);
+    px2(ctx, ox, oy, 4, -27, 1, 6, c);            /* front lock with star clasp */
+    px2(ctx, ox, oy, 4, -21, 1, 3, cT);
+    px2(ctx, ox, oy, 4, -22, 1, 1, "#f2c14e");
   }
 }
 
@@ -465,6 +499,11 @@ function drawAccessory(ctx, ox, oy, acc) {
     px2(ctx, ox, oy, 3, -24, 1, 1, "rgba(150,90,60,0.85)");
     px2(ctx, ox, oy, 2, -23, 1, 1, "rgba(150,90,60,0.7)");
     px2(ctx, ox, oy, 4, -23, 1, 1, "rgba(150,90,60,0.7)");
+  } else if (acc === "foxmarks") {
+    px2(ctx, ox, oy, -1, -25, 2, 0.5, "rgba(178,72,40,0.85)"); /* whisker stripes */
+    px2(ctx, ox, oy, -1, -24, 2, 0.5, "rgba(178,72,40,0.6)");
+    px2(ctx, ox, oy, 3, -25, 2, 0.5, "rgba(178,72,40,0.85)");
+    px2(ctx, ox, oy, 3, -24, 2, 0.5, "rgba(178,72,40,0.6)");
   }
 }
 
@@ -475,6 +514,22 @@ function drawCape(ctx, ox, oy, capeId, t, walking) {
   const c = cape.c, cD = shade(c, 0.66), cL = shade(c, 1.25);
   const trim = cape.trim || cD;
   const lin = cape.lining || shade(c, 0.5);
+  if (cape.id === "ninetails") {
+    /* a fan of fox tails in the cape slot: nearest tails longest, pink-tipped */
+    const tipC = cape.tip || "#e05aa8";
+    for (let i = 4; i >= 0; i--) {
+      const ph = t * (walking ? 6 : 2.2) + i * 1.3;
+      const sw = Math.round(Math.sin(ph) * (walking ? 1.5 : 0.8));
+      const bx = -7 - i * 2, by = -8 - i;
+      const col = i % 2 ? cD : c;
+      px2(ctx, ox, oy, bx, by, 2, 4, col);                    /* root, tucked at the back */
+      px2(ctx, ox, oy, bx - 1 + sw * 0.5, by - 3, 2, 3, col); /* mid, curling out */
+      px2(ctx, ox, oy, bx - 1 + sw * 0.5, by - 2, 1, 2, cL);  /* rim */
+      px2(ctx, ox, oy, bx - 2 + sw, by - 5, 2, 2, tipC);      /* pink tip, up and out */
+      px2(ctx, ox, oy, bx - 2 + sw, by - 5, 1, 1, shade(tipC, 1.25));
+    }
+    return;
+  }
   const sway = walking ? Math.sin(t * 9) * 2 : Math.sin(t * 2) * 0.8;
   const s1 = Math.round(sway * 0.5), s2 = Math.round(sway);
   const w1 = Math.round(Math.sin(t * (walking ? 11 : 2.6) + 1.3) * (walking ? 1 : 0.5));
@@ -953,7 +1008,7 @@ export function drawAdventurer(ctx, m, t) {
   }
 
   const f = m.walking ? Math.floor(t * 8 + m.seed) % 2 : 0;
-  const hair = HAIRS[m.cos.hair].c;
+  const hair = HAIRS[m.cos.hair].c, hair2 = HAIRS[m.cos.hair].c2;
   const outfit = OUTFITS[m.cos.outfit].c;
   const wskin = WEAPON_SKINS.find((w) => w.id === m.cos.weapon);
   const tint = wskin.c;
@@ -974,6 +1029,19 @@ export function drawAdventurer(ctx, m, t) {
       ctx.translate(ox, oy); ctx.scale(1, 0.35); ctx.translate(-ox, -oy);
       ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(ox, oy, 20, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+      if (auraDef.id === "starfire") {
+        /* rising four-point star twinkles */
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 4; i++) {
+          const ph = t * 1.6 + i * 1.57 + m.seed;
+          const sx = ox + Math.sin(ph) * 14;
+          const sy = oy - 8 - ((ph * 5) % 22);
+          const tw = 0.4 + 0.6 * Math.abs(Math.sin(ph * 3));
+          ctx.fillStyle = hexA("#ffe9a0", tw);
+          ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3);
+        }
+        ctx.restore();
+      }
     }
   }
 
@@ -1287,7 +1355,7 @@ export function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 0, -25, 2, 1, "rgba(208,69,90,0.75)");
     px2(ctx, ox, oy, 3, -25, 2, 1, "rgba(208,69,90,0.75)");
   }
-  drawHair(ctx, ox, oy, m.cos.hairstyle, hair);
+  drawHair(ctx, ox, oy, m.cos.hairstyle, hair, hair2);
 
   /* trinket charm at the throat, and the weapon-quality glow at the hand */
   const grT = m.gear && m.gear.trinket;
@@ -1852,20 +1920,25 @@ function drawInnkeep(ctx, x, y, t) {
 }
 function drawFeastBack(ctx, g) {
   const t = g.time;
-  /* gable and rafters */
-  ctx.fillStyle = "#16100b"; ctx.fillRect(0, 0, W, 48);
-  ctx.fillStyle = "#241812";
-  ctx.fillRect(0, 8, W, 4); ctx.fillRect(0, 24, W, 4); ctx.fillRect(0, 40, W, 5);
-  ctx.fillStyle = "#2e2118";
-  for (let i = 0; i < 8; i++) { ctx.fillRect(40 + i * 80, 0, 6, 46); }
-  /* walls: horizontal plank courses */
-  for (let y = 46; y < GROUND - 6; y += 16) {
-    ctx.fillStyle = ((y / 16) | 0) % 2 ? "#33251b" : "#2b1f16";
-    ctx.fillRect(0, y, W, 16);
-    ctx.fillStyle = "#1f1710";
-    ctx.fillRect(((y * 7) % 160) + 40, y + 2, 2, 12);
-    ctx.fillRect(((y * 7) % 160) + 240, y + 2, 2, 12);
-    ctx.fillRect(((y * 7) % 160) + 440, y + 2, 2, 12);
+  const plate = BG_PLATES["Feast Hall"];
+  if (plate) {
+    ctx.drawImage(plate, 0, 0, W, H);
+  } else {
+    /* gable and rafters */
+    ctx.fillStyle = "#16100b"; ctx.fillRect(0, 0, W, 48);
+    ctx.fillStyle = "#241812";
+    ctx.fillRect(0, 8, W, 4); ctx.fillRect(0, 24, W, 4); ctx.fillRect(0, 40, W, 5);
+    ctx.fillStyle = "#2e2118";
+    for (let i = 0; i < 8; i++) { ctx.fillRect(40 + i * 80, 0, 6, 46); }
+    /* walls: horizontal plank courses */
+    for (let y = 46; y < GROUND - 6; y += 16) {
+      ctx.fillStyle = ((y / 16) | 0) % 2 ? "#33251b" : "#2b1f16";
+      ctx.fillRect(0, y, W, 16);
+      ctx.fillStyle = "#1f1710";
+      ctx.fillRect(((y * 7) % 160) + 40, y + 2, 2, 12);
+      ctx.fillRect(((y * 7) % 160) + 240, y + 2, 2, 12);
+      ctx.fillRect(((y * 7) % 160) + 440, y + 2, 2, 12);
+    }
   }
   /* windows with aurora night */
   drawWindowN(ctx, 80, 78, 52, 74, t, true);
@@ -2064,7 +2137,7 @@ function drawFeaster(ctx, m, t) {
   ctx.save();
   if (face === -1) { ctx.translate(ox, 0); ctx.scale(-1, 1); ctx.translate(-ox, 0); }
   const f = m.walking ? Math.floor(t * 8 + m.seed) % 2 : 0;
-  const hair = HAIRS[m.cos.hair].c;
+  const hair = HAIRS[m.cos.hair].c, hair2 = HAIRS[m.cos.hair].c2;
   const outfit = OUTFITS[m.cos.outfit].c;
   const oD = shade(outfit, 0.7), oL = shade(outfit, 1.28);
   const fem = m.cos.body === "f";
@@ -2131,7 +2204,7 @@ function drawFeaster(ctx, m, t) {
   } else {
     px2(ctx, ox, oy, 1, -22, 3, 1, "#8a5a44");
   }
-  drawHair(ctx, ox, oy, m.cos.hairstyle, hair);
+  drawHair(ctx, ox, oy, m.cos.hairstyle, hair, hair2);
   /* activity arms and props */
   if (act === "drink") {
     px2(ctx, ox, oy, -7, -17, 2, 5, oD);

@@ -6,7 +6,21 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
-import { draw, drawAdventurer } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate } from "./render.js";
+
+/* Generated zone background plates (docs/ART-PIPELINE.md). A missing or
+   failed file simply leaves that zone's procedural background in place. */
+for (const [zoneName, file] of Object.entries({
+  "Verdant Fields": "verdant-fields.png",
+  "Gloomwood": "gloomwood.png",
+  "Forgotten Crypt": "forgotten-crypt.png",
+  "Emberdeep": "emberdeep.png",
+  "Feast Hall": "feast-hall.png",
+})) {
+  const img = new Image();
+  img.onload = () => registerBgPlate(zoneName, img);
+  img.src = "/assets/zones/" + file;
+}
 import { audioInit, audioResume, setSfxMuted, setMusicMuted, sfx, musicTick } from "./audio.js";
 
 /* In dev (vite on :5173) talk to the server on :8787; in production the
