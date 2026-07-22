@@ -2,6 +2,13 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.11 — 2026-07-22
+
+**Generated ground and planted props — the environment pass is complete.** Every layer of the scene (background, midground, ground) is now generated art with procedural fallback.
+
+- **The ground the party walks on is real terrain** — seamlessly tiling generated strips scrolling underfoot: sunlit grass over root-laced earth (Verdant Fields), mossy spore-flecked soil (Gloomwood), worn flagstones over cracked masonry (Forgotten Crypt), charred basalt veined with glowing embers (Emberdeep). The scrolling tufts, ember sparks, and walking light pools still play on top.
+- **Props no longer hover** — midground trees, rocks, flora, and fauna now bed into the ground lip (scaled so small critters aren't buried) and cast soft contact shadows, fixing the visible gap under irregular sprite bases.
+
 ## v0.1.10 — 2026-07-22
 
 **A living, changing midground.** The second art-pipeline release: the repeating procedural props are replaced by varied generated prop sets.

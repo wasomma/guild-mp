@@ -31,13 +31,26 @@ export const PROP_SPRITES = {};
 export function registerPropSprite(zoneName, img, slot) {
   (PROP_SPRITES[zoneName] || (PROP_SPRITES[zoneName] = []))[slot || 0] = img;
 }
+/* Generated seamless ground strips (480x69, horizontally tileable), keyed by
+   zone name. Scroll at full parallax under the party's feet; missing entries
+   keep the procedural ground slab. */
+export const GROUND_STRIPS = {};
+export function registerGroundStrip(zoneName, img) { GROUND_STRIPS[zoneName] = img; }
+
 function propRand(n) {
   let h = (n * 2654435761) >>> 0;
   h ^= h >>> 13; h = (h * 1597334677) >>> 0;
   return (h ^ (h >>> 16)) >>> 0;
 }
 function drawProp(mm, img, cx, flip) {
-  const dx = Math.round(cx - img.width / 2), dy = 234 - img.height;
+  /* sink the base into the ground lip (scaled so small fauna isn't buried)
+     and lay a contact shadow underneath — irregular sprite bases otherwise
+     read as hovering over the walk surface */
+  const sink = Math.max(2, Math.min(6, Math.round(img.height * 0.08)));
+  const baseY = 234 + sink;
+  const dx = Math.round(cx - img.width / 2), dy = baseY - img.height;
+  mm.fillStyle = "rgba(10,10,18,0.30)";
+  mm.beginPath(); mm.ellipse(cx, baseY - 2, Math.max(8, img.width * 0.34), 4, 0, 0, Math.PI * 2); mm.fill();
   if (!flip) { mm.drawImage(img, dx, dy); return; }
   mm.save(); mm.translate(dx + img.width / 2, 0); mm.scale(-1, 1); mm.translate(-(dx + img.width / 2), 0);
   mm.drawImage(img, dx, dy); mm.restore();
@@ -138,9 +151,15 @@ function drawScene(ctx, g) {
   }
   ctx.save(); ctx.filter = "blur(1px)"; ctx.drawImage(md, 0, 0); ctx.restore();
 
-  ctx.fillStyle = zone.top; ctx.fillRect(0, GROUND - 12, W, 5);
-  ctx.fillStyle = zone.ground; ctx.fillRect(0, GROUND - 7, W, H - GROUND + 7);
-  ctx.fillStyle = zone.band; ctx.fillRect(0, GROUND - 7, W, 12);
+  const strip = GROUND_STRIPS[zone.name];
+  if (strip) {
+    const so = ((g.scroll % strip.width) + strip.width) % strip.width;
+    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, GROUND - 12);
+  } else {
+    ctx.fillStyle = zone.top; ctx.fillRect(0, GROUND - 12, W, 5);
+    ctx.fillStyle = zone.ground; ctx.fillRect(0, GROUND - 7, W, H - GROUND + 7);
+    ctx.fillStyle = zone.band; ctx.fillRect(0, GROUND - 7, W, 12);
+  }
   ctx.fillStyle = "rgba(0,0,0,0.20)"; ctx.fillRect(0, GROUND + 18, W, H - GROUND - 18);
   const off3 = g.scroll % 46;
   for (let i = -1; i < 16; i++) {

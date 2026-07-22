@@ -27,6 +27,16 @@
     img.onload = () => render.registerBgPlate(zoneName, img);
     img.src = "./" + file;
   }
+  for (const [zoneName, file] of Object.entries({
+    "Verdant Fields": "ground-verdant-fields.png",
+    "Gloomwood": "ground-gloomwood.png",
+    "Forgotten Crypt": "ground-forgotten-crypt.png",
+    "Emberdeep": "ground-emberdeep.png",
+  })) {
+    const img = new Image();
+    img.onload = () => render.registerGroundStrip(zoneName, img);
+    img.src = "./" + file;
+  }
   for (const [zoneName, stem] of Object.entries({
     "Verdant Fields": "prop-verdant-fields",
     "Gloomwood": "prop-gloomwood",

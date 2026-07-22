@@ -6,7 +6,19 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
-import { draw, drawAdventurer, registerBgPlate, registerPropSprite } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip } from "./render.js";
+
+/* Generated seamless ground strips — same fallback contract as the plates. */
+for (const [zoneName, file] of Object.entries({
+  "Verdant Fields": "verdant-fields.png",
+  "Gloomwood": "gloomwood.png",
+  "Forgotten Crypt": "forgotten-crypt.png",
+  "Emberdeep": "emberdeep.png",
+})) {
+  const img = new Image();
+  img.onload = () => registerGroundStrip(zoneName, img);
+  img.src = "/assets/ground/" + file;
+}
 
 /* Generated midground prop sets — slot 0 is the anchor, 1+ are small props.
    Same fallback contract as the plates. */
