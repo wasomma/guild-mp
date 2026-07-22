@@ -8,12 +8,24 @@ import {
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
 
-/* HD hero layer sets (ART-PIPELINE Phase 7C) — the kitsune. Missing files
-   simply leave the procedural paperdoll in place. */
-for (const [part, file] of Object.entries({ body: "kitsune-e-body.png", tail: "kitsune-e-tail.png" })) {
-  const img = new Image();
-  img.onload = () => registerHeroSprite("kitsune", img, "e", part);
-  img.src = "/assets/heroes/" + file;
+/* HD hero layer sets (ART-PIPELINE Phase 7C/7D): the kitsune full-body set,
+   the class-body layered puppets with their wardrobe overlays, and the
+   shared style weapon layers. Filenames follow <key>-e-<part>.png (east
+   facing). Missing files simply leave the procedural paperdoll in place —
+   heroSpriteSetFor gates each hero on having every layer it needs. */
+{
+  const HERO_LAYER_FILES = { kitsune: ["body", "tail"], weapon: ["warrior"] };
+  for (const b of ["tank-m", "tank-f"]) {
+    HERO_LAYER_FILES[b] = ["body",
+      ...[0, 3, 4].map((i) => "outfit:" + i),
+      ...["short", "pixie", "bob", "pony", "long"].map((h) => "hairstyle:" + h)];
+  }
+  for (const [key, parts] of Object.entries(HERO_LAYER_FILES))
+    for (const part of parts) {
+      const img = new Image();
+      img.onload = () => registerHeroSprite(key, img, "e", part);
+      img.src = "/assets/heroes/" + key + "-e-" + part.replace(":", "-") + ".png";
+    }
 }
 
 /* Generated enemy sprites — same fallback contract as the plates. HD art
@@ -432,7 +444,9 @@ function Portrait({ m }) {
          right so the hero and her tails fit the frame. */
       const hd = heroSpriteSetFor(src);
       const Z = hd ? 3 : 4;
-      ctx.setTransform(Z, 0, 0, Z, Math.round(cv.width * (hd ? 0.58 : 0.42)), cv.height - 6 * Z);
+      /* the kitsune's tail fan hangs left, so her frame shifts right; the
+         layered class puppets are symmetric and sit centered */
+      ctx.setTransform(Z, 0, 0, Z, Math.round(cv.width * (hd ? (hd.tail ? 0.58 : 0.5) : 0.42)), cv.height - 6 * Z);
       const mp = {
         ...src, x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
         chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999, noBars: true,

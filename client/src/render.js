@@ -63,16 +63,48 @@ export function registerHeroSprite(key, img, facing, part) {
   const f = set[facing || "e"] || (set[facing || "e"] = {});
   f[part || "body"] = img;
 }
-/* Cosmetics-driven mapping: wearing the Kitsune Crown hairstyle with the
-   Nine-Tails cape summons the HD kitsune (the paperdoll reward loop at HD —
-   gear overlays arrive in a later phase). Name-keyed entries remain for dev
-   harnesses. Combat uses the east facing. */
+/* Per-body anchor table for the layered class-body puppets (Phase 7D), in
+   the shared fitted-canvas space every layer of that body ships in (2 art
+   px per logical unit): cx = body centerline column, foot = sole row,
+   hand = front-fist center (the weapon grip). Filled from the generator
+   meta when a body ships; a class x body-type combination with no entry
+   stays a paperdoll. */
+export const HD_BODY_META = {
+  "tank-m": { cx: 68, foot: 256, hand: [93, 141] },
+  "tank-f": { cx: 66, foot: 244, hand: [90, 133] },
+};
+/* Cosmetics-driven mapping. Two HD tiers:
+   - The kitsune: Kitsune Crown hairstyle + Nine-Tails cape summons the
+     one-off full-body layer set (Phase 7C).
+   - Class-body layered puppets (Phase 7D): a generated base body per
+     class x body type, dressed with overlay layers (outfit, runtime-tinted
+     hairstyle, hat) plus the fighting style's weapon layer. EVERY visible
+     cosmetic must have an HD layer or the hero stays a paperdoll — one
+     chunky procedural piece on a fine body reads worse than the classic
+     look, so hats/capes/accessories without layers gate the whole hero.
+   Name-keyed entries remain for dev harnesses. Combat uses east facing. */
 export function heroSpriteSetFor(m) {
   const cos = m.cos || {};
-  const key = cos.hairstyle === "kitsune" && cos.cape === "ninetails" ? "kitsune" : m.name;
-  const set = HERO_SPRITES[key];
-  const f = set && set.e;
-  return f && f.body ? f : null;
+  if (cos.hairstyle === "kitsune" && cos.cape === "ninetails") {
+    const k = HERO_SPRITES.kitsune && HERO_SPRITES.kitsune.e;
+    if (k && k.body) return k;
+  }
+  const n = HERO_SPRITES[m.name] && HERO_SPRITES[m.name].e;
+  if (n && n.body) return n;
+  const bkey = m.cls + "-" + (cos.body === "f" ? "f" : "m");
+  const meta = HD_BODY_META[bkey];
+  const f = meta && HERO_SPRITES[bkey] && HERO_SPRITES[bkey].e;
+  if (!f || !f.body) return null;
+  const outfit = f["outfit:" + (cos.outfit || 0)];
+  const hair = f["hairstyle:" + cos.hairstyle];
+  const weapons = HERO_SPRITES.weapon && HERO_SPRITES.weapon.e;
+  const weapon = weapons && weapons[m.style];
+  if (!outfit || !hair || !weapon) return null;
+  const hat = cos.hat && cos.hat !== "none" ? f["hat:" + cos.hat] : null;
+  if (cos.hat && cos.hat !== "none" && !hat) return null;
+  if (cos.cape && cos.cape !== "none") return null; /* cape layers arrive with a later wave */
+  if (cos.accessory && cos.accessory !== "none") return null; /* face marks arrive with the portrait pass */
+  return { body: f.body, outfit, hair, hat, weapon, meta };
 }
 
 function propRand(n) {
@@ -734,6 +766,144 @@ function swingAngle(m, start, end, dur) {
   return start + (end - start) * Math.sin(Math.min(1, p) * Math.PI * 0.5);
 }
 
+/* Equipped aura glow + particles (shared by the paperdoll and HD paths). */
+function drawAura(ctx, m, t, ox, oy) {
+  if (m.cos.aura === "none") return;
+  const auraDef = AURAS.find((a) => a.id === m.cos.aura);
+  if (auraDef && auraDef.c) {
+    const pl = 0.16 + 0.08 * Math.sin(t * 3 + m.seed);
+    const ag = ctx.createRadialGradient(ox, oy, 2, ox, oy, 20);
+    ag.addColorStop(0, hexA(auraDef.c, pl)); ag.addColorStop(1, hexA(auraDef.c, 0));
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    ctx.translate(ox, oy); ctx.scale(1, 0.35); ctx.translate(-ox, -oy);
+    ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(ox, oy, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    if (auraDef.id === "starfire") {
+      /* rising four-point star twinkles */
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < 4; i++) {
+        const ph = t * 1.6 + i * 1.57 + m.seed;
+        const sx = ox + Math.sin(ph) * 14;
+        const sy = oy - 8 - ((ph * 5) % 22);
+        const tw = 0.4 + 0.6 * Math.abs(Math.sin(ph * 3));
+        ctx.fillStyle = hexA("#ffe9a0", tw);
+        ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3);
+      }
+      ctx.restore();
+    }
+  }
+}
+
+/* ---- HD layered-puppet helpers (ART-PIPELINE Phase 7D) ---- */
+const hexRGB = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+
+/* Hair overlays are generated silver-gray; tint to the equipped hair color
+   at draw time (per-color canvas cached on the layer image). Two-tone
+   hairs (c2) shift the style's lower reach toward the tip color. */
+function tintedHair(img, hairIdx) {
+  const cache = img._tints || (img._tints = {});
+  if (cache[hairIdx]) return cache[hairIdx];
+  const def = HAIRS[hairIdx] || HAIRS[0];
+  const cv = document.createElement("canvas");
+  cv.width = img.width; cv.height = img.height;
+  const c2d = cv.getContext("2d");
+  c2d.drawImage(img, 0, 0);
+  const id = c2d.getImageData(0, 0, cv.width, cv.height), d = id.data;
+  let y0 = cv.height, y1 = 0;
+  for (let p = 3; p < d.length; p += 4) if (d[p] > 0) { const y = ((p - 3) / 4 / cv.width) | 0; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const base = hexRGB(def.c), tip = def.c2 ? hexRGB(def.c2) : null;
+  for (let p = 0; p < d.length; p += 4) {
+    if (d[p + 3] === 0) continue;
+    const L = (d[p] + d[p + 1] + d[p + 2]) / 765;
+    const y = (p / 4 / cv.width) | 0;
+    const col = tip && y1 > y0 && (y - y0) / (y1 - y0) > 0.62 ? tip : base;
+    const f = 0.4 + L;
+    d[p] = Math.min(255, col[0] * f); d[p + 1] = Math.min(255, col[1] * f); d[p + 2] = Math.min(255, col[2] * f);
+  }
+  c2d.putImageData(id, 0, 0);
+  return (cache[hairIdx] = cv);
+}
+
+/* Weapon layers are generated once in the Steel ramp; other skins remap
+   the steel pixels (cool near-grays) onto the skin's cD->c->cL->edge ramp
+   by luminance. Wood and leather pixels pass through untouched. */
+function skinnedWeapon(img, wk) {
+  if (!wk || wk.id === "steel") return img;
+  const cache = img._skins || (img._skins = {});
+  if (cache[wk.id]) return cache[wk.id];
+  const cv = document.createElement("canvas");
+  cv.width = img.width; cv.height = img.height;
+  const c2d = cv.getContext("2d");
+  c2d.drawImage(img, 0, 0);
+  const id = c2d.getImageData(0, 0, cv.width, cv.height), d = id.data;
+  const ramp = [hexRGB(wk.cD || "#555555"), hexRGB(wk.c), hexRGB(wk.cL || wk.c), hexRGB(wk.edge || wk.cL || wk.c)];
+  for (let p = 0; p < d.length; p += 4) {
+    if (d[p + 3] === 0) continue;
+    const r = d[p], g = d[p + 1], b = d[p + 2];
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+    if (chroma > 46 || b < r - 12) continue;
+    const L = (r + g + b) / 765;
+    const seg = L < 0.35 ? [0, 1, L / 0.35] : L < 0.7 ? [1, 2, (L - 0.35) / 0.35] : [2, 3, (L - 0.7) / 0.3];
+    const A = ramp[seg[0]], B = ramp[seg[1]], k = Math.min(1, seg[2]);
+    d[p] = A[0] + (B[0] - A[0]) * k; d[p + 1] = A[1] + (B[1] - A[1]) * k; d[p + 2] = A[2] + (B[2] - A[2]) * k;
+  }
+  c2d.putImageData(id, 0, 0);
+  return (cache[wk.id] = cv);
+}
+
+/* A registered hi-res layer set replaces the procedural paperdoll (combat
+   is side-view east; layers are authored at 2 device px per logical unit).
+   Back-to-front: aura, kitsune tail instances, base body, outfit, tinted
+   hair, hat, then the weapon at the fist anchor; the pet and HP bar stay
+   procedural on top so no HD hero loses its purchased flair. */
+function drawHdHero(ctx, m, t, ox, oy, hset) {
+  drawShadow(ctx, m.x, m.y, 30);
+  drawAura(ctx, m, t, ox, oy);
+  if (hset.tail) {
+    /* five tail instances fan up-left behind the hero, each with its own
+       sway phase — the HD echo of the Nine-Tails cape motion */
+    const tl = hset.tail.width / 2, tt = hset.tail.height / 2;
+    const ax = ox - 4, ay = oy - 46;
+    for (let i = 0; i < 5; i++) {
+      const base = 0.1 + i * 0.28; /* canvas rotation: positive sweeps the left-pointing tail upward */
+      const sway = Math.sin(t * (m.walking ? 6 : 1.7) + m.seed + i * 0.9) * 0.07;
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(base + sway);
+      ctx.drawImage(hset.tail, -tl, -tt / 2, tl, tt);
+      ctx.restore();
+    }
+  }
+  if (hset.meta) {
+    const meta = hset.meta;
+    const dw = hset.body.width / 2, dh = hset.body.height / 2;
+    /* walk motion: a light step-bob plus a rock around the foot pivot —
+       the puppet's stand-in for leg frames */
+    const bob = m.walking ? Math.abs(Math.sin(t * 6 + m.seed)) * 2 : 0;
+    const rock = m.walking ? Math.sin(t * 6 + m.seed) * 0.03 : 0;
+    const dx = Math.round(ox - meta.cx / 2), dy = Math.round(oy - meta.foot / 2 - bob);
+    if (rock) { ctx.save(); ctx.translate(ox, oy); ctx.rotate(rock); ctx.translate(-ox, -oy); }
+    ctx.drawImage(hset.body, dx, dy, dw, dh);
+    ctx.drawImage(hset.outfit, dx, dy, dw, dh);
+    ctx.drawImage(tintedHair(hset.hair, m.cos.hair), dx, dy, dw, dh);
+    if (hset.hat) ctx.drawImage(hset.hat, dx, dy, dw, dh);
+    const wk = WEAPON_SKINS.find((w) => w.id === m.cos.weapon) || WEAPON_SKINS[0];
+    const wimg = skinnedWeapon(hset.weapon, wk);
+    const hx = ox + (meta.hand[0] - meta.cx) / 2, hy = oy - (meta.foot - meta.hand[1]) / 2;
+    const ang = m.lunge > 0 ? swingAngle(m, -2.1, 1.4, 0.25) : 0.35 + Math.sin(t * 1.7 + m.seed) * 0.05;
+    const ww = wimg.width / 2, wh = wimg.height / 2;
+    ctx.save(); ctx.translate(hx, hy - bob); ctx.rotate(ang);
+    ctx.drawImage(wimg, -ww / 2, -wh * 0.78, ww, wh);
+    ctx.restore();
+    if (rock) ctx.restore();
+  } else {
+    const hw = hset.body.width / 2, hh = hset.body.height / 2;
+    ctx.drawImage(hset.body, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
+  }
+  drawPet(ctx, m, t);
+  if (!m.noBars) hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
+}
+
 /* Warrior axe models: a distinct silhouette and material ramp per weapon skin.
    Drawn in hand-local space: the grip is at the origin, the haft runs up to
    about y=-30, and the head hangs off the +x side of its top. Poses: "rest"
@@ -1108,32 +1278,10 @@ export function drawAdventurer(ctx, m, t) {
   if (m.hop > 0) oy -= Math.round(Math.abs(Math.sin(((0.7 - m.hop) / 0.7) * Math.PI * 2)) * 6);
   const ox = m.x + (m.lunge > 0 ? Math.sin(((0.25 - m.lunge) / 0.25) * Math.PI) * 13 : 0);
 
-  /* A registered hi-res layer set replaces the procedural paperdoll (combat
-     is side-view east). Layers are authored at 2 device px per logical unit
-     and drawn back-to-front: tail instances, then the body. */
+  /* A registered hi-res layer set replaces the procedural paperdoll — see
+     drawHdHero (kitsune full-body set or Phase 7D layered class puppet). */
   const hset = m.alive && heroSpriteSetFor(m);
-  if (hset) {
-    drawShadow(ctx, m.x, m.y, 30);
-    if (hset.tail) {
-      /* five tail instances fan up-left behind the hero, each with its own
-         sway phase — the HD echo of the Nine-Tails cape motion */
-      const tl = hset.tail.width / 2, tt = hset.tail.height / 2;
-      const ax = ox - 4, ay = oy - 46;
-      for (let i = 0; i < 5; i++) {
-        const base = 0.1 + i * 0.28; /* canvas rotation: positive sweeps the left-pointing tail upward */
-        const sway = Math.sin(t * (m.walking ? 6 : 1.7) + m.seed + i * 0.9) * 0.07;
-        ctx.save();
-        ctx.translate(ax, ay);
-        ctx.rotate(base + sway);
-        ctx.drawImage(hset.tail, -tl, -tt / 2, tl, tt);
-        ctx.restore();
-      }
-    }
-    const hw = hset.body.width / 2, hh = hset.body.height / 2;
-    ctx.drawImage(hset.body, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
-    if (!m.noBars) hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
-    return;
-  }
+  if (hset) { drawHdHero(ctx, m, t, ox, oy, hset); return; }
 
   if (!m.alive) {
     drawShadow(ctx, m.x, m.y, 26);
@@ -1167,31 +1315,7 @@ export function drawAdventurer(ctx, m, t) {
   const hx = ox + 8 * P2, hy = oy - 13 * P2;
 
   drawShadow(ctx, ox, oy, 26);
-  if (m.cos.aura !== "none") {
-    const auraDef = AURAS.find((a) => a.id === m.cos.aura);
-    if (auraDef && auraDef.c) {
-      const pl = 0.16 + 0.08 * Math.sin(t * 3 + m.seed);
-      const ag = ctx.createRadialGradient(ox, oy, 2, ox, oy, 20);
-      ag.addColorStop(0, hexA(auraDef.c, pl)); ag.addColorStop(1, hexA(auraDef.c, 0));
-      ctx.save(); ctx.globalCompositeOperation = "lighter";
-      ctx.translate(ox, oy); ctx.scale(1, 0.35); ctx.translate(-ox, -oy);
-      ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(ox, oy, 20, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      if (auraDef.id === "starfire") {
-        /* rising four-point star twinkles */
-        ctx.save(); ctx.globalCompositeOperation = "lighter";
-        for (let i = 0; i < 4; i++) {
-          const ph = t * 1.6 + i * 1.57 + m.seed;
-          const sx = ox + Math.sin(ph) * 14;
-          const sy = oy - 8 - ((ph * 5) % 22);
-          const tw = 0.4 + 0.6 * Math.abs(Math.sin(ph * 3));
-          ctx.fillStyle = hexA("#ffe9a0", tw);
-          ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3);
-        }
-        ctx.restore();
-      }
-    }
-  }
+  drawAura(ctx, m, t, ox, oy);
 
   /* chainblade whip, behind the body */
   if (sty === "chain" && m.chainT > 0 && m.chainTgt) {

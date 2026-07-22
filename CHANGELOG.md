@@ -2,6 +2,16 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.23 — 2026-07-22
+
+**HD tanks: the wardrobe goes layered.** Phase D of the HD-canvas arc — the first class base bodies with real mix-and-match gear at full detail:
+
+- Tanks (both body types) now render as HD layered puppets: a generated ~123-px base body dressed at draw time with your equipped outfit, hairstyle, and weapon — the paperdoll reward loop at source-native detail.
+- Three outfits are HD so far (Traveler, Midnight, Royal — the Royal gown is something to see), plus five hairstyles (Short Crop, Pixie, Bob, Ponytail, Long Flow). Hairstyles are tinted live to all nine hair colors, including two-tone tips.
+- The warrior's battle axe is HD art, and every weapon skin (Gilded, Obsidian, Bloodrot, Crystal) applies to it as a true material remap — one axe, five finishes.
+- Combos that don't have HD layers yet (hats, capes, accessories, paladins) keep the classic paperdoll look for now; more wardrobe waves and the other classes follow.
+- HD heroes now keep their auras and pets (the kitsune included), and walking HD heroes step-bob instead of gliding.
+
 ## v0.1.22 — 2026-07-22
 
 **The kitsune arrives in HD.** The first source-native hero: a ~123-px-tall generated kitsune warrior, standing on the action line at full detail — long green-to-pink hair, fox ears, wine-and-gold outfit, golden spear:
