@@ -516,13 +516,17 @@ function makeEnemy(g, tier) {
   const zone = zoneOf(g);
   const s = g.stage;
   const boss = tier === "boss", elite = tier === "elite";
-  const hp = Math.round((28 + s * 15) * (boss ? 9 : elite ? 3.6 : 1) * rand(0.9, 1.1));
+  /* stopgap until the formal balance pass: the party outlevels the stage
+     after chapter resets, so Kings stat HP/damage against the highest level
+     in the party when it exceeds the stage; rewards stay on the real stage */
+  const sB = boss ? Math.max(s, ...g.members.map((m) => m.level)) : s;
+  const hp = Math.round((28 + sB * 15) * (boss ? 9 : elite ? 3.6 : 1) * rand(0.9, 1.1));
   const e = {
     id: g.uid++, kind: zone.enemy, boss, elite,
     scale: boss ? 1.8 : elite ? 1.35 : 1,
     name: boss ? `${zone.label} King` : elite ? zone.eliteLabel : zone.label,
     hp, maxHp: hp,
-    dmg: (4 + s * 1.5) * (boss ? 1.9 : elite ? 1.4 : 1),
+    dmg: (4 + sB * 1.5) * (boss ? 1.9 : elite ? 1.4 : 1),
     spd: boss ? 2.0 : elite ? 1.8 : rand(1.5, 2.1),
     xp: Math.round((9 + s * 3.2) * (boss ? 6 : elite ? 2.5 : 1)),
     gold: Math.round((10 + s * 4) * (boss ? 8 : elite ? 3.5 : 1)),

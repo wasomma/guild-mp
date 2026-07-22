@@ -114,7 +114,7 @@ The Poison Vial adds `2 + stage×0.7` damage per second for 8s to the whole enem
 
 ## Incoming damage
 
-- Enemy damage: `(4 + stage×1.5) × tier` (×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1).
+- Enemy damage: `(4 + stage×1.5) × tier` (×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1). For **Kings only**, `stage` in this formula is `max(stage, highest level in the party)` — see the boss level floor below.
 - **Targeting is tank-focused**: autos pick a random living tank, falling back to anyone only when no tank stands. Tanks are the aggro system.
 - Mitigation: `max(1, raw − armor×0.6) × (1 − damage reduction)`. The Armor Elixir adds +6 armor for 12s at combat start.
 - **Cleaves** are the healer check: any non-boss enemy, when 2+ members are alive, winds up (0.4s, 0.5s elite — a visible telegraph) every ~4–9s and hits the *entire party* for ×0.5 of its damage (×0.7 elite). Tank-focus keeps autos survivable; cleaves force party-wide healing.
@@ -133,9 +133,10 @@ The Poison Vial adds `2 + stage×0.7` damage per second for 8s to the whole enem
 ## The difficulty and reward curve
 
 - Enemy HP: `(28 + stage×15) × tier × rand(0.9–1.1)` (×9 boss / ×3.6 elite / ×1 normal). Packs are 2–4 normals, or elite + 1 normal at stage %5==3, or a lone King at stage %5==0 (+1 extra normal per pack under Endless Horde, at 80% HP each).
+- **Boss level floor** (stopgap pending the formal balance pass): Kings stat their HP and damage using `max(stage, highest level in the party)` instead of the raw stage, so a party that has outleveled the stage (typically right after a chapter reset) still gets a real boss fight. Rewards (XP, gold, loot) stay on the real stage, and elites/normals are unaffected. Note for mixed parties: boss damage tracks the *top* level, so a much lower-level member can be hit hard by party-wide specials.
 - Loot power: `(4 + stage×1.25) × rarity multiplier × rand(0.9–1.12)`, rarity multipliers 1.0 / 1.35 / 1.75 / 2.35 / 3.2 (unique 3.4). Drop odds: bosses always drop (plus a 60% second drop) at 10% unique chance each; elites always drop at 5% unique; normals drop 13% of the time at 1% unique.
 - Rarity weights start at 54/26/12/6/2 (common→legendary) and shift with stage: common loses `stage×0.4` weight (the shift caps at 20, i.e. stage 50, leaving common at weight 34) while each higher tier gains a quarter of the shift — deep stages steadily favor rare+ gear.
-- Because member damage grows multiplicatively (level × style × skills × gear power that itself scales with stage × legacy × chorus) while enemy HP grows linearly in stage with fixed tier multipliers, a well-geared party accelerates until the next King's special-phase check, which is the intended wall.
+- Because member damage grows multiplicatively (level × style × skills × gear power that itself scales with stage × legacy × chorus) while enemy HP grows linearly in stage with fixed tier multipliers, a well-geared party accelerates until the next King's special-phase check, which is the intended wall. The boss level floor keeps that wall standing across chapter resets; gear/legacy growth still outpaces it over time, which the formal balance pass will address.
 
 ## Daily quests
 

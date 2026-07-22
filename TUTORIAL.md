@@ -32,7 +32,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 Combat is fully automatic: the party attacks, heals, dodges, crits, and casts ultimates on its own. Waves of enemies come in a rhythm:
 
-- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone). Kings telegraph big special attacks with a wind-up — a Tank's stun can **interrupt** them — and grow more dangerous as their health drops.
+- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone). Kings telegraph big special attacks with a wind-up — a Tank's stun can **interrupt** them — and grow more dangerous as their health drops. A King always rises to meet the party: he fights at least at the strength of your highest-level hero, however early the wave.
 - **Two waves before each boss** an **elite** appears: tougher, meaner, better loot.
 - The world cycles through four zones — Verdant Fields, Gloomwood, Forgotten Crypt, Emberdeep — every five waves.
 

@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.18 — 2026-07-22
+
+Boss level floor (balance stopgap): Kings now stat their HP and damage against `max(stage, highest level in the party)` instead of the raw stage, so boss fights stay real after the party outlevels the content (most visibly right after a chapter reset). Rewards still pay on the real stage; elites and normal packs are unchanged. A formal balance pass is planned; this holds the line until then.
+
 ## v0.1.17 — 2026-07-22
 
 Smoothed the world scroll in the multiplayer client: the background now interpolates between server snapshots like the characters always did, instead of stepping forward at the 10Hz broadcast rate — the travel between fights no longer stutters.
