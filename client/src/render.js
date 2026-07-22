@@ -58,8 +58,21 @@ export function registerEnemySprite(kind, img, hd) {
    procedural paperdolls. Keys are member names for now — a cosmetics-driven
    mapping ships with the first HD character. */
 export const HERO_SPRITES = {};
-export function registerHeroSprite(key, img, facing) {
-  (HERO_SPRITES[key] || (HERO_SPRITES[key] = {}))[facing || "e"] = img;
+export function registerHeroSprite(key, img, facing, part) {
+  const set = HERO_SPRITES[key] || (HERO_SPRITES[key] = {});
+  const f = set[facing || "e"] || (set[facing || "e"] = {});
+  f[part || "body"] = img;
+}
+/* Cosmetics-driven mapping: wearing the Kitsune Crown hairstyle with the
+   Nine-Tails cape summons the HD kitsune (the paperdoll reward loop at HD —
+   gear overlays arrive in a later phase). Name-keyed entries remain for dev
+   harnesses. Combat uses the east facing. */
+export function heroSpriteSetFor(m) {
+  const cos = m.cos || {};
+  const key = cos.hairstyle === "kitsune" && cos.cape === "ninetails" ? "kitsune" : m.name;
+  const set = HERO_SPRITES[key];
+  const f = set && set.e;
+  return f && f.body ? f : null;
 }
 
 function propRand(n) {
@@ -1095,14 +1108,30 @@ export function drawAdventurer(ctx, m, t) {
   if (m.hop > 0) oy -= Math.round(Math.abs(Math.sin(((0.7 - m.hop) / 0.7) * Math.PI * 2)) * 6);
   const ox = m.x + (m.lunge > 0 ? Math.sin(((0.25 - m.lunge) / 0.25) * Math.PI) * 13 : 0);
 
-  /* A registered hi-res sprite replaces the procedural paperdoll (combat is
-     side-view, so it always draws the east facing). */
-  const hs = m.alive && HERO_SPRITES[m.name] && HERO_SPRITES[m.name].e;
-  if (hs) {
-    const hw = hs.width / 2, hh = hs.height / 2;
+  /* A registered hi-res layer set replaces the procedural paperdoll (combat
+     is side-view east). Layers are authored at 2 device px per logical unit
+     and drawn back-to-front: tail instances, then the body. */
+  const hset = m.alive && heroSpriteSetFor(m);
+  if (hset) {
     drawShadow(ctx, m.x, m.y, 30);
-    ctx.drawImage(hs, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
-    hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
+    if (hset.tail) {
+      /* five tail instances fan up-left behind the hero, each with its own
+         sway phase — the HD echo of the Nine-Tails cape motion */
+      const tl = hset.tail.width / 2, tt = hset.tail.height / 2;
+      const ax = ox - 4, ay = oy - 46;
+      for (let i = 0; i < 5; i++) {
+        const base = 0.1 + i * 0.28; /* canvas rotation: positive sweeps the left-pointing tail upward */
+        const sway = Math.sin(t * (m.walking ? 6 : 1.7) + m.seed + i * 0.9) * 0.07;
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.rotate(base + sway);
+        ctx.drawImage(hset.tail, -tl, -tt / 2, tl, tt);
+        ctx.restore();
+      }
+    }
+    const hw = hset.body.width / 2, hh = hset.body.height / 2;
+    ctx.drawImage(hset.body, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
+    if (!m.noBars) hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
     return;
   }
 

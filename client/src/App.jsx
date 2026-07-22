@@ -6,7 +6,15 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
-import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
+
+/* HD hero layer sets (ART-PIPELINE Phase 7C) — the kitsune. Missing files
+   simply leave the procedural paperdoll in place. */
+for (const [part, file] of Object.entries({ body: "kitsune-e-body.png", tail: "kitsune-e-tail.png" })) {
+  const img = new Image();
+  img.onload = () => registerHeroSprite("kitsune", img, "e", part);
+  img.src = "/assets/heroes/" + file;
+}
 
 /* Generated enemy sprites — same fallback contract as the plates. HD art
    (2 art px per logical unit, source-native on the 2x canvas) wins over the
@@ -420,8 +428,11 @@ function Portrait({ m }) {
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, cv.width, cv.height);
       ctx.imageSmoothingEnabled = false;
-      const Z = 4;
-      ctx.setTransform(Z, 0, 0, Z, Math.round(cv.width * 0.42), cv.height - 6 * Z);
+      /* HD layer sets are ~123 logical px tall — zoom out a step and shift
+         right so the hero and her tails fit the frame. */
+      const hd = heroSpriteSetFor(src);
+      const Z = hd ? 3 : 4;
+      ctx.setTransform(Z, 0, 0, Z, Math.round(cv.width * (hd ? 0.58 : 0.42)), cv.height - 6 * Z);
       const mp = {
         ...src, x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
         chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999, noBars: true,

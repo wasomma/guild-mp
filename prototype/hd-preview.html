@@ -36,7 +36,10 @@
     try { render.registerEnemySprite(kind, await load("./enemy-hd-" + kind + ".png"), true); }
     catch { render.registerEnemySprite(kind, await load("./enemy-" + kind + ".png")); }
   }
-  render.registerHeroSprite("Kitsune", await load("./gen-2-pixelrealism.png"), "e");
+  try {
+    render.registerHeroSprite("kitsune", await load("./kitsune-hd-body.png"), "e", "body");
+    render.registerHeroSprite("kitsune", await load("./kitsune-hd-tail.png"), "e", "tail");
+  } catch { /* no HD hero layers present — paperdolls stay */ }
 
   const hd = document.getElementById("hd").getContext("2d");
   const sd = document.getElementById("sd").getContext("2d");

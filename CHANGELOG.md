@@ -2,6 +2,15 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.22 — 2026-07-22
+
+**The kitsune arrives in HD.** The first source-native hero: a ~123-px-tall generated kitsune warrior, standing on the action line at full detail — long green-to-pink hair, fox ears, wine-and-gold outfit, golden spear:
+
+- Wearing the **Kitsune Crown hairstyle together with the Nine-Tails cape** now summons the HD kitsune in place of the procedural paperdoll — the cosmetic set you earn is the transformation.
+- She is a **layered puppet**: five separately-drawn tail instances fan out behind her, each swaying on its own phase (brisker while walking), driven by the same engine motion language as everything else. Idle bob, attack lunges, and hops carry over automatically.
+- The inspect portrait frames HD characters at 3× (procedural stays 4×) so the full figure and tail fan fit — this is where the detail really lands.
+- Layer assets live in `assets/heroes/kitsune-e-*.png` (facing-keyed for the future south/north facings); missing files leave the paperdoll untouched, and the standalone prototype stays procedural.
+
 ## v0.1.21 — 2026-07-22
 
 **The HD action line.** The game window doubles its pixel density and the four zone enemies are reborn in high-definition art — the first visible payoff of the HD canvas direction:
