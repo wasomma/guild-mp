@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.24 — 2026-07-22
+
+Facing fix: the HD cave bat and crypt skeleton shipped looking away from the party — both sprites are now mirrored to face the heroes, matching every other combatant (same in-place remedy as the v0.1.16 classic-sprite fix).
+
 ## v0.1.23 — 2026-07-22
 
 **HD tanks: the wardrobe goes layered.** Phase D of the HD-canvas arc — the first class base bodies with real mix-and-match gear at full detail:
