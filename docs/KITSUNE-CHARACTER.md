@@ -2,7 +2,7 @@
 
 The owner's original character, driven by the references in `docs/art-refs/Kitsune-Refs/` (gitignored), rendered under the game's locked art style (ART-BIBLE.md). Implemented 2026-07-21 as a five-piece cosmetic set in the paperdoll systems — the identity kit carries over; outfits stay the game's own gear/OUTFITS systems.
 
-**Status: v1 accepted as a good starting point (owner, 2026-07-21). Deliberately NOT iterating further on the sprite art until the overall aesthetic work (ART-PIPELINE Phase 2+, fidelity-study pick) settles — revisit the set after the style stabilizes.** Iterate with: `qa-kitsune-preview.mjs` + `prototype/kitsune-preview.html`, regression via `qa-kitsune-set.mjs`.
+**Status: the kitsune is the first HD character (owner, 2026-07-22).** The HD-canvas direction (ART-PIPELINE.md Phase 7) supersedes the old "wait for the fidelity pick" hold: Phase C ships this character as a source-native ~246px sprite — base roll `docs/art-src/character-options/gen-2-pixelrealism.png` (final re-roll pending: hands and weapon need a fix pass), sliced into puppet layers, animated by the engine's transform motion, east-facing (south comes with the feast facing in Phase F). The v1 procedural cosmetic set below stays live until then and remains the catalog definition. Iterate with: `qa-kitsune-preview.mjs` + `prototype/kitsune-preview.html` (classic) and `prototype/hd-preview.html` (2× canvas), regression via `qa-kitsune-set.mjs`.
 
 ## Identity kit (from the references)
 

@@ -2,6 +2,15 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.20 — 2026-07-22
+
+**The HD canvas foundation (dormant).** Infrastructure for the new character-art direction — source-native hi-res heroes on a 2× canvas — ships in both renderers with zero visible change:
+
+- The renderer now derives a render scale from its canvas: a classic 640×300 canvas draws exactly as before; a 1280×600 canvas draws every logical unit at 2 device pixels. World coordinates, the sim, and networking are untouched.
+- Two scale-correctness fixes that only bite on a wide canvas: the bloom self-copy lands 1:1 under an identity transform, and the tilt-shift band reads its source rectangles in device pixels.
+- New `HERO_SPRITES`/`registerHeroSprite(key, img, facing)` registry: a registered hi-res character sprite (authored at 2 device px per logical unit) replaces the procedural paperdoll, facing-keyed for the future — "e" for combat, "s"/"n" reserved for feast and camp facings. Nothing registers sprites yet; every character still draws procedurally.
+- Dev harness: `prototype/hd-preview.html` renders the 2× and classic canvases side by side with a draw-cost benchmark (measured: 0.74 ms/frame at 2× — comfortably within budget).
+
 ## v0.1.19 — 2026-07-22
 
 **The pet corner.** The feast's arm-wrestling pair is retired; where their table stood, every equipped pet now gathers on its own rug to play out the celebration:

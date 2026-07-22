@@ -1432,6 +1432,18 @@ function registerGroundStrip(zoneName, img) { GROUND_STRIPS[zoneName] = img; }
    kinds keep the procedural drawing. */
 const ENEMY_SPRITES = {};
 function registerEnemySprite(kind, img) { ENEMY_SPRITES[kind] = img; }
+/* Hi-res hero sprites for the HD canvas direction (docs/ART-PIPELINE.md):
+   authored at 2 device px per logical unit, so they render source-native on
+   a 2x canvas (see the render-scale wrapper in draw). Two-level registry —
+   character key, then facing: "e" is combat (the engine mirrors for west),
+   "s"/"n" are reserved for future feast and camp facings. The standalone
+   prototype registers none and keeps the procedural paperdolls. Keys are
+   member names for now — a cosmetics-driven mapping ships with the first HD
+   character. */
+const HERO_SPRITES = {};
+function registerHeroSprite(key, img, facing) {
+  (HERO_SPRITES[key] || (HERO_SPRITES[key] = {}))[facing || "e"] = img;
+}
 
 function propRand(n) {
   let h = (n * 2654435761) >>> 0;
@@ -1668,8 +1680,11 @@ function drawLighting(ctx, g) {
   /* tilt-shift bands: re-blur the top and bottom of the frame */
   ctx.save();
   ctx.filter = "blur(1.6px)";
-  ctx.drawImage(ctx.canvas, 0, 0, W, 64, 0, 0, W, 64);
-  ctx.drawImage(ctx.canvas, 0, H - 28, W, 28, 0, H - 28, W, 28);
+  { /* drawImage source rects are device px, not logical units */
+    const S = ctx.canvas.width / W;
+    ctx.drawImage(ctx.canvas, 0, 0, W * S, 64 * S, 0, 0, W, 64);
+    ctx.drawImage(ctx.canvas, 0, (H - 28) * S, W * S, 28 * S, 0, H - 28, W, 28);
+  }
   ctx.restore();
   ctx.save();
   /* volumetric god rays */
@@ -2473,6 +2488,17 @@ function drawAdventurer(ctx, m, t) {
   if (m.alive && !m.walking && m.lunge <= 0) oy += Math.round(Math.sin(t * 2.5 + m.seed) * 1.4);
   if (m.hop > 0) oy -= Math.round(Math.abs(Math.sin(((0.7 - m.hop) / 0.7) * Math.PI * 2)) * 6);
   const ox = m.x + (m.lunge > 0 ? Math.sin(((0.25 - m.lunge) / 0.25) * Math.PI) * 13 : 0);
+
+  /* A registered hi-res sprite replaces the procedural paperdoll (combat is
+     side-view, so it always draws the east facing). */
+  const hs = m.alive && HERO_SPRITES[m.name] && HERO_SPRITES[m.name].e;
+  if (hs) {
+    const hw = hs.width / 2, hh = hs.height / 2;
+    drawShadow(ctx, m.x, m.y, 30);
+    ctx.drawImage(hs, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
+    hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
+    return;
+  }
 
   if (!m.alive) {
     drawShadow(ctx, m.x, m.y, 26);
@@ -4093,6 +4119,13 @@ function drawTimeline(ctx, g) {
 
 function draw(ctx, g) {
   ctx.imageSmoothingEnabled = false;
+  /* Render scale, derived from the canvas: a 640-wide canvas renders the
+     classic look (S=1, output unchanged); a 1280-wide canvas renders every
+     logical unit at 2 device px so hi-res sprites can draw source-native.
+     World coordinates stay 640x300 logical throughout. */
+  const S = ctx.canvas.width / W;
+  ctx.save();
+  if (S !== 1) ctx.scale(S, S);
   const t = g.time;
   ctx.save();
   if (g.shake > 0.2) ctx.translate(rand(-1, 1) * g.shake, rand(-1, 1) * g.shake * 0.6);
@@ -4137,9 +4170,10 @@ function draw(ctx, g) {
   /* bloom: an additive, blurred self-copy — bright emissives (glints, auras,
      ult beams, feast candles) spill soft light; dark pixels barely add. */
   ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); /* the self-copy must land 1:1 */
   ctx.globalCompositeOperation = "lighter";
   ctx.globalAlpha = 0.14;
-  ctx.filter = "blur(5px) saturate(1.35) brightness(1.1)";
+  ctx.filter = `blur(${5 * S}px) saturate(1.35) brightness(1.1)`;
   ctx.drawImage(ctx.canvas, 0, 0);
   ctx.restore();
   ctx.restore();
@@ -4180,6 +4214,7 @@ function draw(ctx, g) {
     ctx.fillText("The road is empty.", W / 2, H / 2 - 10);
     ctx.fillText("Join the voice channel to muster the party!", W / 2, H / 2 + 12);
   }
+  ctx.restore(); /* close the render-scale wrapper */
 }
 
 /* ===================== UI ===================== */

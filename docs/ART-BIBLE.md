@@ -2,7 +2,7 @@
 
 The single source of truth for how Guild of the Open Mic looks. Every art change — procedural code in the renderers or generated assets from the pipeline (see ART-PIPELINE.md) — is judged against this document. When a visual decision isn't covered here, make the call, then record it here in the same commit.
 
-Status: **style locked 2026-07-21** from the owner's reference picks. Remaining open item: the formal character-fidelity-study selection (see Direction).
+Status: **style locked 2026-07-21** from the owner's reference picks. **Character direction locked 2026-07-22:** the fidelity-study question is resolved by the **HD canvas** decision — source-native generated heroes (~246px art) on a 2× render canvas, adopted in phases (ART-PIPELINE.md Phase 7). Until Phase C ships the first HD character, the procedural paperdolls remain the live look.
 
 ## Direction (owner's picks, 2026-07-21)
 
@@ -13,9 +13,9 @@ Status: **style locked 2026-07-21** from the owner's reference picks. Remaining 
 
 ## Hard constraints (from the engine)
 
-- World canvas: **640 × 300**, ground line at y=244.
+- World geometry: **640 × 300 logical units**, ground line at y=244. The device canvas may run at 2× (1280×600) — the renderer derives its scale from the canvas width, and all coordinates stay logical. Hi-res hero sprites are authored at 2 device px per logical unit and drawn source-native on the 2× canvas via `HERO_SPRITES`.
 - Two pixel grids: background props on **P=3** (`px` helper), characters/enemies on **P2=2** (`px2` helper). Generated assets must land on one of these grids — no off-grid pixels, no anti-aliasing, no partial-alpha edges.
-- Characters are **procedural paperdolls** (class × hair × outfit × weapon skin × cape × aura, composed at draw time). Characters stay code-drawn; see ART-PIPELINE.md for what gets generated instead.
+- Characters are **procedural paperdolls** (class × hair × outfit × weapon skin × cape × aura, composed at draw time) until the HD phases land. The end state is a **hybrid layered puppet**: generated hi-res base body, gear and cosmetics as overlay layers (combinatorics preserved), animated by the engine's transform motion — see ART-PIPELINE.md Phase 7. Facings: east is combat canon (west mirrors); south/north are authored later for feast/camp scenes, so every HD asset is named and registered facing-aware from day one.
 - Scene layers: `_bg` (blurred 2.2px), `_mid`, `_fg`, then lighting/bloom passes. A generated background must be authored knowing the bg layer gets depth blur — fine detail there is wasted.
 - THE CARDINAL RULE applies to art: any rendering change lands identically in `client/src/render.js` and `prototype/guild-idle.jsx`.
 
@@ -45,7 +45,7 @@ Zone palettes are canon and live in `shared/sim.js` (ZONES). Generated assets fo
 **Characters & enemies (Star Renegades lane)**:
 - Rim light on the key-light side of every sprite; shadow side picks up environment bounce color (zone `amb`), never plain darkened base color and never black outlines — separation comes from value contrast against the scene.
 - Saturated mid-tones, confident readable silhouettes, slight pose dynamism (weight shift, weapon angle) over stiff symmetry.
-- Generated enemies must sit on the P2 grid at the same texel density as the procedural party or they will read as pasted-in.
+- **Two-tier density (HD direction):** the action line (heroes, then enemies) runs at fine pixel density on the 2× canvas; the diorama behind keeps its chunky P=3/P2 texels — this mixed density is Star Renegades' own composition, not a compromise. Within a tier, densities must match: generated enemies sit on the action line's density or they read as pasted-in.
 - **Scale rule (adventurers are ~70px tall):** ground fauna ankle-to-knee height (14–26px — a rabbit must never out-scale a hero), small flora/rocks knee-to-chest (40–58px), midground anchor trees/pillars ~2× character height (~150px). Generated small fauna is halved in resolution before the 2× texel upscale so its pixel density matches the P2 world instead of reading as fine-grained miniatures.
 
 **Battle VFX (Octopath II lane)** — judge against `battle-vfx-night-octopath2.jpg`:

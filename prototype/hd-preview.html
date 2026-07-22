@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- HD-CANVAS SPIKE HARNESS (hd-canvas-spike branch, not shipped): renders the
+     real draw code on a 1280x600 canvas (S=2) with a hi-res hero sprite at
+     native pixels, next to the classic 640x300 render. window.bench(S, n)
+     measures raw draw cost per frame at either scale. -->
+<html>
+<head><meta charset="utf-8"><title>HD canvas spike</title>
+<style>
+  body { background: #14121f; margin: 0; padding: 12px; font: 12px monospace; color: #cfc9e0; }
+  canvas { display: block; margin-bottom: 10px; border: 1px solid #333; max-width: 100%; }
+</style></head>
+<body>
+<div id="status">loading...</div>
+<div>HD 1280x600 (S=2, hi-res kitsune at native pixels)</div>
+<canvas id="hd" width="1280" height="600"></canvas>
+<div>classic 640x300 (S=1)</div>
+<canvas id="sd" width="640" height="300"></canvas>
+<script type="module">
+  const render = await import("./render.bundle.mjs");
+  const view = await (await fetch("./kitsune-view.json")).json();
+  const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+  for (const [zone, file] of Object.entries({
+    "Verdant Fields": "zone-verdant.png", "Gloomwood": "zone-gloomwood.png",
+    "Forgotten Crypt": "zone-forgotten-crypt.png", "Emberdeep": "zone-emberdeep.png",
+    "Feast Hall": "zone-feast-hall.png",
+  })) render.registerBgPlate(zone, await load("./" + file));
+  for (const [zone, file] of Object.entries({
+    "Verdant Fields": "ground-verdant-fields.png", "Gloomwood": "ground-gloomwood.png",
+    "Forgotten Crypt": "ground-forgotten-crypt.png", "Emberdeep": "ground-emberdeep.png",
+  })) render.registerGroundStrip(zone, await load("./" + file));
+  for (const [zone, stem] of Object.entries({
+    "Verdant Fields": "prop-verdant-fields", "Gloomwood": "prop-gloomwood",
+    "Forgotten Crypt": "prop-forgotten-crypt", "Emberdeep": "prop-emberdeep",
+  })) for (let s = 0; s < 4; s++) render.registerPropSprite(zone, await load(`./${stem}-${s}.png`), s);
+  for (const kind of ["slime", "bat", "skeleton", "imp"])
+    render.registerEnemySprite(kind, await load("./enemy-" + kind + ".png"));
+  render.registerHeroSprite("Kitsune", await load("./gen-2-pixelrealism.png"), "e");
+
+  const hd = document.getElementById("hd").getContext("2d");
+  const sd = document.getElementById("sd").getContext("2d");
+  window.drawOnce = (time) => {
+    const v = { ...view, time: view.time + (time || 0.35) };
+    render.draw(hd, { ...v }, 0.05);
+    render.draw(sd, { ...v }, 0.05);
+  };
+  window.bench = (scale, n) => {
+    const c = document.createElement("canvas");
+    c.width = 640 * scale; c.height = 300 * scale;
+    const ctx = c.getContext("2d");
+    const v = { ...view };
+    render.draw(ctx, v, 0.05); /* warm layer caches */
+    const t0 = performance.now();
+    for (let i = 0; i < n; i++) { v.time += 1 / 60; render.draw(ctx, v, 1 / 60); }
+    return (performance.now() - t0) / n;
+  };
+  window.drawOnce(0.35);
+  document.getElementById("status").textContent = "ready";
+</script>
+</body>
+</html>
