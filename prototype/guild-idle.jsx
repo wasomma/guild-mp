@@ -1426,6 +1426,13 @@ function registerPropSprite(zoneName, img, slot) {
    keep the procedural ground slab. */
 const GROUND_STRIPS = {};
 function registerGroundStrip(zoneName, img) { GROUND_STRIPS[zoneName] = img; }
+/* Generated enemy sprites (transparent PNGs at P2 texel density), keyed by
+   enemy kind ("slime", "bat", "skeleton", "imp"). Drawn bottom-center on the
+   ground line inside drawEnemy's scale transform; light engine motion
+   (squash, hover, bob) stands in for the procedural frame animation. Missing
+   kinds keep the procedural drawing. */
+const ENEMY_SPRITES = {};
+function registerEnemySprite(kind, img) { ENEMY_SPRITES[kind] = img; }
 
 function propRand(n) {
   let h = (n * 2654435761) >>> 0;
@@ -3062,7 +3069,41 @@ function drawEnemy(ctx, e, t) {
   ctx.save();
   ctx.translate(ox, oy); ctx.scale(s, s); ctx.translate(-ox, -oy);
   let top = -21;
-  if (e.kind === "slime") {
+  const spr = ENEMY_SPRITES[e.kind];
+  if (spr) {
+    /* generated sprite: bottom-center on the ground line; engine motion
+       (squash / hover / bob) replaces the procedural frame animation */
+    const th = spr.height / P2;
+    top = e.kind === "bat" ? -Math.round(th + 7) : -Math.round(th + 1);
+    let img = spr;
+    if (e.enraged) {
+      if (!spr._rage) {
+        const c = document.createElement("canvas");
+        c.width = spr.width; c.height = spr.height;
+        const cc = c.getContext("2d");
+        cc.drawImage(spr, 0, 0);
+        cc.globalCompositeOperation = "source-atop";
+        cc.fillStyle = "rgba(255,70,40,0.4)";
+        cc.fillRect(0, 0, c.width, c.height);
+        spr._rage = c;
+      }
+      img = spr._rage;
+    }
+    if (e.kind === "slime") {
+      const sq = Math.sin(t * 5 + e.seed) * 0.05;
+      ctx.save();
+      ctx.translate(ox, oy); ctx.scale(1 + sq, 1 - sq); ctx.translate(-ox, -oy);
+      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height));
+      ctx.restore();
+    } else if (e.kind === "bat") {
+      const hov = Math.sin(t * 3 + e.seed) * 6;
+      const fl = Math.floor(t * 8 + e.seed) % 2;
+      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height - 14 + hov + (fl ? -2 : 0)));
+    } else {
+      const f = Math.floor(t * 6 + e.seed) % 2;
+      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height - (f ? 1 : 0)));
+    }
+  } else if (e.kind === "slime") {
     top = -13;
     const sq = Math.sin(t * 5 + e.seed);
     const c = "#6fbf5e", cd = "#4d8f45", cD = "#3a6e37", cl = "#a8e08c", core = "#d9f7c2";

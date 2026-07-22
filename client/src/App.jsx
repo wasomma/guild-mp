@@ -6,7 +6,14 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
-import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite } from "./render.js";
+
+/* Generated enemy sprites — same fallback contract as the plates. */
+for (const kind of ["slime", "bat", "skeleton", "imp"]) {
+  const img = new Image();
+  img.onload = () => registerEnemySprite(kind, img);
+  img.src = "/assets/enemies/" + kind + ".png";
+}
 
 /* Generated seamless ground strips — same fallback contract as the plates. */
 for (const [zoneName, file] of Object.entries({

@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.15 — 2026-07-22
+
+**Generated enemies — the monsters join the diorama.** The four zone enemies are now PixelLab-generated sprites in the Star Renegades character lane (docs/ART-PIPELINE.md phase 6):
+
+- The Verdant Fields slime, Gloomwood cave bat, Forgotten Crypt skeleton, and Emberdeep imp replace their procedural drawings via the new ENEMY_SPRITES registry (`assets/enemies/<kind>.png`); the procedural art remains the fallback (and the standalone prototype's look), and the Kings are the same sprites at boss scale with their procedural crown.
+- Engine motion animates the static sprites — slime squash-and-stretch, bat hover with flap lift, skeleton and imp step-bob — and enraged enemies flush red. Elite auras, telegraphs, cleave rings, and HP bars stay procedural on top.
+- New `scripts/art/fit-enemy.mjs` fits raw generations onto the P2 texel grid (trim → hard-alpha resample to exact texel height → 2× upscale → optional mirror).
+
 ## v0.1.14 — 2026-07-22
 
 **The seam polish release — every layer boundary now reads natural.** A round of owner-driven refinements to how the generated layers meet:
