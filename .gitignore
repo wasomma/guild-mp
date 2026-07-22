@@ -21,3 +21,6 @@ prototype/kitsune-view-*.json
 
 # Local Claude session tooling (dev-preview launch config)
 .claude/
+
+# Review GIFs assembled from harness captures (regenerable, heavy)
+docs/art-src/enemies/gifs/
