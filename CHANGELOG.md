@@ -2,6 +2,16 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.14 — 2026-07-22
+
+**The seam polish release — every layer boundary now reads natural.** A round of owner-driven refinements to how the generated layers meet:
+
+- **Regenerated plates** — Emberdeep and Gloomwood backgrounds now carry texture to their bottom edge (their old "corner framing" produced flat bars at the ground seam).
+- **The Crypt walks on a road** — the ashlar-block strip (which read as a wall face) is replaced by a worn cobbled path of irregular stones.
+- **Gloomwood's floor is a deep-forest trail** — dense moss, roots, and stones with scattered luminous spore patches, replacing the featureless dark gradient.
+- **Layer transitions** — strips lost their inpaint-artifact bottom row; the ground below the surface now smears smoothly to the frame edge instead of showing a second-pass seam; a depth-haze feather and an irregular palette-matched clump fringe (grass/moss/rubble/ember nubs per zone) break the ruler-straight line where the midground meets the ground.
+- New dev tool: `prototype/biomes.html` renders all four biomes live on one page for art review.
+
 ## v0.1.13 — 2026-07-22
 
 Removed the last flat transition band between the midground and the ground: each ground strip's blank top margin (a few near-uniform rows the generator left above the actual surface texture — most visible as a dark bar in Gloomwood) is now trimmed away, so surface texture starts exactly at the walk-surface lip in all four zones.

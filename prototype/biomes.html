@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- DEV HARNESS: all four biomes drawn live on one page for art review.
+     Regenerate the per-biome views with qa-kitsune-preview.mjs (see repo root):
+     no arg / 6 / 11 / 16, copied to kitsune-view-<biome>.json. -->
+<html>
+<head><meta charset="utf-8"><title>Biome review board</title>
+<style>
+  body { background: #14121f; margin: 0; padding: 10px; font: 12px monospace; color: #cfc9e0; }
+  canvas { image-rendering: pixelated; display: block; margin: 3px 0 12px; border: 1px solid #333; width: 640px; }
+</style></head>
+<body>
+<script type="module">
+  const render = await import("./render.bundle.mjs");
+  for (const [zoneName, file] of Object.entries({
+    "Verdant Fields": "zone-verdant.png",
+    "Gloomwood": "zone-gloomwood.png",
+    "Forgotten Crypt": "zone-forgotten-crypt.png",
+    "Emberdeep": "zone-emberdeep.png",
+    "Feast Hall": "zone-feast-hall.png",
+  })) {
+    const img = new Image();
+    img.onload = () => render.registerBgPlate(zoneName, img);
+    img.src = "./" + file;
+  }
+  for (const [zoneName, stem] of Object.entries({
+    "Verdant Fields": "prop-verdant-fields",
+    "Gloomwood": "prop-gloomwood",
+    "Forgotten Crypt": "prop-forgotten-crypt",
+    "Emberdeep": "prop-emberdeep",
+  })) {
+    for (let slot = 0; slot < 4; slot++) {
+      const img = new Image();
+      img.onload = () => render.registerPropSprite(zoneName, img, slot);
+      img.src = "./" + stem + "-" + slot + ".png";
+    }
+  }
+  for (const [zoneName, file] of Object.entries({
+    "Verdant Fields": "ground-verdant-fields.png",
+    "Gloomwood": "ground-gloomwood.png",
+    "Forgotten Crypt": "ground-forgotten-crypt.png",
+    "Emberdeep": "ground-emberdeep.png",
+  })) {
+    const img = new Image();
+    img.onload = () => render.registerGroundStrip(zoneName, img);
+    img.src = "./" + file;
+  }
+  const biomes = [
+    ["Verdant Fields", "kitsune-view-verdant.json"],
+    ["Gloomwood", "kitsune-view-gloomwood.json"],
+    ["Forgotten Crypt", "kitsune-view-crypt.json"],
+    ["Emberdeep", "kitsune-view-ember.json"],
+  ];
+  const scenes = [];
+  for (const [name, file] of biomes) {
+    const label = document.createElement("div");
+    label.textContent = name;
+    const canvas = document.createElement("canvas");
+    canvas.width = 640; canvas.height = 300;
+    document.body.append(label, canvas);
+    const view = await (await fetch("./" + file)).json();
+    view.particles = []; view.floaters = []; view.shake = 0; view.connected = true;
+    scenes.push({ ctx: canvas.getContext("2d"), view });
+  }
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    for (const s of scenes) { s.view.time += dt; render.draw(s.ctx, s.view, dt); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

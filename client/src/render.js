@@ -154,11 +154,33 @@ function drawScene(ctx, g) {
   const strip = GROUND_STRIPS[zone.name];
   if (strip) {
     const so = ((g.scroll % strip.width) + strip.width) % strip.width;
-    /* bottom-aligned filler first, then the main pass 8px higher than the old
-       slab top: the surface lip overlaps the plate's flat bottom band (the
-       procedural near-range used to bridge that region) */
-    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, H - strip.height);
-    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, GROUND - 20);
+    /* main pass 8px higher than the old slab top (the surface lip overlaps
+       the plate's flat bottom band), then the last clean rows smeared to the
+       frame bottom — a second tiled pass would show a contrast seam */
+    const stripBot = GROUND - 20 + strip.height;
+    for (let sx = -so; sx < W; sx += strip.width) {
+      ctx.drawImage(strip, sx, GROUND - 20);
+      if (stripBot < H) ctx.drawImage(strip, 0, strip.height - 2, strip.width, 2, sx, stripBot, strip.width, H - stripBot);
+    }
+    /* irregular clump fringe straddling the lip: breaks the ruler-straight
+       top edge of the strip with small palette-matched bumps */
+    const off4 = g.scroll % 29;
+    const ctile = Math.floor(g.scroll / 29);
+    for (let i = -1; i < Math.ceil(W / 29) + 1; i++) {
+      const hh = propRand((ctile + i) * 13 + 5);
+      if (hh % 4 === 0) continue;
+      const cxx = i * 29 - off4 + ((hh >> 7) % 11);
+      const cw = 4 + (hh % 5), ch = 2 + ((hh >> 3) % 3);
+      ctx.fillStyle = (hh >> 5) & 1 ? zone.band : zone.top;
+      ctx.fillRect(cxx, GROUND - 20 - ch, cw, ch + 2);
+      ctx.fillStyle = "rgba(10,10,18,0.25)";
+      ctx.fillRect(cxx, GROUND - 20 - ch, cw, 1);
+    }
+    /* depth-haze feather at the lip: eases the value step where the blurred
+       plate meets the sharp strip (harshest in Gloomwood) */
+    const seam = ctx.createLinearGradient(0, GROUND - 24, 0, GROUND - 8);
+    seam.addColorStop(0, "rgba(10,10,18,0.35)"); seam.addColorStop(1, "rgba(10,10,18,0)");
+    ctx.fillStyle = seam; ctx.fillRect(0, GROUND - 24, W, 16);
   } else {
     ctx.fillStyle = zone.top; ctx.fillRect(0, GROUND - 12, W, 5);
     ctx.fillStyle = zone.ground; ctx.fillRect(0, GROUND - 7, W, H - GROUND + 7);
