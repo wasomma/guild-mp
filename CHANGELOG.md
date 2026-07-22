@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.13 — 2026-07-22
+
+Removed the last flat transition band between the midground and the ground: each ground strip's blank top margin (a few near-uniform rows the generator left above the actual surface texture — most visible as a dark bar in Gloomwood) is now trimmed away, so surface texture starts exactly at the walk-surface lip in all four zones.
+
 ## v0.1.12 — 2026-07-22
 
 **The ground got its perspective back.** All four ground strips regenerated from a slightly elevated camera — the walkable surface now reads as a foreshortened plane you look down onto (mottled meadow, mossy forest floor, flagstone paving, ember-veined crust) instead of an eye-level cross-section with grass silhouetted against the sky. The strip's surface lip was also raised to overlap the background plate's bottom edge, removing the flat single-color band that sat awkwardly between the midground and the ground.
