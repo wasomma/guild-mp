@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- DEV HARNESS (not shipped): animates the feast pet corner with the real
+     draw code. Regenerate feast-pets-view.json with qa-pet-preview.mjs (repo
+     root) and rebuild render.bundle.mjs (see QA-STATUS.md soak command). -->
+<html>
+<head><meta charset="utf-8"><title>Feast pet corner preview</title>
+<style>
+  body { background: #14121f; margin: 0; padding: 12px; font: 12px monospace; color: #cfc9e0; }
+  canvas { image-rendering: pixelated; display: block; margin-bottom: 10px; border: 1px solid #333; }
+</style></head>
+<body>
+<div>feast scene (640x300)</div>
+<canvas id="scene" width="640" height="300"></canvas>
+<div>4x inspect of the pet corner</div>
+<canvas id="zoom" width="600" height="340"></canvas>
+<script type="module">
+  const render = await import("./render.bundle.mjs");
+  const view = await (await fetch("./feast-pets-view.json")).json();
+  const img = new Image();
+  img.onload = () => render.registerBgPlate("Feast Hall", img);
+  img.src = "./zone-feast-hall.png";
+  const scene = document.getElementById("scene").getContext("2d");
+  const zoomC = document.getElementById("zoom");
+  const zoom = zoomC.getContext("2d");
+  zoom.imageSmoothingEnabled = false;
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    view.time += dt;
+    view.feastT = 12; /* hold the feast; never let the banner hit zero */
+    render.draw(scene, view, dt);
+    zoom.fillStyle = "#14121f"; zoom.fillRect(0, 0, 600, 340);
+    zoom.drawImage(scene.canvas, 478, 195, 150, 85, 0, 0, 600, 340);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>
