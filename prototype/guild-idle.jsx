@@ -1412,6 +1412,27 @@ function getLayer(g, key) {
 const BG_PLATES = {};
 function registerBgPlate(zoneName, img) { BG_PLATES[zoneName] = img; }
 
+/* Generated midground prop sprites (transparent PNGs), keyed by zone name.
+   Each zone holds a slot array — 0 is the large anchor, 1+ are small props
+   (rocks, flora, fauna). Placement hashes the world tile index, so the
+   landscape varies but stays put as it scrolls and is identical for every
+   client. Zones with no sprites keep the procedural props. */
+const PROP_SPRITES = {};
+function registerPropSprite(zoneName, img, slot) {
+  (PROP_SPRITES[zoneName] || (PROP_SPRITES[zoneName] = []))[slot || 0] = img;
+}
+function propRand(n) {
+  let h = (n * 2654435761) >>> 0;
+  h ^= h >>> 13; h = (h * 1597334677) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
+}
+function drawProp(mm, img, cx, flip) {
+  const dx = Math.round(cx - img.width / 2), dy = 234 - img.height;
+  if (!flip) { mm.drawImage(img, dx, dy); return; }
+  mm.save(); mm.translate(dx + img.width / 2, 0); mm.scale(-1, 1); mm.translate(-(dx + img.width / 2), 0);
+  mm.drawImage(img, dx, dy); mm.restore();
+}
+
 function drawRange(c, off, baseY, amp, wgap, color) {
   c.fillStyle = color;
   for (let i = -1; i < Math.ceil(W / wgap) + 2; i++) {
@@ -1464,9 +1485,23 @@ function drawScene(ctx, g) {
   const md = getLayer(g, "_mid"), mm = md.getContext("2d");
   mm.clearRect(0, 0, W, H);
   const off2 = (g.scroll * 0.55) % 150;
+  const props = PROP_SPRITES[zone.name];
+  const hasProps = !!(props && props.some(Boolean));
+  const tile0 = Math.floor((g.scroll * 0.55) / 150);
   for (let i = -1; i < 6; i++) {
     const x = i * 150 - off2 + 26;
-    if (zone.enemy === "slime") {
+    if (hasProps) {
+      const h = propRand(tile0 + i);
+      if (h % 5) {                       /* 1 in 5 tiles stays open ground */
+        const s = props[h % props.length] || props.find(Boolean);
+        drawProp(mm, s, x + 12 + ((h >> 4) % 41) - 20, (h >> 6) & 1);
+      }
+      const h2 = propRand((tile0 + i) * 7 + 3);
+      if (h2 % 5 < 3) {                  /* small filler between anchors */
+        const s2 = props[1 + (h2 % Math.max(1, props.length - 1))];
+        if (s2) drawProp(mm, s2, x + 87 + ((h2 >> 5) % 51) - 25, (h2 >> 7) & 1);
+      }
+    } else if (zone.enemy === "slime") {
       mm.fillStyle = "#33261d"; mm.fillRect(x + 11, 170, 7, 64);
       mm.fillStyle = zone.midDark; mm.fillRect(x - 10, 126, 48, 34);
       mm.fillStyle = zone.mid; mm.fillRect(x - 4, 112, 36, 30); mm.fillRect(x - 14, 140, 24, 18);

@@ -6,7 +6,22 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
-import { draw, drawAdventurer, registerBgPlate } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate, registerPropSprite } from "./render.js";
+
+/* Generated midground prop sets — slot 0 is the anchor, 1+ are small props.
+   Same fallback contract as the plates. */
+for (const [zoneName, stem] of Object.entries({
+  "Verdant Fields": "verdant-fields",
+  "Gloomwood": "gloomwood",
+  "Forgotten Crypt": "forgotten-crypt",
+  "Emberdeep": "emberdeep",
+})) {
+  for (let slot = 0; slot < 4; slot++) {
+    const img = new Image();
+    img.onload = () => registerPropSprite(zoneName, img, slot);
+    img.src = "/assets/props/" + stem + "-" + slot + ".png";
+  }
+}
 
 /* Generated zone background plates (docs/ART-PIPELINE.md). A missing or
    failed file simply leaves that zone's procedural background in place. */

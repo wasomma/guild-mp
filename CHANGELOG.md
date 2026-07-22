@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.10 — 2026-07-22
+
+**A living, changing midground.** The second art-pipeline release: the repeating procedural props are replaced by varied generated prop sets.
+
+- **Each zone now has a landscape, not a wallpaper** — a large anchor (oak, twisted glow-tree, candle pillar, lava spire) plus rocks, flora, and biome fauna: a rabbit in Verdant Fields, an owl on a stump in Gloomwood, a rat in the Forgotten Crypt, a fire salamander in Emberdeep. Placement varies as the party marches — different props, shifted positions, mirrored flips, open stretches — while staying deterministic, so every connected player sees the identical world.
+- **Everything is scaled to the heroes** — fauna at ankle-to-knee height, flora knee-to-chest, anchor trees about twice a hero's height (the first draft's rabbit was taller than a human; the art bible now has a formal scale rule).
+- Procedural props remain as automatic fallback, and the standalone prototype keeps its procedural look.
+
 ## v0.1.9 — 2026-07-21
 
 **Generated background art and the Kitsune cosmetic set.** The first fruits of the new AI-assisted art pipeline (see docs/ART-PIPELINE.md).

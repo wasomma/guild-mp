@@ -46,6 +46,7 @@ Zone palettes are canon and live in `shared/sim.js` (ZONES). Generated assets fo
 - Rim light on the key-light side of every sprite; shadow side picks up environment bounce color (zone `amb`), never plain darkened base color and never black outlines — separation comes from value contrast against the scene.
 - Saturated mid-tones, confident readable silhouettes, slight pose dynamism (weight shift, weapon angle) over stiff symmetry.
 - Generated enemies must sit on the P2 grid at the same texel density as the procedural party or they will read as pasted-in.
+- **Scale rule (adventurers are ~70px tall):** ground fauna ankle-to-knee height (14–26px — a rabbit must never out-scale a hero), small flora/rocks knee-to-chest (40–58px), midground anchor trees/pillars ~2× character height (~150px). Generated small fauna is halved in resolution before the 2× texel upscale so its pixel density matches the P2 world instead of reading as fine-grained miniatures.
 
 **Battle VFX (Octopath II lane)** — judge against `battle-vfx-night-octopath2.jpg`:
 - Additive, bloom-carried effects: white-hot core, colored falloff, particle debris. Ultimates may briefly darken the scene grade for contrast; standard hits must not.

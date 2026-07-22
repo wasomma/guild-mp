@@ -27,6 +27,18 @@
     img.onload = () => render.registerBgPlate(zoneName, img);
     img.src = "./" + file;
   }
+  for (const [zoneName, stem] of Object.entries({
+    "Verdant Fields": "prop-verdant-fields",
+    "Gloomwood": "prop-gloomwood",
+    "Forgotten Crypt": "prop-forgotten-crypt",
+    "Emberdeep": "prop-emberdeep",
+  })) {
+    for (let slot = 0; slot < 4; slot++) {
+      const img = new Image();
+      img.onload = () => render.registerPropSprite(zoneName, img, slot);
+      img.src = "./" + stem + "-" + slot + ".png";
+    }
+  }
   const scene = document.getElementById("scene").getContext("2d");
   const zoomC = document.getElementById("zoom");
   const zoom = zoomC.getContext("2d");
