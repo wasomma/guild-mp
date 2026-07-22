@@ -8,11 +8,18 @@ import {
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite } from "./render.js";
 
-/* Generated enemy sprites — same fallback contract as the plates. */
+/* Generated enemy sprites — same fallback contract as the plates. HD art
+   (2 art px per logical unit, source-native on the 2x canvas) wins over the
+   classic texel sprites; missing HD falls back to classic, then procedural. */
 for (const kind of ["slime", "bat", "skeleton", "imp"]) {
-  const img = new Image();
-  img.onload = () => registerEnemySprite(kind, img);
-  img.src = "/assets/enemies/" + kind + ".png";
+  const hd = new Image();
+  hd.onload = () => registerEnemySprite(kind, hd, true);
+  hd.onerror = () => {
+    const img = new Image();
+    img.onload = () => registerEnemySprite(kind, img);
+    img.src = "/assets/enemies/" + kind + ".png";
+  };
+  hd.src = "/assets/enemies/hd/" + kind + ".png";
 }
 
 /* Generated seamless ground strips — same fallback contract as the plates. */
@@ -310,7 +317,11 @@ export default function App() {
           </aside>
           <section className="stage">
             <div className="canvaswrap">
-              <canvas ref={canvasRef} width={W} height={H} />
+              {/* 2x device canvas: the world renders at 2 device px per
+                  logical unit so HD sprites draw source-native (render.js
+                  derives the scale; CSS sizing and mouse math are
+                  logical-relative and unchanged). */}
+              <canvas ref={canvasRef} width={W * 2} height={H * 2} />
             </div>
             {g && (
               <div className="worldbar">

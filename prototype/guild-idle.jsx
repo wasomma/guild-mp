@@ -1431,7 +1431,13 @@ function registerGroundStrip(zoneName, img) { GROUND_STRIPS[zoneName] = img; }
    (squash, hover, bob) stands in for the procedural frame animation. Missing
    kinds keep the procedural drawing. */
 const ENEMY_SPRITES = {};
-function registerEnemySprite(kind, img) { ENEMY_SPRITES[kind] = img; }
+/* hd: the sprite is HD art at 2 art px per logical unit (the hero-sprite
+   convention) — drawEnemy renders it at half its pixel size, source-native
+   on the 2x canvas. Omitted: classic texel art drawn 1:1. */
+function registerEnemySprite(kind, img, hd) {
+  if (hd) img._ds = 2;
+  ENEMY_SPRITES[kind] = img;
+}
 /* Hi-res hero sprites for the HD canvas direction (docs/ART-PIPELINE.md):
    authored at 2 device px per logical unit, so they render source-native on
    a 2x canvas (see the render-scale wrapper in draw). Two-level registry —
@@ -3097,8 +3103,12 @@ function drawEnemy(ctx, e, t) {
   const spr = ENEMY_SPRITES[e.kind];
   if (spr) {
     /* generated sprite: bottom-center on the ground line; engine motion
-       (squash / hover / bob) replaces the procedural frame animation */
-    const th = spr.height / P2;
+       (squash / hover / bob) replaces the procedural frame animation.
+       HD art carries _ds = 2 (2 art px per logical unit) and draws at half
+       its pixel size — source-native on the 2x canvas. */
+    const ds = spr._ds || 1;
+    const dw = spr.width / ds, dh = spr.height / ds;
+    const th = dh / P2;
     top = e.kind === "bat" ? -Math.round(th + 7) : -Math.round(th + 1);
     let img = spr;
     if (e.enraged) {
@@ -3118,15 +3128,15 @@ function drawEnemy(ctx, e, t) {
       const sq = Math.sin(t * 5 + e.seed) * 0.05;
       ctx.save();
       ctx.translate(ox, oy); ctx.scale(1 + sq, 1 - sq); ctx.translate(-ox, -oy);
-      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height));
+      ctx.drawImage(img, Math.round(ox - dw / 2), Math.round(oy - dh), dw, dh);
       ctx.restore();
     } else if (e.kind === "bat") {
       const hov = Math.sin(t * 3 + e.seed) * 6;
       const fl = Math.floor(t * 8 + e.seed) % 2;
-      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height - 14 + hov + (fl ? -2 : 0)));
+      ctx.drawImage(img, Math.round(ox - dw / 2), Math.round(oy - dh - 14 + hov + (fl ? -2 : 0)), dw, dh);
     } else {
       const f = Math.floor(t * 6 + e.seed) % 2;
-      ctx.drawImage(img, Math.round(ox - spr.width / 2), Math.round(oy - spr.height - (f ? 1 : 0)));
+      ctx.drawImage(img, Math.round(ox - dw / 2), Math.round(oy - dh - (f ? 1 : 0)), dw, dh);
     }
   } else if (e.kind === "slime") {
     top = -13;
@@ -4596,7 +4606,10 @@ export default function GuildIdle() {
           </header>
 
           <div style={{ background: "#100e1a", padding: "6px 10px" }}>
-            <canvas ref={cvsRef} width={W} height={H}
+            {/* 2x device canvas: the world renders at 2 device px per logical
+                unit so HD sprites draw source-native (the renderer derives
+                the scale; CSS sizing and mouse math are logical-relative). */}
+            <canvas ref={cvsRef} width={W * 2} height={H * 2}
               style={{ width: "100%", maxWidth: 900, display: "block", margin: "0 auto", imageRendering: "pixelated", border: "2px solid #2e2947", background: "#141221" }} />
           </div>
 

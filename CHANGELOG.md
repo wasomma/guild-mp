@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.21 — 2026-07-22
+
+**The HD action line.** The game window doubles its pixel density and the four zone enemies are reborn in high-definition art — the first visible payoff of the HD canvas direction:
+
+- The canvas now renders at 1280×600 (2 device pixels per world unit) in both the multiplayer client and the prototype. The diorama keeps its chunky charm; the action line gets fine.
+- All four enemies regenerated at HD density (2 art px per logical unit, drawn source-native): a glossy slime with a glowing core, a fuzzy cave bat with webbed wings and amber eyes, a bright-ivory skeleton warrior with sword and shield, and a brick-red imp with golden horns and a trident. Kings are the same art at 1.8× — the Slime King wears his crown well.
+- Classic texel sprites remain as fallback (`assets/enemies/<kind>.png`); HD art lives in `assets/enemies/hd/` and wins when present. The standalone prototype keeps its procedural enemies.
+
 ## v0.1.20 — 2026-07-22
 
 **The HD canvas foundation (dormant).** Infrastructure for the new character-art direction — source-native hi-res heroes on a 2× canvas — ships in both renderers with zero visible change:
