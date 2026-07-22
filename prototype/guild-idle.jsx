@@ -1548,7 +1548,11 @@ function drawScene(ctx, g) {
   const strip = GROUND_STRIPS[zone.name];
   if (strip) {
     const so = ((g.scroll % strip.width) + strip.width) % strip.width;
-    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, GROUND - 12);
+    /* bottom-aligned filler first, then the main pass 8px higher than the old
+       slab top: the surface lip overlaps the plate's flat bottom band (the
+       procedural near-range used to bridge that region) */
+    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, H - strip.height);
+    for (let sx = -so; sx < W; sx += strip.width) ctx.drawImage(strip, sx, GROUND - 20);
   } else {
     ctx.fillStyle = zone.top; ctx.fillRect(0, GROUND - 12, W, 5);
     ctx.fillStyle = zone.ground; ctx.fillRect(0, GROUND - 7, W, H - GROUND + 7);

@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.12 — 2026-07-22
+
+**The ground got its perspective back.** All four ground strips regenerated from a slightly elevated camera — the walkable surface now reads as a foreshortened plane you look down onto (mottled meadow, mossy forest floor, flagstone paving, ember-veined crust) instead of an eye-level cross-section with grass silhouetted against the sky. The strip's surface lip was also raised to overlap the background plate's bottom edge, removing the flat single-color band that sat awkwardly between the midground and the ground.
+
 ## v0.1.11 — 2026-07-22
 
 **Generated ground and planted props — the environment pass is complete.** Every layer of the scene (background, midground, ground) is now generated art with procedural fallback.
