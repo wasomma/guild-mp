@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.16 — 2026-07-22
+
+Flipped all four generated enemy sprites to face left, toward the party — the v0.1.15 sprites shipped facing away from the fight (the fit step's mirror was skipped). Asset-only fix; no code changes.
+
 ## v0.1.15 — 2026-07-22
 
 **Generated enemies — the monsters join the diorama.** The four zone enemies are now PixelLab-generated sprites in the Star Renegades character lane (docs/ART-PIPELINE.md phase 6):
