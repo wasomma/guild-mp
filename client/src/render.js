@@ -2167,11 +2167,8 @@ function drawFeastFront(ctx, g) {
   ctx.fillStyle = "#c78a3b"; ctx.fillRect(414, GROUND - 38, 16, 2); ctx.fillRect(418, GROUND - 34, 3, 2);
   ctx.fillStyle = "#e8dcc0"; ctx.fillRect(344, GROUND - 36, 4, 6);
   drawFlame(ctx, 346, GROUND - 36, 1.2, t, 5);
-  /* the arm-wrestling table */
-  ctx.fillStyle = "#6b4f33"; ctx.fillRect(526, GROUND - 26, 40, 6);
-  ctx.fillStyle = "#8a6b48"; ctx.fillRect(526, GROUND - 26, 40, 2);
-  ctx.fillStyle = "#4a3626"; ctx.fillRect(542, GROUND - 20, 8, 22);
-  ctx.fillStyle = "#3a2a1c"; ctx.fillRect(536, GROUND, 20, 4);
+  /* the pet corner where the wrestling table stood */
+  drawFeastPets(ctx, g, t);
   /* music notes from singers and dancers */
   ctx.font = "10px monospace";
   for (const m of g.members) {
@@ -2244,8 +2241,148 @@ function drawFeastBanner(ctx, g) {
   ctx.fillStyle = "#cfc9e8";
   ctx.fillText(Math.ceil(Math.max(0, g.feastT || 0)) + "s", W - 8, 15);
 }
+/* the pet corner: where the wrestling table stood, every equipped pet
+   gathers on its own rug to romp while the guild feasts */
+function drawFeastPets(ctx, g, t) {
+  /* corner rug, water bowl, and a ball of yarn */
+  ctx.fillStyle = "#2e4a5c"; ctx.fillRect(492, GROUND + 2, 122, 24);
+  ctx.fillStyle = "#f2c14e"; ctx.fillRect(492, GROUND + 2, 122, 2); ctx.fillRect(492, GROUND + 24, 122, 2);
+  ctx.fillStyle = "#446e8e"; ctx.fillRect(508, GROUND + 11, 8, 6); ctx.fillRect(553, GROUND + 11, 8, 6); ctx.fillRect(598, GROUND + 11, 8, 6);
+  ctx.fillStyle = "#6f7890"; ctx.fillRect(600, GROUND - 5, 12, 5);
+  ctx.fillStyle = "#8fb3d9"; ctx.fillRect(602, GROUND - 4, 8, 2);
+  ctx.fillStyle = "#c95f7b"; ctx.fillRect(495, GROUND - 6, 6, 6);
+  ctx.fillStyle = "#e77fb3"; ctx.fillRect(496, GROUND - 5, 3, 1); ctx.fillRect(498, GROUND - 3, 3, 1);
+  const pets = g.members.filter((m) => m.cos && m.cos.pet && m.cos.pet !== "none");
+  const n = pets.length;
+  pets.forEach((m, i) => {
+    const id = m.cos.pet;
+    const bx = Math.round(500 + ((i + 0.5) * 106) / n);
+    const by = GROUND + (i % 2 ? 17 : 5);
+    ctx.save();
+    /* everyone plays facing the middle of the rug */
+    if (bx > 553) { ctx.translate(bx, 0); ctx.scale(-1, 1); ctx.translate(-bx, 0); }
+    if (id === "cat") {
+      const c = "#7a7490";
+      drawShadow(ctx, bx, by, 10);
+      const ph = (t * 0.6 + m.seed) % 4;
+      px(ctx, bx, by, -5, -7 + Math.round(Math.sin(t * 3 + m.seed)), 1, 3, c);
+      if (ph < 1.4) {
+        /* head bowed to the flank, tongue rasping the fur clean */
+        px(ctx, bx, by, -4, -4, 8, 3, c);
+        px(ctx, bx, by, 1, -5, 4, 3, c);
+        px(ctx, bx, by, 1, -6, 1, 1, c); px(ctx, bx, by, 4, -6, 1, 1, c);
+        const lk = Math.floor(t * 7 + m.seed) % 2;
+        px(ctx, bx, by, 1 + lk, -2, 1, 1, "#e77fb3");
+        if (lk) px(ctx, bx, by, 0, -5, 1, 1, "#b7b1c9");
+      } else if (ph < 2.0) {
+        /* a paw scrubs behind the ear */
+        px(ctx, bx, by, -4, -4, 7, 3, c);
+        px(ctx, bx, by, 2, -7, 4, 4, c);
+        px(ctx, bx, by, 2, -8, 1, 1, c); px(ctx, bx, by, 5, -8, 1, 1, c);
+        px(ctx, bx, by, 4, -6, 1, 1, "#f2c14e");
+        px(ctx, bx, by, 1, -8 + (Math.floor(t * 8) % 2), 1, 2, c);
+      } else {
+        /* upright and smug between grooming passes */
+        px(ctx, bx, by, -4, -4, 7, 3, c);
+        px(ctx, bx, by, 2, -7, 4, 4, c);
+        px(ctx, bx, by, 2, -8, 1, 1, c); px(ctx, bx, by, 5, -8, 1, 1, c);
+        px(ctx, bx, by, 4, -6, 1, 1, "#f2c14e");
+      }
+      px(ctx, bx, by, -3, -1, 1, 1, c); px(ctx, bx, by, 1, -1, 1, 1, c);
+    } else if (id === "pup") {
+      const c = "#8a6b48";
+      drawShadow(ctx, bx, by, 11);
+      const ph = (t * 0.7 + m.seed) % 4;
+      if (ph < 1.8) {
+        /* belly-up roll, paws paddling the air, rocking with joy */
+        const rk = Math.round(Math.sin(t * 8 + m.seed));
+        px(ctx, bx, by, -4 + rk, -3, 8, 3, c);
+        px(ctx, bx, by, -3 + rk, -3, 6, 1, "#a3835c");
+        const w1 = Math.floor(t * 10 + m.seed) % 2, w2 = 1 - w1;
+        px(ctx, bx, by, -3 + rk, -5 - w1, 1, 2, c); px(ctx, bx, by, -1 + rk, -5 - w2, 1, 2, c);
+        px(ctx, bx, by, 1 + rk, -5 - w1, 1, 2, c); px(ctx, bx, by, 3 + rk, -5 - w2, 1, 2, c);
+        px(ctx, bx, by, 4 + rk, -3, 3, 3, c);
+        px(ctx, bx, by, 6 + rk, -4, 1, 2, "#6b4a32");
+        px(ctx, bx, by, 5 + rk, 0, 1, 1, "#e77fb3");
+      } else {
+        /* springs up, tail going wild, bouncing at the yarn */
+        const jy = -Math.round(Math.abs(Math.sin(t * 6 + m.seed)) * 2);
+        px(ctx, bx, by, -4, -4 + jy, 7, 3, c);
+        px(ctx, bx, by, 2, -7 + jy, 4, 4, c);
+        px(ctx, bx, by, 5, -7 + jy, 1, 2, "#6b4a32");
+        px(ctx, bx, by, 4, -6 + jy, 1, 1, "#26232b");
+        px(ctx, bx, by, -5, -5 + jy + Math.round(Math.sin(t * 14)), 2, 1, c);
+        px(ctx, bx, by, -3, -1, 1, 1, c); px(ctx, bx, by, 1, -1, 1, 1, c);
+      }
+    } else if (id === "drake") {
+      drawShadow(ctx, bx, by, 10);
+      const fl = Math.floor(t * 7 + m.seed) % 2;
+      px(ctx, bx, by, -3, -4, 7, 4, "#c9503f");
+      px(ctx, bx, by, 3, -6, 3, 3, "#e0654f");
+      px(ctx, bx, by, -5, -3, 2, 1, "#c9503f");
+      px(ctx, bx, by, fl ? -2 : -1, fl ? -8 : -6, 3, 3, "#8a2f24");
+      px(ctx, bx, by, 4, -5, 1, 1, "#f7e28b");
+      /* puffs a little arc of embers for the others to chase */
+      const ep = (t * 0.8 + m.seed) % 3;
+      if (ep < 0.9) {
+        for (let k = 0; k < 3; k++) {
+          const p = ep / 0.9 + k * 0.12;
+          if (p > 1) continue;
+          px(ctx, bx, by, Math.round(7 + p * 10), Math.round(-5 - Math.sin(p * Math.PI) * 4 + k), 1, 1, k % 2 ? "#ff8a4a" : "#f2a94e");
+        }
+      }
+    } else if (id === "slimelet") {
+      const b = Math.abs(Math.sin(t * 4 + m.seed));
+      const jy = -Math.round(b * 7);
+      drawShadow(ctx, bx, by, 10 - Math.round(b * 4));
+      /* stretches tall at the top of the hop, splats wide on the rug */
+      const st = Math.round(b * 2);
+      px(ctx, bx, by + jy, -3, -4 - st, 6, 4 + st, "#6fbf5e");
+      if (b < 0.35) px(ctx, bx, by, -4, -2, 8, 2, "#6fbf5e");
+      px(ctx, bx, by + jy, -2, -3 - st, 1, 1, "#26232b"); px(ctx, bx, by + jy, 1, -3 - st, 1, 1, "#26232b");
+    } else if (id === "owl") {
+      const c = "#9a8f7a";
+      drawShadow(ctx, bx, by, 9);
+      px(ctx, bx, by, -2, -5, 5, 6, c);
+      const look = Math.floor(t * 0.9 + m.seed) % 4;
+      if (look === 2) {
+        /* head owled clean around: nothing but feathers */
+        px(ctx, bx, by, -2, -6, 5, 4, shade(c, 0.85));
+      } else {
+        const off = look === 1 ? 1 : look === 3 ? -1 : 0;
+        px(ctx, bx, by, -2 + off, -6, 5, 4, c);
+        px(ctx, bx, by, -1 + off, -5, 1, 1, "#f7e28b"); px(ctx, bx, by, 1 + off, -5, 1, 1, "#f7e28b");
+        px(ctx, bx, by, off, -4, 1, 1, "#e8a13b");
+        /* a hoot on the forward look */
+        if (look === 0) {
+          const hp = (t * 1.4 + m.seed) % 1.6;
+          if (hp < 0.8) {
+            px(ctx, bx, by, 2, -8 - Math.round(hp * 3), 1, 1, "#f7e28b");
+            if (hp > 0.4) px(ctx, bx, by, 4, -9 - Math.round(hp * 3), 1, 1, "#f2c14e");
+          }
+        }
+      }
+    } else if (id === "wisp") {
+      const yy = by - 14 + Math.sin(t * 3 + m.seed) * 2;
+      const pu = 0.55 + 0.45 * Math.sin(t * 2.2 + m.seed);
+      const gg = ctx.createRadialGradient(bx, yy, 1, bx, yy, 8 + pu * 6);
+      gg.addColorStop(0, `rgba(143,227,255,${0.55 + pu * 0.35})`); gg.addColorStop(1, "rgba(143,227,255,0)");
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = gg; ctx.fillRect(bx - 16, yy - 16, 32, 32);
+      ctx.restore();
+      px(ctx, bx, yy, -1, -1, 2, 2, "#eafaff");
+      /* orbiting shines */
+      for (let k = 0; k < 3; k++) {
+        const a = t * 1.6 + m.seed + k * 2.1;
+        if (Math.sin(a * 1.7) < 0.2) continue;
+        px(ctx, bx, yy, Math.round(Math.cos(a) * 4), Math.round(Math.sin(a) * 3), 1, 1, "#eafaff");
+      }
+    }
+    ctx.restore();
+  });
+}
 function drawFeaster(ctx, m, t) {
-  drawPet(ctx, m, t);
+  /* pets are off playing in the corner during the feast (drawFeastPets) */
   const fs = m.feast || {};
   const act = fs.act || "dance";
   let oy = m.y;
@@ -2318,8 +2455,6 @@ function drawFeaster(ctx, m, t) {
   if (act === "sing") {
     px2(ctx, ox, oy, 1, -23, 3, 2, "#5a2f35");
     px2(ctx, ox, oy, 2, -22, 1, 1, "#e77fb3");
-  } else if (act === "wrestle") {
-    px2(ctx, ox, oy, 1, -22, 3, 1, "#f7f4ff");
   } else if (fem) {
     px2(ctx, ox, oy, 1, -22, 3, 1, "#c96a7a");
   } else {
@@ -2372,23 +2507,6 @@ function drawFeaster(ctx, m, t) {
       px2(ctx, ox, oy, -9, -14, 2, 2, SKIN);
       px2(ctx, ox, oy, 6, -22, 2, 4, oD);
       px2(ctx, ox, oy, 7, -24, 2, 2, SKIN);
-    }
-  } else if (act === "wrestle") {
-    px2(ctx, ox, oy, -7, -17, 2, 5, oD);
-    px2(ctx, ox, oy, -7, -12, 2, 2, SKIN);
-    if (m.walking) {
-      /* still striding to the table: arms at the sides, no reach yet */
-      px2(ctx, ox, oy, 6, -17, 2, 5, oD);
-      px2(ctx, ox, oy, 6, -12, 2, 2, SKIN);
-    } else {
-      const wob = Math.sin(t * 7 + (fs.pairSeed || 0)) * 2;
-      const yo = Math.round((fs.face === -1 ? -wob : wob));
-      const reach = Math.min(16, Math.max(6, Math.round(Math.abs((fs.midX || (m.x + 22)) - m.x) / 2)));
-      px2(ctx, ox, oy, 4, -17, 3, 2, oD);
-      px2(ctx, ox, oy, 6, -17 + yo * 0.5, reach - 6, 2, SKIN);
-      px2(ctx, ox, oy, reach - 1, -18 + yo, 3, 3, SKIN);
-      px2(ctx, ox, oy, reach, -18 + yo, 1, 1, SKIN_D);
-      if (Math.abs(wob) > 1.6) px2(ctx, ox, oy, 3, -28, 1, 1, "#8fe3ff");
     }
   }
   drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);

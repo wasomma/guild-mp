@@ -690,17 +690,12 @@ function setupFeast(g) {
   const ms = [...g.members];
   for (let i = ms.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ms[i], ms[j]] = [ms[j], ms[i]]; }
   const table = [316, 354, 392, 430, 462], bar = [96, 128], dance = [214, 252];
-  let ti = 0, bi = 0, di = 0, si = 0, idx = 0;
+  let ti = 0, bi = 0, di = 0, si = 0;
   const assign = (m, act, tx, extra) => { m.feast = { act, seed: Math.random() * 10, face: 1, ...(extra || {}) }; m.tx = tx; };
-  if (ms.length >= 2) {
-    const ps = Math.random() * 10;
-    assign(ms[0], "wrestle", 522, { midX: 545, pairSeed: ps });
-    assign(ms[1], "wrestle", 568, { face: -1, midX: 545, pairSeed: ps });
-    idx = 2;
-  }
+  /* the old arm-wrestling corner belongs to the pets now (drawFeastPets) */
   const acts = ["drink_bar", "eat", "sing", "dance", "drink", "eat", "dance", "drink_bar"];
-  for (; idx < ms.length; idx++) {
-    const a = acts[(idx - 2 + acts.length * 2) % acts.length];
+  for (let idx = 0; idx < ms.length; idx++) {
+    const a = acts[idx % acts.length];
     const m = ms[idx];
     if (a === "drink_bar" && bi < bar.length) assign(m, "drink", bar[bi++], { face: -1 });
     else if (a === "eat" && ti < table.length) assign(m, "eat", table[ti++]);

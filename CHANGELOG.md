@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.19 — 2026-07-22
+
+**The pet corner.** The feast's arm-wrestling pair is retired; where their table stood, every equipped pet now gathers on its own rug to play out the celebration:
+
+- Cats groom — licking their flank clean, scrubbing behind an ear, sitting up smug between passes. Pups roll belly-up with paws paddling, then spring up tail-wagging. Drakelings puff little arcs of embers. Slimelets bounce, stretching tall mid-hop and splatting wide. Moon Owls turn their head clean around and hoot. Glimmer Wisps pulse and throw off orbiting shines.
+- The corner has its own rug, water bowl, and ball of yarn; pets spread across it facing the middle, staggered in depth.
+- `setupFeast` no longer assigns the wrestle pair — everyone joins the drink/eat/sing/dance rotation; the wrestle activity and its table are gone from both renderers.
+
 ## v0.1.18 — 2026-07-22
 
 Boss level floor (balance stopgap): Kings now stat their HP and damage against `max(stage, highest level in the party)` instead of the raw stage, so boss fights stay real after the party outlevels the content (most visibly right after a chapter reset). Rewards still pay on the real stage; elites and normal packs are unchanged. A formal balance pass is planned; this holds the line until then.

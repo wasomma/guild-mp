@@ -57,7 +57,7 @@ The Guild Hall board posts **three contracts each day** — slay foes, defeat el
 
 ## Chapters end at the feast
 
-The campaign runs in **Chapters**, and a chapter ends itself: when the party fells the **wave 20 King** — the fourth King, closing the full tour of all four zones — the guild hall doors swing wide, a **feast** breaks out (mugs clink, a jig plays), the guild earns **✨ renown**, and a new chapter begins from wave 1. No votes, no buttons — just fight your way to the finale.
+The campaign runs in **Chapters**, and a chapter ends itself: when the party fells the **wave 20 King** — the fourth King, closing the full tour of all four zones — the guild hall doors swing wide, a **feast** breaks out (mugs clink, a jig plays, and every equipped pet piles onto the corner rug to play — cats groom, pups roll, drakes puff embers, slimelets bounce, moon owls hoot with a full head-turn, wisps shine), the guild earns **✨ renown**, and a new chapter begins from wave 1. No votes, no buttons — just fight your way to the finale.
 
 - **Heroes keep their levels, gear, and skills** across chapters. Only the world resets; you march into the new chapter as strong as you left the old one.
 - The feast also **restocks the pantry** — potion stocks are topped up to the guild's baseline.

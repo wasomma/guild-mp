@@ -114,17 +114,19 @@ for (const K of KINGS) {
   runDraw("stage 20 finale timeline", g, 40);
 }
 
-/* ---------- 5. feast, six members incl. wrestle pair, all activities ---------- */
+/* ---------- 5. feast, six members with all six pets in the pet corner ---------- */
 {
   const g = makeWorld(6);
   tickUntil(g, (w) => w.phase === "combat", 30);
+  const petIds = ["cat", "pup", "drake", "slimelet", "owl", "wisp"];
+  g.members.forEach((m, i) => { m.cos.pet = petIds[i % petIds.length]; });
   g.stage = 20; g.best = 20;
   endChapter(g);
   if (g.phase !== "feast") failures.push({ name: "feast setup", e: new Error("endChapter did not enter feast; phase=" + g.phase) });
   const acts = new Set(g.members.map((m) => m.feast && m.feast.act));
   console.log("note: feast activities present: " + [...acts].join(", "));
   for (let i = 0; i < 60; i++) tick(g, 0.05); // let feast animate a bit
-  runDraw("feast hall with wrestle pair", g, 80);
+  runDraw("feast hall with pet corner", g, 80);
 }
 
 /* ---------- 6. each of the six style ults mid-cast ---------- */
