@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.17 — 2026-07-22
+
+Smoothed the world scroll in the multiplayer client: the background now interpolates between server snapshots like the characters always did, instead of stepping forward at the 10Hz broadcast rate — the travel between fights no longer stutters.
+
 ## v0.1.16 — 2026-07-22
 
 Flipped all four generated enemy sprites to face left, toward the party — the v0.1.15 sprites shipped facing away from the fight (the fit step's mirror was skipped). Asset-only fix; no code changes.

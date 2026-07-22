@@ -221,10 +221,15 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "scroll", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
+        // scroll is continuous server-side but snapshots arrive at 10Hz; lerp it
+        // like the entities so the world glides instead of stepping (snap on reset)
+        v.scroll = net.prev && net.prev.scroll <= cur.scroll
+          ? net.prev.scroll + (cur.scroll - net.prev.scroll) * a
+          : cur.scroll;
         v.members = lerpEnts(net.prev ? net.prev.members : null, cur.members, a, LERP_KEYS);
         v.enemies = lerpEnts(net.prev ? net.prev.enemies : null, cur.enemies, a, LERP_KEYS);
         v.projectiles = lerpEnts(net.prev ? net.prev.projectiles : null, cur.projectiles, a, ["x", "y"]);
