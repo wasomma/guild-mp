@@ -1,0 +1,88 @@
+# Runs the repo's verification gates (CLAUDE.md "Build, run, verify") on every
+# push and PR, plus the two sync rules: the committed standalone HTML must be
+# byte-reproducible from the prototype, and (on main) gh-pages:index.html must
+# be byte-identical to it.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Syntax gates, bundles, headless QA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install client deps (pins esbuild via the lockfile)
+        run: npm ci --no-audit --no-fund
+        working-directory: client
+
+      - name: Syntax gates
+        run: |
+          node --check shared/sim.js
+          for f in server/*.js; do node --check "$f"; done
+
+      - name: Bundle-check client and prototype
+        run: |
+          ESBUILD=client/node_modules/.bin/esbuild
+          "$ESBUILD" client/src/App.jsx --bundle --outfile=/dev/null --loader:.jsx=jsx --alias:@shared=./shared --external:react --external:react-dom
+          "$ESBUILD" prototype/guild-idle.jsx --bundle --outfile=/dev/null --loader:.jsx=jsx --external:react --external:react-dom
+
+      - name: Headless sim + render QA
+        run: |
+          client/node_modules/.bin/esbuild client/src/render.js --bundle --format=esm --outfile=/tmp/render.bundle.mjs --alias:@shared=./shared
+          node qa-chapter-retell.mjs
+          node qa-render-soak.mjs
+          node qa-kitsune-set.mjs
+
+      - name: Standalone demo is rebuilt (cardinal sync rule)
+        run: |
+          node scripts/build-standalone.js
+          git diff --exit-code prototype/guild-of-the-open-mic.html || {
+            echo "::error::prototype/guild-of-the-open-mic.html is stale — run 'node scripts/build-standalone.js' and commit the result (see CLAUDE.md)."
+            exit 1
+          }
+
+  server-smoke:
+    name: Server WebSocket smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server deps
+        run: npm ci --no-audit --no-fund
+        working-directory: server
+
+      - name: WebSocket snapshot smoke test
+        run: node qa-ws-smoke.mjs
+
+  demo-sync:
+    name: Public demo matches main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: gh-pages index.html is byte-identical to the standalone build
+        run: |
+          git fetch --depth=1 origin gh-pages
+          main_sha=$(git rev-parse "HEAD:prototype/guild-of-the-open-mic.html")
+          pages_sha=$(git rev-parse "origin/gh-pages:index.html")
+          if [ "$main_sha" != "$pages_sha" ]; then
+            echo "::error::Public demo is stale: gh-pages index.html ($pages_sha) != main's standalone build ($main_sha). Push the build bytes to gh-pages (see CLAUDE.md)."
+            exit 1
+          fi

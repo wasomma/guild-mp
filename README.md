@@ -103,3 +103,7 @@ From then on a "Log in with Discord" button appears in the client header. Anyone
 ## Persistence
 
 Stop the server with Ctrl+C (or crash it, that works too) and start it again: the campaign resumes at the same stage, and every character (level, gear, skills, wardrobe) is waiting in the roster for its owner to rejoin voice. State lives in two SQLite tables, `worlds` and `characters`, inside `server/guild.db`. A `world.json` from the earlier version migrates into the database automatically on first boot. Delete `guild.db` to start a fresh legend.
+
+## License
+
+All rights reserved. The source is public so it can be read, studied, and discussed, but this is not an open-source license: copying, redistributing, or reusing the code or the game's art and audio requires the owner's permission.
