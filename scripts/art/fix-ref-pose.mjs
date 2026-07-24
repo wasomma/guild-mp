@@ -1,0 +1,60 @@
+// Repair the bootstrap style reference's pose: inpaint the crossed-arms
+// band of style-ref-mannequin.png into relaxed arms-at-sides (the rig needs
+// fist anchors beside the thighs). 100x200 fits /inpaint's 200 cap in one
+// window. Usage: node scripts/art/fix-ref-pose.mjs <seed>
+import { readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { createRequire } from "node:module";
+const require = createRequire(process.cwd() + "/package.json");
+const { PNG } = require("pngjs");
+
+const KEY = JSON.parse(readFileSync(homedir() + "/.claude.json", "utf8"))
+  .mcpServers.pixellab.env.PIXELLAB_SECRET;
+const DIR = "docs/art-src/heroes-d2";
+const seed = Number(process.argv[2]) || 1;
+
+const ref = PNG.sync.read(readFileSync(`${DIR}/style-ref-mannequin.png`));
+const { width: W, height: H } = ref;
+
+/* mask: white = repaint. The crossed arms + chest occupy roughly rows
+   45..140; repaint that full-width band so the arms can re-hang. */
+const mask = new PNG({ width: W, height: H });
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const i = (y * W + x) * 4;
+  const on = y >= 36 && y <= 145; /* start above the shoulder line or the kept upper-arm stubs force raised arms */
+  mask.data[i] = mask.data[i + 1] = mask.data[i + 2] = on ? 255 : 0;
+  mask.data[i + 3] = 255;
+}
+
+const pal = ["#e8b98a", "#c99465", "#3a3644", "#2a2732", "#4a4656", "#22202c"];
+const palPng = () => {
+  const p = new PNG({ width: pal.length, height: 1 });
+  pal.forEach((h, i) => {
+    p.data[i * 4] = parseInt(h.slice(1, 3), 16);
+    p.data[i * 4 + 1] = parseInt(h.slice(3, 5), 16);
+    p.data[i * 4 + 2] = parseInt(h.slice(5, 7), 16);
+    p.data[i * 4 + 3] = 255;
+  });
+  return PNG.sync.write(p).toString("base64");
+};
+
+const r = await fetch("https://api.pixellab.ai/v1/inpaint", {
+  method: "POST",
+  headers: { Authorization: "Bearer " + KEY, "Content-Type": "application/json" },
+  body: JSON.stringify({
+    description: "bald man standing upright in a plain dark-gray fitted long-sleeved bodysuit, both arms hanging relaxed straight down at his sides, hands in loose fists resting beside his thighs, smooth plain chest, soft painterly shading",
+    negative_description: "crossed arms, raised arms, hands on chest, hands on hips, gold trim, jewelry, weapon, muddy, blurry, deformed hands",
+    image_size: { width: W, height: H },
+    inpainting_image: { type: "base64", base64: readFileSync(`${DIR}/style-ref-mannequin.png`).toString("base64") },
+    mask_image: { type: "base64", base64: PNG.sync.write(mask).toString("base64") },
+    color_image: { type: "base64", base64: palPng() },
+    no_background: true,
+    shading: "detailed shading", detail: "highly detailed", outline: "lineless",
+    text_guidance_scale: 10,
+    seed,
+  }),
+});
+const j = await r.json().catch(() => null);
+if (!r.ok) throw new Error("inpaint " + r.status + ": " + JSON.stringify(j).slice(0, 300));
+writeFileSync(`${DIR}/style-ref-pose-s${seed}.png`, Buffer.from(j.image.base64, "base64"));
+console.log("wrote", `${DIR}/style-ref-pose-s${seed}.png`, "usage", JSON.stringify(j.usage || {}));

@@ -30,7 +30,7 @@ const PAL = [...SKIN, "#3a3644", "#2a2732", "#4a4656", "#2a2430"];
    photoreal-gaunt faces, not the mannequin idea itself). */
 const SUIT = "wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at the sides with hands in loose fists, well-drawn five-fingered hands, empty hands, no weapon";
 const PAINT = "painted in a soft painterly anime-influenced style, soft cel shading with warm light, gentle rounded facial features, large expressive eyes, a calm slight smile, smooth soft skin";
-const NEG = "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry, photorealistic, gaunt face, hollow cheeks, harsh shadows, grim expression, wrinkles";
+const NEG = "hair, beard, tail, furry, anthro, animal muzzle, fox face, wolf, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry, photorealistic, gaunt face, hollow cheeks, harsh shadows, grim expression, wrinkles";
 
 const SUBJECTS = {
   "human-m": {
@@ -46,6 +46,25 @@ const SUBJECTS = {
     desc: `athletic young elf woman standing in three-quarter view facing right, her face and body turned toward the right side of the frame, completely bald head, no hair, long elegant pointed elf ears extending out to the sides, ${SUIT}, ${PAINT}, detailed shading`,
   },
 };
+/* Race x gender matrix (owner-approved 2026-07-24): bald mannequins at the
+   kitsune's detail grade, canon skin (runtime-tinted later like hair), race
+   features baked EXCEPT tintables — dwarf beard and kitsunekin tail arrive
+   as overlay/instanced layers, so both are suppressed here. */
+const FEM = "her face and body turned toward the right side of the frame, completely bald shaved head with a smooth bare scalp, ";
+const RACE_SUBJECTS = {};
+for (const [race, mFlavor, fFlavor] of [
+  ["human", "athletic young man", "athletic young woman"],
+  ["elf", "slender graceful young elf man with long elegant pointed ears extending out to the sides", "slender graceful young elf woman with long elegant pointed ears extending out to the sides"],
+  ["kitsunekin", "lithe young man with a completely human face and two upright silver-gray furred fox ears on top of his head", "lithe young woman with a completely human face and two upright silver-gray furred fox ears on top of her head"],
+  ["dwarf", "short stocky powerfully built dwarf man with broad shoulders", "short stocky sturdily built dwarf woman with broad shoulders"],
+  ["orc", "athletic young orc man with two small ivory tusks rising from his lower jaw and a strong friendly heavy jaw", "athletic young orc woman with two small ivory tusks rising from her lower jaw and a strong jaw"],
+  ["tiefling", "athletic young tiefling man with two dark burgundy curved horns sweeping back from his temples", "athletic young tiefling woman with two dark burgundy curved horns sweeping back from her temples"],
+]) {
+  RACE_SUBJECTS[race + "-m"] = { desc: `${mFlavor} standing in three-quarter view facing right, completely bald head, no hair, ${SUIT}, ${PAINT}, detailed shading` };
+  RACE_SUBJECTS[race + "-f"] = { desc: `${fFlavor} standing in three-quarter view facing right, ${FEM}completely bald head, no hair, ${SUIT}, ${PAINT}, detailed shading` };
+}
+Object.assign(SUBJECTS, RACE_SUBJECTS);
+
 const SEEDS = [1, 2];
 
 mkdirSync(DIR, { recursive: true });
@@ -88,6 +107,27 @@ async function rollOne(eng, sub, seed) {
       shading: "detailed shading", detail: "highly detailed", outline: "lineless",
       text_guidance_scale: 8,
       color_image: { type: "base64", base64: palPng(PAL) }, seed,
+    });
+  } else if (eng.startsWith("b2")) {
+    /* v2 bootstrap: the pose-surgered arms-at-sides painterly mannequin */
+    const styleB64 = readFileSync(`${DIR}/style-ref-v2.png`).toString("base64");
+    const strength = Number(eng.slice(2)) || 35;
+    res = await call("/generate-image-bitforge", {
+      description: cfg.desc, negative_description: NEG,
+      image_size: BF_SIZE, no_background: true,
+      style_image: { type: "base64", base64: styleB64 },
+      style_strength: strength, seed,
+    });
+  } else if (eng.startsWith("bs")) {
+    /* bootstrap lane: the recolored bald gray-suit mannequin as style ref
+       (style-ref-mannequin.png is already 100x200 = BF_SIZE) */
+    const styleB64 = readFileSync(`${DIR}/style-ref-mannequin.png`).toString("base64");
+    const strength = Number(eng.slice(2)) || 35;
+    res = await call("/generate-image-bitforge", {
+      description: cfg.desc, negative_description: NEG,
+      image_size: BF_SIZE, no_background: true,
+      style_image: { type: "base64", base64: styleB64 },
+      style_strength: strength, seed,
     });
   } else if (eng.startsWith("bf")) {
     /* bitforge requires the style image at exactly the output size;
@@ -163,16 +203,58 @@ function sheet() {
   console.log("sheet:", `${DIR}/judge-sheet.png`, W + "x" + (H + PAD * 2 + LABEL), "cells:", cells.map((c) => c.label).join(","));
 }
 
+/* matrix sheet: 6 race rows x (m-s1 m-s2 f-s1 f-s2) columns, every cell
+   scaled to the kitsune's trimmed height for style-bar judging */
+function matrixSheet() {
+  const kits = PNG.sync.read(readFileSync(KITSUNE_RAW));
+  const kb = bbox(kits), CH = kb.h, PAD = 10;
+  const races = ["human", "elf", "kitsunekin", "dwarf", "orc", "tiefling"];
+  const cols = ["m-s1", "m-s2", "f-s1", "f-s2"];
+  const cells = races.map((r) => cols.map((c) => {
+    const p = `${DIR}/b235-${r}-${c.replace("-", "-s").replace("m-s", "m-s").replace("f-s", "f-s")}.png`;
+    const path = `${DIR}/b235-${r}-${c[0]}-s${c.slice(3)}.png`;
+    if (!existsSync(path)) return null;
+    const png = PNG.sync.read(readFileSync(path));
+    return { png, b: bbox(png) };
+  }));
+  const CW = Math.max(...cells.flat().filter(Boolean).map((c) => Math.round((c.b.w * CH) / c.b.h))) + PAD;
+  const W = PAD + CW * 4, H = (CH + PAD) * races.length + PAD;
+  const out = new PNG({ width: W, height: H });
+  out.data.fill(0);
+  cells.forEach((row, ri) => row.forEach((cell, ci) => {
+    if (!cell) return;
+    const { png, b } = cell;
+    const tw = Math.round((b.w * CH) / b.h);
+    const x0 = PAD + ci * CW + Math.round((CW - PAD - tw) / 2), y0 = PAD + ri * (CH + PAD);
+    for (let y = 0; y < CH; y++) for (let x = 0; x < tw; x++) {
+      const sx = b.x0 + Math.min(b.w - 1, Math.floor(((x + 0.5) / tw) * b.w));
+      const sy = b.y0 + Math.min(b.h - 1, Math.floor(((y + 0.5) / CH) * b.h));
+      const si = (sy * png.width + sx) * 4, di = ((y0 + y) * W + x0 + x) * 4;
+      out.data[di] = png.data[si]; out.data[di + 1] = png.data[si + 1];
+      out.data[di + 2] = png.data[si + 2]; out.data[di + 3] = png.data[si + 3];
+    }
+  }));
+  writeFileSync(`${DIR}/judge-matrix.png`, PNG.sync.write(out));
+  console.log("matrix:", `${DIR}/judge-matrix.png`, W + "x" + H);
+}
+
 const [cmd, only] = process.argv.slice(2);
 if (cmd === "roll") {
-  const filter = only ? only.split(":") : null;
-  for (const eng of ["px", "bf", "bf40", "bf25", "bfn35"]) for (const sub of Object.keys(SUBJECTS)) for (const seed of SEEDS) {
-    if (filter && !(filter[0] === eng && filter[1] === sub && Number(filter[2]) === seed)) continue;
-    try { await rollOne(eng, sub, seed); }
-    catch (e) { console.error("FAIL", eng, sub, "s" + seed, e.message); }
+  if (only) {
+    /* explicit engine:subject:seed — rolls exactly that spec, any engine */
+    const [eng, sub, seed] = only.split(":");
+    try { await rollOne(eng, sub, Number(seed) || 1); }
+    catch (e) { console.error("FAIL", only, e.message); process.exitCode = 1; }
+  } else {
+    for (const eng of ["px", "bf", "bf40", "bf25", "bfn35"]) for (const sub of Object.keys(SUBJECTS)) for (const seed of SEEDS) {
+      try { await rollOne(eng, sub, seed); }
+      catch (e) { console.error("FAIL", eng, sub, "s" + seed, e.message); }
+    }
   }
 } else if (cmd === "sheet") {
   sheet();
+} else if (cmd === "matrix") {
+  matrixSheet();
 } else {
   console.log("usage: roll [eng:sub:seed] | sheet");
 }
