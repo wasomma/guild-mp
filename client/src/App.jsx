@@ -4,6 +4,7 @@ import {
   BODIES, HATS, HAIRS, HAIRSTYLES, OUTFITS, WEAPON_SKINS, ACCESSORIES, CAPES, PETS, AURAS,
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
+  RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
@@ -14,12 +15,11 @@ import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGrou
    facing). Missing files simply leave the procedural paperdoll in place —
    heroSpriteSetFor gates each hero on having every layer it needs. */
 {
-  const HERO_LAYER_FILES = { kitsune: ["body", "tail"], weapon: ["warrior"] };
-  for (const b of ["tank-m", "tank-f"]) {
-    HERO_LAYER_FILES[b] = ["body",
-      ...[0, 3, 4].map((i) => "outfit:" + i),
-      ...["short", "pixie", "bob", "pony", "long"].map((h) => "hairstyle:" + h)];
-  }
+  /* The Phase 7D tank puppets were rolled back with the character-creator
+     pivot (owner call, 2026-07-24): all class heroes stay procedural until
+     the HD art direction is re-settled against the creator's taxonomy.
+     Only the kitsune full-body set (Phase 7C) remains registered. */
+  const HERO_LAYER_FILES = { kitsune: ["body", "tail"] };
   for (const [key, parts] of Object.entries(HERO_LAYER_FILES))
     for (const part of parts) {
       const img = new Image();
@@ -125,6 +125,8 @@ export default function App() {
   const [tab, setTab] = useState(null);
   const [selId, setSelId] = useState(null);
   const [wardTab, setWardTab] = useState("wardrobe");
+  const [creatorFor, setCreatorFor] = useState(null); // member id in the character creator
+  const creatorAutoRef = useRef(false); // auto-open once per session for a fresh character
   const [confirmRetell, setConfirmRetell] = useState(null); // member id awaiting confirm
   const [me, setMe] = useState(null);
   const [sfxOff, setSfxOffUI] = useState(false);
@@ -290,6 +292,14 @@ export default function App() {
     };
   }, []);
 
+  /* first-join creator: a fresh character (cos.fresh) belonging to the
+     logged-in player opens the creator once per session */
+  useEffect(() => {
+    if (!snap || !me || creatorAutoRef.current) return;
+    const mine = snap.members.find((x) => x.key === me.key);
+    if (mine && mine.cos && mine.cos.fresh) { creatorAutoRef.current = true; setCreatorFor(mine.id); }
+  }, [snap, me]);
+
   const g = snap;
   const sel = g ? g.members.find((m) => m.id === selId) : null;
   const zone = g ? zoneOf(g) : null;
@@ -342,6 +352,12 @@ export default function App() {
                   derives the scale; CSS sizing and mouse math are
                   logical-relative and unchanged). */}
               <canvas ref={canvasRef} width={W * 2} height={H * 2} />
+              {g && creatorFor != null && (() => {
+                const cm = g.members.find((x) => x.id === creatorFor);
+                return cm && !lockOf(cm)
+                  ? <CharacterCreator m={cm} send={send} onClose={() => setCreatorFor(null)} />
+                  : null;
+              })()}
             </div>
             {g && (
               <div className="worldbar">
@@ -386,7 +402,8 @@ export default function App() {
           )}
           {g && sel && (
             <aside className="rightcol">
-              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)} />
+              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)}
+                onAppearance={() => setCreatorFor(sel.id)} />
             </aside>
           )}
           {g && !sel && tab && (
@@ -459,6 +476,132 @@ function Portrait({ m }) {
   return <canvas ref={cvRef} width={300} height={400} className="portrait" />;
 }
 
+/* The character creator: a live undressed-preview of the paperdoll plus
+   pickers for the free identity catalogs (race, body, skin tone, hairstyle,
+   hair color, undergarment). Commits through the `appearance` intent; opens
+   automatically on a member's first join (cos.fresh) and any time from the
+   Appearance button. */
+function CreatorPreview({ m, draft, dressed }) {
+  const cvRef = useRef(null);
+  const dRef = useRef({ m, draft, dressed });
+  dRef.current = { m, draft, dressed };
+  useEffect(() => {
+    const cv = cvRef.current;
+    if (!cv) return;
+    const ctx = cv.getContext("2d");
+    let raf;
+    const t0 = performance.now();
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const { m: src, draft: d, dressed: dr } = dRef.current;
+      if (!src) return;
+      const t = (performance.now() - t0) / 1000;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = "#141221";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      const grd = ctx.createRadialGradient(cv.width * 0.5, cv.height * 0.62, 10, cv.width * 0.5, cv.height * 0.62, 170);
+      grd.addColorStop(0, "rgba(63,58,96,0.55)");
+      grd.addColorStop(1, "rgba(63,58,96,0)");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.setTransform(4, 0, 0, 4, Math.round(cv.width * 0.5), cv.height - 24);
+      const mp = {
+        ...src, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
+        x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
+        chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999,
+      };
+      drawAdventurer(ctx, mp, t);
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={cvRef} width={300} height={400} className="portrait" />;
+}
+
+function CharacterCreator({ m, send, onClose }) {
+  const [draft, setDraft] = useState({
+    race: m.cos.race || "human", body: m.cos.body || "m", skin: m.cos.skin ?? 0,
+    hairstyle: m.cos.hairstyle, hair: m.cos.hair,
+    under: m.cos.under || "wrap", underC: m.cos.underC ?? 0,
+  });
+  const [dressed, setDressed] = useState(false);
+  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
+  const styleChoices = HAIRSTYLES.filter((h) => FREE_HAIRSTYLES.includes(h.id) || (m.owned.hairstyle || []).includes(h.id));
+  const hairChoices = HAIRS.map((h, i) => ({ h, i })).filter(({ i }) => (m.owned.hair || []).includes(i));
+  const commit = () => { send({ a: "appearance", memberId: m.id, ...draft }); onClose(); };
+  return (
+    <div className="creator">
+      <div className="cleft">
+        <div className="clabel">{m.cos.fresh ? "Forge your adventurer" : "The outfitter's mirror"}</div>
+        <CreatorPreview m={m} draft={draft} dressed={dressed} />
+        <button className="mini" onClick={() => setDressed(!dressed)}>{dressed ? "🪞 show undergarments" : "👗 show current outfit"}</button>
+        <div className="crow">
+          <button className="mini confirm" onClick={commit}>✓ Step through the doors</button>
+          <button className="mini" onClick={onClose}>✕ not now</button>
+        </div>
+      </div>
+      <div className="copts">
+        <div className="cgroup">
+          <div className="clabel">Race</div>
+          <div className="crow">
+            {RACES.map((r) => (
+              <button key={r.id} className={"copt" + (draft.race === r.id ? " on" : "")} onClick={() => set("race", r.id)}>{r.name}</button>
+            ))}
+          </div>
+        </div>
+        <div className="cgroup">
+          <div className="clabel">Body</div>
+          <div className="crow">
+            {BODIES.map((b) => (
+              <button key={b.id} className={"copt" + (draft.body === b.id ? " on" : "")} onClick={() => set("body", b.id)}>{b.name}</button>
+            ))}
+          </div>
+        </div>
+        <div className="cgroup">
+          <div className="clabel">Skin tone</div>
+          <div className="crow">
+            {SKINS.map((s, i) => (
+              <button key={s.name} title={s.name} className={"csw" + (draft.skin === i ? " on" : "")} style={{ background: s.c }} onClick={() => set("skin", i)} />
+            ))}
+          </div>
+        </div>
+        <div className="cgroup">
+          <div className="clabel">Hairstyle</div>
+          <div className="crow">
+            {styleChoices.map((h) => (
+              <button key={h.id} className={"copt" + (draft.hairstyle === h.id ? " on" : "")} onClick={() => set("hairstyle", h.id)}>{h.name}</button>
+            ))}
+          </div>
+        </div>
+        <div className="cgroup">
+          <div className="clabel">Hair color</div>
+          <div className="crow">
+            {hairChoices.map(({ h, i }) => (
+              <button key={h.name} title={h.name} className={"csw" + (draft.hair === i ? " on" : "")}
+                style={{ background: h.c2 ? `linear-gradient(180deg, ${h.c} 55%, ${h.c2})` : h.c }} onClick={() => set("hair", i)} />
+            ))}
+          </div>
+        </div>
+        <div className="cgroup">
+          <div className="clabel">Undergarments</div>
+          <div className="crow">
+            {UNDERGARMENTS.map((u) => (
+              <button key={u.id} className={"copt" + (draft.under === u.id ? " on" : "")} onClick={() => set("under", u.id)}>{u.name}</button>
+            ))}
+          </div>
+          <div className="crow" style={{ marginTop: 6 }}>
+            {UNDER_COLORS.map((u, i) => (
+              <button key={u.name} title={u.name} className={"csw" + (draft.underC === i ? " on" : "")} style={{ background: u.c }} onClick={() => set("underC", i)} />
+            ))}
+          </div>
+        </div>
+        <div className="dim small">Race, body, skin, and starter styles are free — wardrobe pieces you own stay owned. Reopen any time with 🪞 Appearance.</div>
+      </div>
+    </div>
+  );
+}
+
 function PartyList({ g, onSel }) {
   if (!g.members.length) return <div className="dim">The hall is quiet. Join the Discord voice channel to enter the world.</div>;
   return (
@@ -483,12 +626,13 @@ function PartyList({ g, onSel }) {
   );
 }
 
-function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock }) {
+function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock, onAppearance }) {
   return (
     <div className="detail">
       <div className="drow">
         <button className="mini" onClick={onBack}>✕ close</button>
         <span style={{ color: CLASSES[m.cls].color }}>{CLASSES[m.cls].icon} {m.name} · Lv {m.level} {styleOf(m).name}</span>
+        {!lock && <button className="mini" onClick={onAppearance} title="race, body, skin, hair, undergarments">🪞 Appearance</button>}
         <span className="dim small">dmg {fmt(m.dmgDone)} · heal {fmt(m.healDone)} · kills {m.kills}</span>
       </div>
       <div className="inspect">
@@ -872,7 +1016,20 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .worldbar .wgroup { display: flex; gap: 16px; flex-wrap: wrap; }
 .wgold { color: #f2c14e; } .wrenown { color: #b07fe0; }
 .chorusline { color: #8fe3ff; font-size: 16px; }
-.canvaswrap { flex: 1; min-height: 0; display: flex; align-items: center; background: #000; border-bottom: 2px solid #2b2740; }
+.canvaswrap { flex: 1; min-height: 0; display: flex; align-items: center; background: #000; border-bottom: 2px solid #2b2740; position: relative; }
+.creator { position: absolute; inset: 10px; z-index: 6; display: flex; gap: 16px; padding: 14px; overflow: auto;
+  background: rgba(13,11,22,0.94); border: 1px solid #3a3550; border-radius: 10px; }
+.creator .cleft { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.creator .cleft .portrait { width: 220px; }
+.creator .copts { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.creator .clabel { font-size: 11px; color: #8b84ad; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.creator .crow { display: flex; flex-wrap: wrap; gap: 6px; }
+.creator .copt { font: inherit; font-size: 13px; cursor: pointer; border: 1px solid #2e2947; background: #262138; color: #cfc9e8; padding: 3px 10px; border-radius: 5px; }
+.creator .copt:hover { filter: brightness(1.2); }
+.creator .copt.on { border-color: #f2c14e; color: #fff1c9; }
+.creator .csw { width: 24px; height: 24px; border-radius: 5px; border: 2px solid #2e2947; cursor: pointer; padding: 0; }
+.creator .csw.on { border-color: #f2c14e; box-shadow: 0 0 0 1px #f2c14e; }
+.creator .confirm { border-color: #7fd069; color: #b9e8a8; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; }
 .tabs { display: flex; gap: 4px; padding: 8px 10px; }
 .tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-radius: 7px; padding: 4px 12px; cursor: pointer; }

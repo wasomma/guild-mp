@@ -40,22 +40,8 @@
     render.registerHeroSprite("kitsune", await load("./kitsune-hd-body.png"), "e", "body");
     render.registerHeroSprite("kitsune", await load("./kitsune-hd-tail.png"), "e", "tail");
   } catch { /* no HD hero layers present — paperdolls stay */ }
-  /* Phase 7D layered puppets — the same matrix the client registers, from
-     hero-<key>-e-<part>.png copies in this folder; absent files just leave
-     that combination procedural. */
-  {
-    const HERO_LAYER_FILES = { weapon: ["warrior"] };
-    for (const b of ["tank-m", "tank-f"]) {
-      HERO_LAYER_FILES[b] = ["body",
-        ...[0, 3, 4].map((i) => "outfit:" + i),
-        ...["short", "pixie", "bob", "pony", "long"].map((h) => "hairstyle:" + h)];
-    }
-    for (const [key, parts] of Object.entries(HERO_LAYER_FILES))
-      for (const part of parts) {
-        try { render.registerHeroSprite(key, await load("./hero-" + key + "-e-" + part.replace(":", "-") + ".png"), "e", part); }
-        catch { /* absent layer */ }
-      }
-  }
+  /* Phase 7D tank puppets rolled back 2026-07-24 (character-creator pivot) —
+     class heroes are procedural again; only the kitsune set registers. */
 
   const hd = document.getElementById("hd").getContext("2d");
   const sd = document.getElementById("sd").getContext("2d");

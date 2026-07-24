@@ -15,10 +15,12 @@ The world only moves while someone is in voice. When the last person leaves, tim
 - **Left sidebar** — the party: a card for each person currently in voice, with class, level, HP, and XP. Click a card to open their character sheet.
 - **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, zone, the active mutator, guild gold 🪙, and renown ✨. Below that, three tabs that open as right-side panels: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
 - **Right edge** — the **boss timeline**: the next ten Kings and how many waves remain before each.
-- **Character column** — clicking a party card opens it on the far right, with four tabs: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe**.
+- **Character column** — clicking a party card opens it on the far right, with four tabs: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe** — plus the **🪞 Appearance** button that reopens the character creator.
 - **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵), this guide (❓ How to play), and the Discord login.
 
 ## Your character
+
+**Make them yours.** The first time you join voice, the **character creator** opens over the game: pick your **race** (Human, Elf, Kitsune-kin, Dwarf, Orc, or Tiefling — purely cosmetic, each with its own features like pointed ears, a fox tail, tusks, or horns), body, **skin tone** (nine shades including a few decidedly non-human ones), hairstyle, hair color, and **starter undergarments**, all with a live mirror preview. Everything in the creator is free, and you can reopen it any time with **🪞 Appearance** in your character column — identity is never loot.
 
 **Classes.** New heroes are assigned Tank 🛡️, DPS ⚔️, or Healer 💚 in rotation so the party stays balanced. Tanks stand in front, soak hits, and can stun; DPS melt enemies; Healers keep everyone standing. You can **respec to any class for free** at the bottom of the Skills tab (it resets your skill ranks).
 

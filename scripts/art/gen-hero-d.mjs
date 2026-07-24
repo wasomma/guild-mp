@@ -40,6 +40,33 @@ const BODY_CFG = {
     desc: "tall athletic strong woman standing in three-quarter view facing right, her face and body turned toward the right side of the frame, completely bald head, no hair, smooth even skin, broad-shouldered powerful but tapered build, wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at her sides with hands in loose fists, well-drawn five-fingered hands, calm determined face, empty hands, no weapon, detailed shading",
     neg: "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry",
   },
+  /* Wave 2 silhouettes: DPS = lean and wiry, healer = slender and soft-
+     shouldered (the robed look comes from the outfits; the mannequin only
+     carries the build). Same proven bodysuit clause + negatives verbatim. */
+  "dps-m": {
+    artH: 240,
+    pal: [...SKIN, "#3a3644", "#2a2732", "#4a4656", "#2a2430"],
+    desc: "lean wiry athletic bald man standing in three-quarter view facing right, completely bald head, no hair, slim agile build with toned narrow shoulders, wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at his sides with hands in loose fists, well-drawn five-fingered hands, alert sharp-featured face, empty hands, no weapon, detailed shading",
+    neg: "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry",
+  },
+  "dps-f": {
+    artH: 234,
+    pal: [...SKIN, "#3a3644", "#2a2732", "#4a4656", "#2a2430"],
+    desc: "lean agile athletic woman standing in three-quarter view facing right, her face and body turned toward the right side of the frame, completely bald head, no hair, smooth even skin, slim toned wiry build, wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at her sides with hands in loose fists, well-drawn five-fingered hands, alert sharp-featured face, empty hands, no weapon, detailed shading",
+    neg: "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry",
+  },
+  "healer-m": {
+    artH: 238,
+    pal: [...SKIN, "#3a3644", "#2a2732", "#4a4656", "#2a2430"],
+    desc: "slender gentle bald man standing upright in three-quarter view facing right, completely bald head, no hair, slim graceful build with soft narrow shoulders, wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at his sides with hands in loose fists, well-drawn five-fingered hands, calm serene kind face, empty hands, no weapon, detailed shading",
+    neg: "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry",
+  },
+  "healer-f": {
+    artH: 234,
+    pal: [...SKIN, "#3a3644", "#2a2732", "#4a4656", "#2a2430"],
+    desc: "slender graceful woman standing upright in three-quarter view facing right, her face and body turned toward the right side of the frame, completely bald head, no hair, smooth even skin, slim gentle build with soft narrow shoulders, wearing a snug plain dark-gray #3a3644 long-sleeved fitted bodysuit covering the torso and both arms to the wrists, matching fitted dark-gray #2a2732 leggings, plain dark simple boots, bare hands, both arms relaxed at her sides with hands in loose fists, well-drawn five-fingered hands, calm serene kind face, empty hands, no weapon, detailed shading",
+    neg: "hair, beard, helmet, hat, weapon, sword, axe, shield, armor, cape, deformed hands, extra fingers, extra limbs, muddy, blurry",
+  },
 };
 
 /* Wardrobe items. mask: rows of the raw gen the inpaint may repaint, given
@@ -90,6 +117,38 @@ const WEAPON_CFG = {
     pal: ["#cfd6e0", "#7f8aa0", "#eef2f8", "#ffffff", "#6b4a32", "#513723", "#8a6b48"],
     desc: "single one-handed battle axe standing upright, broad curved steel axe head #cfd6e0 with bright polished edge #eef2f8 on one side near the top, sturdy dark wooden handle #6b4a32 with leather grip wrap, side view, nothing else in frame, detailed shading",
     neg: "hand, arm, person, double-headed, two blades, muddy, dark, blurry",
+  },
+  /* Wave 2 (all single-layer). Metal parts stay in the Steel near-grays so
+     the runtime ramp-swap can restyle them; wood/leather passes through.
+     The bow limbs are steel-gray on purpose — procedural drawArcherBow
+     builds the bow body from the skin ramp, so the HD bow must too. */
+  archer: {
+    gen: { w: 64, h: 160 }, artH: 122, steelify: true,
+    /* pixflux refuses a metal bow (wood prior beats every steel clause —
+       three seeds of A/B), so the bow generates wood and gets its warm
+       pixels remapped onto the Steel ramp at fit time. Full-steel matches
+       procedural canon: drawArcherBow builds the bow from the skin ramp. */
+    pal: ["#cfd6e0", "#7f8aa0", "#eef2f8", "#ffffff", "#6b4a32", "#513723", "#8a6b48"],
+    desc: "single tall recurve longbow standing upright, the bow made entirely of shining polished steel-gray #cfd6e0 metal, gleaming silvery metal bow limbs with bright #eef2f8 highlights, only a small dark leather grip wrap #6b4a32 at the middle, one thin taut pale vertical bowstring connecting the two tips, side view, nothing else in frame, detailed shading",
+    neg: "hand, arm, person, arrow, quiver, crossbow, wooden bow, brown wood limbs, muddy, dark, blurry",
+  },
+  rogue: {
+    gen: { w: 48, h: 96 }, artH: 46,
+    pal: ["#cfd6e0", "#7f8aa0", "#eef2f8", "#ffffff", "#6b4a32", "#513723", "#8a6b48"],
+    desc: "single slim dagger standing upright with the point at the top, slender polished steel-gray #cfd6e0 blade with a bright #eef2f8 edge, small steel crossguard, short dark leather-wrapped grip #6b4a32 with a steel pommel, side view, nothing else in frame, detailed shading",
+    neg: "hand, arm, person, sword, long blade, sheath, muddy, dark, blurry",
+  },
+  chain: {
+    gen: { w: 64, h: 128 }, artH: 82,
+    pal: ["#cfd6e0", "#7f8aa0", "#eef2f8", "#ffffff", "#6b4a32", "#513723", "#8a6b48"],
+    desc: "single hooked chainblade weapon standing upright, a curved sickle-like polished steel-gray #cfd6e0 blade with a bright #eef2f8 edge at the top, connected by a short segment of steel chain links to a dark leather-wrapped handle #6b4a32 at the bottom, side view, nothing else in frame, detailed shading",
+    neg: "hand, arm, person, scythe, long pole, whip, muddy, dark, blurry",
+  },
+  mystic: {
+    gen: { w: 64, h: 192 }, artH: 132,
+    pal: ["#cfd6e0", "#7f8aa0", "#eef2f8", "#ffffff", "#6b4a32", "#513723", "#8a6b48"],
+    desc: "single tall wooden mage staff standing upright, long straight dark wooden shaft #6b4a32, crowned at the top by an ornate polished steel-gray #cfd6e0 headpiece with curved prongs holding a small glowing pale white #eef2f8 crystal, side view, nothing else in frame, detailed shading",
+    neg: "hand, arm, person, flag, spear, blade, muddy, dark, blurry",
   },
 };
 
@@ -339,14 +398,34 @@ if (cmd === "body") {
   const cfg = WEAPON_CFG[styleId];
   if (!cfg) throw new Error("styleId must be: " + Object.keys(WEAPON_CFG).join(" | "));
   const seed = Number(seedArg) || 1;
-  const { png, usage } = await call("/generate-image-pixflux", {
-    description: cfg.desc, negative_description: cfg.neg,
-    image_size: { width: cfg.gen.w, height: cfg.gen.h }, no_background: true,
-    shading: "detailed shading", detail: "highly detailed", outline: "lineless",
-    text_guidance_scale: 8,
-    color_image: { type: "base64", base64: palPng(cfg.pal) }, seed,
-  });
-  writeFileSync(`${DIR}/weapon-${styleId}-s${seed}.png`, PNG.sync.write(png));
+  let png, usage;
+  if (process.env.REFIT === "1") {
+    /* reprocess a saved raw (trim/steelify/resample), no API call */
+    png = PNG.sync.read(readFileSync(`${DIR}/weapon-${styleId}-s${seed}.png`));
+  } else {
+    ({ png, usage } = await call("/generate-image-pixflux", {
+      description: cfg.desc, negative_description: cfg.neg,
+      image_size: { width: cfg.gen.w, height: cfg.gen.h }, no_background: true,
+      shading: "detailed shading", detail: "highly detailed", outline: "lineless",
+      text_guidance_scale: 8,
+      color_image: { type: "base64", base64: palPng(cfg.pal) }, seed,
+    }));
+    writeFileSync(`${DIR}/weapon-${styleId}-s${seed}.png`, PNG.sync.write(png));
+  }
+  if (cfg.steelify) {
+    /* remap warm (wood) pixels onto the Steel ramp by luminance so the
+       runtime ramp-swap (which keys on cool near-grays) can restyle them */
+    const RAMP = [[0x5f, 0x69, 0x80], [0x7f, 0x8a, 0xa0], [0xcf, 0xd6, 0xe0], [0xee, 0xf2, 0xf8]];
+    for (let i = 0; i < png.width * png.height; i++) {
+      const o = i * 4;
+      if (png.data[o + 3] < 8) continue;
+      const r = png.data[o], g = png.data[o + 1], bl = png.data[o + 2];
+      if (!(r > bl + 12 && r > g)) continue; /* warm = wood */
+      const lum = (r * 0.299 + g * 0.587 + bl * 0.114) / 255;
+      const t = lum < 0.22 ? RAMP[0] : lum < 0.3 ? RAMP[1] : lum < 0.44 ? RAMP[2] : RAMP[3];
+      png.data[o] = t[0]; png.data[o + 1] = t[1]; png.data[o + 2] = t[2];
+    }
+  }
   const b = bbox(png);
   /* trim + resample to artH like fit-enemy (weapons ship trimmed — they
      have their own anchor, not the body canvas) */

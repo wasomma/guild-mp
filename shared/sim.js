@@ -68,6 +68,47 @@ export const BODIES = [
   { id: "m", name: "Male" },
   { id: "f", name: "Female" },
 ];
+/* Character-creator identity catalogs (all free — identity is not loot).
+   Races are cosmetic-only: no stat changes, just features the renderers
+   draw (ears, tail, tusks, horns, build scale, dwarf beard). */
+export const RACES = [
+  { id: "human", name: "Human" },
+  { id: "elf", name: "Elf", ears: "point" },
+  { id: "kitsunekin", name: "Kitsune-kin", ears: "fox", tail: true },
+  { id: "dwarf", name: "Dwarf", build: 0.86, buildW: 1.1, beard: true },
+  { id: "orc", name: "Orc", tusks: true },
+  { id: "tiefling", name: "Tiefling", horns: true },
+];
+export const raceOf = (m) => RACES.find((r) => r.id === (m.cos && m.cos.race)) || RACES[0];
+/* Skin tones: index 0 is the classic canon ramp; 1-4 natural range; 5+ the
+   fantasy tones the orc/tiefling flavors call for (any race may wear any). */
+export const SKINS = [
+  { name: "Golden", c: "#e8b98a", d: "#c99465", l: "#f6d4a6" },
+  { name: "Porcelain", c: "#f4d9bd", d: "#d4b294", l: "#fdeedd" },
+  { name: "Olive", c: "#c9a06c", d: "#a67c4e", l: "#e0bc8c" },
+  { name: "Umber", c: "#9c6b43", d: "#7a4e2d", l: "#b9855a" },
+  { name: "Deep", c: "#6e4a30", d: "#523420", l: "#8a6142" },
+  { name: "Jade", c: "#8fae6a", d: "#6d8a4c", l: "#aecb8a" },
+  { name: "Ash", c: "#9a94a8", d: "#767085", l: "#b8b2c4" },
+  { name: "Lavender", c: "#a98fc9", d: "#846da6", l: "#c4aede" },
+  { name: "Crimson", c: "#b56055", d: "#8f4238", l: "#d07f72" },
+];
+export const UNDERGARMENTS = [
+  { id: "wrap", name: "Chest Wrap" },
+  { id: "vest", name: "Linen Vest" },
+  { id: "singlet", name: "Singlet" },
+];
+export const UNDER_COLORS = [
+  { name: "Linen", c: "#d9cbb0" },
+  { name: "Charcoal", c: "#3a3550" },
+  { name: "Wine", c: "#7a2f45" },
+  { name: "Forest", c: "#3f6d4a" },
+  { name: "Sky", c: "#5aa9e6" },
+  { name: "Rose", c: "#d98aa3" },
+];
+/* The five spawn hairstyles are free in the creator; premium styles
+   (bun, twin, braid, kitsune) stay wardrobe purchases. */
+export const FREE_HAIRSTYLES = ["short", "pixie", "bob", "pony", "long"];
 export const HAIRSTYLES = [
   { id: "short", name: "Short Crop", price: 0 },
   { id: "pixie", name: "Pixie Cut", price: 60 },
@@ -276,12 +317,16 @@ export function makeMember(g, key, name, cls) {
   const defaults = { tank: 3, dps: 2, healer: 1 };
   const fem = Math.random() < 0.5;
   const startHair = fem ? pick(["pony", "long", "bob"]) : pick(["short", "short", "pixie"]);
+  /* spawn identity is a random starting point — the creator (fresh flag)
+     opens on first join so the player makes it theirs */
+  const race = pick(RACES).id;
+  const startSkin = race === "orc" ? 5 : race === "tiefling" ? pick([6, 7, 8]) : Math.floor(Math.random() * 5);
   const m = {
     id: g.uid++, key, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
     skills: {}, autoSkill: true, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
-    cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
-    owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
+    cos: { body: fem ? "f" : "m", race, skin: startSkin, under: pick(UNDERGARMENTS).id, underC: Math.floor(Math.random() * UNDER_COLORS.length), fresh: true, hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
+    owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: [...FREE_HAIRSTYLES], outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
     ult: 0, ultT: 0,
     x: -40, y: 0, walking: true, kills: 0, dmgDone: 0, healDone: 0, bubble: 0, seed: Math.random() * 10,
@@ -353,8 +398,36 @@ export function rehydrateMember(g, d) {
     kills: d.kills || 0, dmgDone: d.dmgDone || 0, healDone: d.healDone || 0,
     retellings: d.retellings || 0,
   });
+  /* pre-creator characters: backfill identity defaults (no fresh flag — a
+     hero who predates the creator keeps their look until they open it) and
+     grandfather in the free starter hairstyles */
+  m.cos = { race: "human", skin: 0, under: "wrap", underC: 0, ...m.cos };
+  m.owned.hairstyle = Array.from(new Set([...(m.owned.hairstyle || []), ...FREE_HAIRSTYLES]));
   m._st = stats(m, g); m.hp = m._st.hp;
   return m;
+}
+
+/* The character creator's commit: validates every id against the free
+   identity catalogs (paid wardrobe stock still requires ownership) and
+   clears the first-join fresh flag. Shared by the multiplayer `appearance`
+   intent and the prototype's direct call. */
+export function applyAppearance(g, m, p) {
+  const race = RACES.find((r) => r.id === p.race);
+  const body = BODIES.find((b) => b.id === p.body);
+  const skinOk = Number.isInteger(p.skin) && p.skin >= 0 && p.skin < SKINS.length;
+  const under = UNDERGARMENTS.find((u) => u.id === p.under);
+  const underCOk = Number.isInteger(p.underC) && p.underC >= 0 && p.underC < UNDER_COLORS.length;
+  const hairOk = Number.isInteger(p.hair) && (m.owned.hair || []).includes(p.hair);
+  const styleOk = FREE_HAIRSTYLES.includes(p.hairstyle) || (m.owned.hairstyle || []).includes(p.hairstyle);
+  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk) return false;
+  const wasFresh = m.cos.fresh;
+  Object.assign(m.cos, { race: race.id, body: body.id, skin: p.skin, under: under.id, underC: p.underC, hair: p.hair, hairstyle: p.hairstyle });
+  delete m.cos.fresh;
+  if (!(m.owned.hairstyle || []).includes(p.hairstyle)) m.owned.hairstyle.push(p.hairstyle);
+  addLog(g, wasFresh
+    ? `${m.name} the ${race.name} steps through the guild doors for the first time!`
+    : `${m.name} returns from the outfitter's mirror with a new look.`, "#f2c14e");
+  return true;
 }
 
 const nextClass = (g) => CLASS_ORDER[g.joinCount % 3];
@@ -1393,6 +1466,11 @@ export function applyIntent(g, msg) {
     case "setBody": {
       const m = byId(msg.memberId);
       if (m && BODIES.find((b) => b.id === msg.body)) m.cos.body = msg.body;
+      break;
+    }
+    case "appearance": {
+      const m = byId(msg.memberId);
+      if (m) applyAppearance(g, m, msg);
       break;
     }
     case "cosmetic": {

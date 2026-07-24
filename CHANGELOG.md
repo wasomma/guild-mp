@@ -2,6 +2,17 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.25 — 2026-07-24
+
+**The character creator.** Your adventurer is now yours to make:
+
+- A creator panel opens over the game the first time you join voice (and any time after from **🪞 Appearance** in your character column): pick your **race**, body, **skin tone**, hairstyle, hair color, and **starter undergarments**, with a live mirror preview.
+- **Six races**, all free and purely cosmetic: Human, Elf (pointed ears), Kitsune-kin (fox ears and a swaying tail), Dwarf (short, stout, and bearded), Orc (tusks), and Tiefling (horns) — their features show in combat, at the feast, and in portraits.
+- **Nine skin tones** — five natural shades plus Jade, Ash, Lavender, and Crimson for the monstrous and the infernal.
+- **Undergarments** (wrap, vest, or singlet in six dyes) show under the warrior's open harness and in the creator's mirror; the fem warrior's chest wrap now wears your chosen color.
+- All five starter hairstyles are free in the creator; premium styles and everything else in the wardrobe still come from the shop. Existing heroes keep their look and get the starter styles granted — reopen the mirror whenever you like, changes are free.
+- Art-direction note: the HD tank puppets from v0.1.23 have been rolled back to the classic paperdolls while the generated-character style is re-settled (the HD kitsune remains); the creator's identity system is the new foundation the next HD pass will build on.
+
 ## v0.1.24 — 2026-07-22
 
 Facing fix: the HD cave bat and crypt skeleton shipped looking away from the party — both sprites are now mirrored to face the heroes, matching every other combatant (same in-place remedy as the v0.1.16 classic-sprite fix).

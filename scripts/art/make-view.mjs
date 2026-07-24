@@ -2,7 +2,8 @@
 // settled in formation and enemies alive. Run from the guild-mp root:
 //   node scripts/art/make-view.mjs <stage> [scenario]
 // scenario "tanks" = Phase 7D judge party (three HD warrior-tank combos +
-// one paperdoll DPS for the density comparison); default = kitsune party.
+// one paperdoll DPS for the density comparison); "races" = one member per
+// creator race with varied skin tones and undergarments; default = kitsune.
 import { writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 const sim = await import(pathToFileURL(process.cwd() + "/shared/sim.js"));
@@ -26,6 +27,24 @@ if (scenario === "tanks") {
     m.cls = c.cls; m.style = c.style;
     Object.assign(m.cos, { hat: "none", accessory: "none", cape: "none", pet: "none", aura: "none" }, c.cos);
   });
+} else if (scenario === "races") {
+  /* one of each race; the warrior shows the undergarment under the open
+     harness, the dwarf shows the build squash, fantasy tones on orc/tiefling */
+  const combos = [
+    { name: "Human", cls: "tank", style: "warrior", cos: { race: "human", body: "m", skin: 2, under: "vest", underC: 0, hairstyle: "short", hair: 0 } },
+    { name: "Elf", cls: "dps", style: "archer", cos: { race: "elf", body: "f", skin: 1, under: "wrap", underC: 4, hairstyle: "long", hair: 2 } },
+    { name: "Kitsune", cls: "dps", style: "rogue", cos: { race: "kitsunekin", body: "f", skin: 0, under: "singlet", underC: 5, hairstyle: "pony", hair: 8 } },
+    { name: "Dwarf", cls: "tank", style: "warrior", cos: { race: "dwarf", body: "m", skin: 3, under: "wrap", underC: 2, hairstyle: "short", hair: 3 } },
+    { name: "Orc", cls: "dps", style: "chain", cos: { race: "orc", body: "m", skin: 5, under: "vest", underC: 3, hairstyle: "pixie", hair: 1 } },
+    { name: "Tiefling", cls: "healer", style: "mystic", cos: { race: "tiefling", body: "f", skin: 7, under: "wrap", underC: 1, hairstyle: "bob", hair: 4 } },
+  ];
+  combos.forEach((c, i) => joinVoice(g, "u" + i, c.name, null));
+  g.members.forEach((m, i) => {
+    const c = combos[i];
+    m.cls = c.cls; m.style = c.style;
+    Object.assign(m.cos, { hat: "none", accessory: "none", cape: "none", pet: "none", aura: "none", outfit: 0, weapon: "steel" }, c.cos);
+    delete m.cos.fresh;
+  });
 } else {
   joinVoice(g, "u0", "Kitsune", null);
   joinVoice(g, "u1", "Hero1", null);
@@ -39,6 +58,9 @@ if (scenario === "tanks") {
 const stage = Number(process.argv[2]) || 2;
 g.stage = stage; g.best = Math.max(g.best, g.stage); g.enemies = []; g.phase = "advance"; g.advanceT = 0.01;
 for (let s = 0; s < 400 && !(g.phase === "combat" && g.enemies.length); s++) tick(g, 0.05);
+/* the six-member races party melts low-stage mobs before the formation
+   settles — pad enemy HP so everyone reaches their slot */
+if (scenario === "races") g.enemies.forEach((e) => { e.hpMax = (e.hpMax || e.hp) * 50; e.hp = e.hpMax; });
 let settled = 0;
 for (let s = 0; s < 200 && g.phase === "combat" && g.enemies.length; s++) {
   tick(g, 0.05);

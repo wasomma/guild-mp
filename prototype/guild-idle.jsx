@@ -70,6 +70,47 @@ const BODIES = [
   { id: "m", name: "Male" },
   { id: "f", name: "Female" },
 ];
+/* Character-creator identity catalogs (all free — identity is not loot).
+   Races are cosmetic-only: no stat changes, just features the renderers
+   draw (ears, tail, tusks, horns, build scale, dwarf beard). */
+const RACES = [
+  { id: "human", name: "Human" },
+  { id: "elf", name: "Elf", ears: "point" },
+  { id: "kitsunekin", name: "Kitsune-kin", ears: "fox", tail: true },
+  { id: "dwarf", name: "Dwarf", build: 0.86, buildW: 1.1, beard: true },
+  { id: "orc", name: "Orc", tusks: true },
+  { id: "tiefling", name: "Tiefling", horns: true },
+];
+const raceOf = (m) => RACES.find((r) => r.id === (m.cos && m.cos.race)) || RACES[0];
+/* Skin tones: index 0 is the classic canon ramp; 1-4 natural range; 5+ the
+   fantasy tones the orc/tiefling flavors call for (any race may wear any). */
+const SKINS = [
+  { name: "Golden", c: "#e8b98a", d: "#c99465", l: "#f6d4a6" },
+  { name: "Porcelain", c: "#f4d9bd", d: "#d4b294", l: "#fdeedd" },
+  { name: "Olive", c: "#c9a06c", d: "#a67c4e", l: "#e0bc8c" },
+  { name: "Umber", c: "#9c6b43", d: "#7a4e2d", l: "#b9855a" },
+  { name: "Deep", c: "#6e4a30", d: "#523420", l: "#8a6142" },
+  { name: "Jade", c: "#8fae6a", d: "#6d8a4c", l: "#aecb8a" },
+  { name: "Ash", c: "#9a94a8", d: "#767085", l: "#b8b2c4" },
+  { name: "Lavender", c: "#a98fc9", d: "#846da6", l: "#c4aede" },
+  { name: "Crimson", c: "#b56055", d: "#8f4238", l: "#d07f72" },
+];
+const UNDERGARMENTS = [
+  { id: "wrap", name: "Chest Wrap" },
+  { id: "vest", name: "Linen Vest" },
+  { id: "singlet", name: "Singlet" },
+];
+const UNDER_COLORS = [
+  { name: "Linen", c: "#d9cbb0" },
+  { name: "Charcoal", c: "#3a3550" },
+  { name: "Wine", c: "#7a2f45" },
+  { name: "Forest", c: "#3f6d4a" },
+  { name: "Sky", c: "#5aa9e6" },
+  { name: "Rose", c: "#d98aa3" },
+];
+/* The five spawn hairstyles are free in the creator; premium styles
+   (bun, twin, braid, kitsune) stay wardrobe purchases. */
+const FREE_HAIRSTYLES = ["short", "pixie", "bob", "pony", "long"];
 const HAIRSTYLES = [
   { id: "short", name: "Short Crop",   price: 0 },
   { id: "pixie", name: "Pixie Cut",    price: 60 },
@@ -255,16 +296,43 @@ function addLog(g, text, color) {
   if (g.log.length > 40) g.log.pop();
 }
 
+/* The character creator's commit: validates every id against the free
+   identity catalogs (paid wardrobe stock still requires ownership) and
+   clears the first-join fresh flag. Shared by the multiplayer `appearance`
+   intent and the prototype's direct call. */
+function applyAppearance(g, m, p) {
+  const race = RACES.find((r) => r.id === p.race);
+  const body = BODIES.find((b) => b.id === p.body);
+  const skinOk = Number.isInteger(p.skin) && p.skin >= 0 && p.skin < SKINS.length;
+  const under = UNDERGARMENTS.find((u) => u.id === p.under);
+  const underCOk = Number.isInteger(p.underC) && p.underC >= 0 && p.underC < UNDER_COLORS.length;
+  const hairOk = Number.isInteger(p.hair) && (m.owned.hair || []).includes(p.hair);
+  const styleOk = FREE_HAIRSTYLES.includes(p.hairstyle) || (m.owned.hairstyle || []).includes(p.hairstyle);
+  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk) return false;
+  const wasFresh = m.cos.fresh;
+  Object.assign(m.cos, { race: race.id, body: body.id, skin: p.skin, under: under.id, underC: p.underC, hair: p.hair, hairstyle: p.hairstyle });
+  delete m.cos.fresh;
+  if (!(m.owned.hairstyle || []).includes(p.hairstyle)) m.owned.hairstyle.push(p.hairstyle);
+  addLog(g, wasFresh
+    ? `${m.name} the ${race.name} steps through the guild doors for the first time!`
+    : `${m.name} returns from the outfitter's mirror with a new look.`, "#f2c14e");
+  return true;
+}
+
 function makeMember(name, cls) {
   const defaults = { tank: 3, dps: 2, healer: 1 };
   const fem = Math.random() < 0.5;
   const startHair = fem ? pick(["pony", "long", "bob"]) : pick(["short", "short", "pixie"]);
+  /* spawn identity is a random starting point — the creator (fresh flag)
+     opens on first join so the player makes it theirs */
+  const race = pick(RACES).id;
+  const startSkin = race === "orc" ? 5 : race === "tiefling" ? pick([6, 7, 8]) : Math.floor(Math.random() * 5);
   const m = {
     id: UID++, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
     skills: {}, autoSkill: true, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
-    cos: { body: fem ? "f" : "m", hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
-    owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: Array.from(new Set(["short", startHair])), outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
+    cos: { body: fem ? "f" : "m", race, skin: startSkin, under: pick(UNDERGARMENTS).id, underC: Math.floor(Math.random() * UNDER_COLORS.length), fresh: true, hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
+    owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: [...FREE_HAIRSTYLES], outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
     ult: 0, ultT: 0,
     x: -40, y: 0, walking: true, kills: 0, dmgDone: 0, healDone: 0, bubble: 0, seed: Math.random() * 10,
@@ -1459,8 +1527,9 @@ function registerHeroSprite(key, img, facing, part) {
    meta when a body ships; a class x body-type combination with no entry
    stays a paperdoll. */
 const HD_BODY_META = {
-  "tank-m": { cx: 68, foot: 256, hand: [93, 141] },
-  "tank-f": { cx: 66, foot: 244, hand: [90, 133] },
+  /* emptied 2026-07-24: the Phase 7D tank puppets were rolled back with the
+     character-creator pivot — class bodies return here once the HD direction
+     is re-settled against the creator's race x gender taxonomy. */
 };
 /* Cosmetics-driven mapping. Two HD tiers:
    - The kitsune: Kitsune Crown hairstyle + Nine-Tails cape summons the
@@ -2160,6 +2229,78 @@ function drawAccessory(ctx, ox, oy, acc) {
   }
 }
 
+/* Race features (creator identity), shared by the combat paperdoll and the
+   feaster — same head-local px2 coordinates in both poses. The face pass
+   (elf ears, orc tusks, dwarf beard) draws with the face so hair falls over
+   it; fox ears and tiefling horns ride on top of the finished hair. */
+function drawRaceFace(ctx, ox, oy, m, sk) {
+  const race = raceOf(m);
+  if (race.tusks) {
+    px2(ctx, ox, oy, 0.5, -22.5, 1, 1.5, "#efe6cf");
+    px2(ctx, ox, oy, 4, -22.5, 1, 1.5, "#efe6cf");
+    px2(ctx, ox, oy, 0.5, -21.5, 1, 0.5, "#c9bfa4");
+    px2(ctx, ox, oy, 4, -21.5, 1, 0.5, "#c9bfa4");
+  }
+  if (race.beard && m.cos.body !== "f") {
+    const bc = HAIRS[m.cos.hair].c, bd = shade(bc, 0.7);
+    px2(ctx, ox, oy, -1, -21.5, 6, 2, bc);
+    px2(ctx, ox, oy, 0, -19.5, 5, 1.5, bc);
+    px2(ctx, ox, oy, 1, -18, 3, 1, bd);
+    px2(ctx, ox, oy, -1, -21.5, 1, 1.5, bd);
+    px2(ctx, ox, oy, 1, -22, 3, 0.5, bd);
+  }
+}
+function drawRaceCrown(ctx, ox, oy, m, sk) {
+  const race = raceOf(m);
+  if (race.ears === "point") {
+    /* pointed ears ride over the hair — they poke through long styles */
+    px2(ctx, ox, oy, -7, -26.5, 2, 2, sk.c);
+    px2(ctx, ox, oy, -8.5, -27.5, 2, 1.5, sk.c);
+    px2(ctx, ox, oy, -9.5, -28, 1, 1, sk.c);
+    px2(ctx, ox, oy, -7, -25, 2, 0.5, sk.d);
+    px2(ctx, ox, oy, -8.5, -26.5, 1.5, 0.5, sk.d);
+  }
+  if (race.ears === "fox") {
+    const fc = HAIRS[m.cos.hair].c, fd = shade(fc, 0.72), fi = "#f2dcc9";
+    px2(ctx, ox, oy, -4, -33.5, 2.5, 3, fc);
+    px2(ctx, ox, oy, -3.5, -33, 1.5, 2, fi);
+    px2(ctx, ox, oy, -4, -33.5, 1, 3, fd);
+    px2(ctx, ox, oy, 2, -33.5, 2.5, 3, fc);
+    px2(ctx, ox, oy, 2.5, -33, 1.5, 2, fi);
+    px2(ctx, ox, oy, 3.5, -33.5, 1, 3, fd);
+  }
+  if (race.horns) {
+    const hc = "#6e3a44", hl = "#9a5560";
+    px2(ctx, ox, oy, -4, -33.5, 1.5, 3, hc);
+    px2(ctx, ox, oy, -4.5, -34.5, 1.5, 1.5, hc);
+    px2(ctx, ox, oy, -4.5, -34.5, 1, 0.5, hl);
+    px2(ctx, ox, oy, 3, -33.5, 1.5, 3, hc);
+    px2(ctx, ox, oy, 3.5, -34.5, 1.5, 1.5, hc);
+    px2(ctx, ox, oy, 4, -34.5, 1, 0.5, hl);
+  }
+}
+/* Starter undergarments (creator identity): drawn alone in the creator's
+   undressed preview, and under the warrior's open harness in the world. */
+function drawUndergarment(ctx, ox, oy, und, uc, ucD, ucL, fem) {
+  if (und === "wrap") {
+    px2(ctx, ox, oy, -6, fem ? -18.5 : -17, 12, 3, uc);
+    px2(ctx, ox, oy, -6, fem ? -18.5 : -17, 12, 0.5, ucL);
+    px2(ctx, ox, oy, -6, fem ? -16 : -14.5, 12, 0.5, ucD);
+  } else if (und === "vest") {
+    px2(ctx, ox, oy, -6, -19, 12, 6, uc);
+    px2(ctx, ox, oy, -5, -19, 10, 1, ucL);
+    px2(ctx, ox, oy, -6, -19, 1, 6, ucD);
+    px2(ctx, ox, oy, -6, -13.5, 12, 0.5, ucD);
+  } else {
+    /* singlet: shoulder straps and a torso that tucks into the waistband */
+    px2(ctx, ox, oy, -6, -19, 2, 8, uc);
+    px2(ctx, ox, oy, 4, -19, 2, 8, uc);
+    px2(ctx, ox, oy, -6, -17, 12, 6, uc);
+    px2(ctx, ox, oy, -6, -17, 12, 0.5, ucL);
+    px2(ctx, ox, oy, -6, -11.5, 12, 0.5, ucD);
+  }
+}
+
 function swingAngle(m, start, end, dur) {
   if (m.lunge <= 0) return start;
   const p = 1 - m.lunge / dur;
@@ -2679,8 +2820,9 @@ function drawAdventurer(ctx, m, t) {
   const ox = m.x + (m.lunge > 0 ? Math.sin(((0.25 - m.lunge) / 0.25) * Math.PI) * 13 : 0);
 
   /* A registered hi-res layer set replaces the procedural paperdoll — see
-     drawHdHero (kitsune full-body set or Phase 7D layered class puppet). */
-  const hset = m.alive && heroSpriteSetFor(m);
+     drawHdHero (kitsune full-body set or Phase 7D layered class puppet).
+     The creator's undressed preview (noOutfit) always uses the paperdoll. */
+  const hset = m.alive && !m.noOutfit && heroSpriteSetFor(m);
   if (hset) { drawHdHero(ctx, m, t, ox, oy, hset); return; }
 
   if (!m.alive) {
@@ -2714,8 +2856,19 @@ function drawAdventurer(ctx, m, t) {
   const fem = m.cos.body === "f";
   const hx = ox + 8 * P2, hy = oy - 13 * P2;
 
+  /* creator identity: the member's skin ramp shadows the module canon so
+     every SKIN/SKIN_D/SKIN_L reference below wears the chosen tone */
+  const race = raceOf(m);
+  const skn = SKINS[m.cos.skin] || SKINS[0];
+  const SKIN = skn.c, SKIN_D = skn.d, SKIN_L = skn.l;
+  const uDef = UNDER_COLORS[m.cos.underC] || UNDER_COLORS[0];
+  const uc = uDef.c, ucD = shade(uc, 0.72), ucL = shade(uc, 1.25);
+  const und = m.cos.under || "wrap";
+  const worldT = ctx.getTransform();
+  const build = race.build || 1, buildW = race.buildW || 1;
+
   drawShadow(ctx, ox, oy, 26);
-  drawAura(ctx, m, t, ox, oy);
+  if (!m.noOutfit) drawAura(ctx, m, t, ox, oy);
 
   /* chainblade whip, behind the body */
   if (sty === "chain" && m.chainT > 0 && m.chainTgt) {
@@ -2763,16 +2916,32 @@ function drawAdventurer(ctx, m, t) {
     ctx.restore();
   }
 
-  drawCape(ctx, ox, oy, m.cos.cape, t, m.walking);
+  /* dwarf build: squash and widen around the ground anchor; the few
+     world-space effects inside (ult beams and marks) escape back to worldT */
+  if (build !== 1) { ctx.save(); ctx.translate(ox, oy); ctx.scale(buildW, build); ctx.translate(-ox, -oy); }
+
+  if (!m.noOutfit) drawCape(ctx, ox, oy, m.cos.cape, t, m.walking);
+
+  /* kitsune-kin tail pokes out behind the hip, over the cape hem */
+  if (race.tail) {
+    const fc = HAIRS[m.cos.hair].c, fd = shade(fc, 0.72);
+    const sw = Math.sin(t * (m.walking ? 7 : 2.2) + m.seed) * 1.2;
+    px2(ctx, ox, oy, -8, -10, 3, 2.5, fc);
+    px2(ctx, ox, oy, -8, -8.5, 2, 1, fd);
+    px2(ctx, ox, oy, -10.5 + sw * 0.4, -12, 3, 3, fc);
+    px2(ctx, ox, oy, -10.5 + sw * 0.4, -9.5, 2, 1, fd);
+    px2(ctx, ox, oy, -12.5 + sw, -14.5, 3, 3, fc);
+    px2(ctx, ox, oy, -13 + sw, -16.5, 2.5, 2, "#f2dcc9");
+  }
 
   /* back arm (behind the torso) */
   const armSw = m.walking ? (f ? 1 : 0) : 0;
-  const backSleeve = sty === "paladin" ? "#7f8aa0" : sty === "warrior" ? SKIN_D : sty === "mystic" ? outfit : oD;
+  const backSleeve = m.noOutfit ? SKIN_D : sty === "paladin" ? "#7f8aa0" : sty === "warrior" ? SKIN_D : sty === "mystic" ? outfit : oD;
   px2(ctx, ox, oy, -7, -17, 2, 5, backSleeve);
   px2(ctx, ox, oy, -7, -12 + armSw, 2, 2, SKIN);
 
   /* back-mounted gear, behind the torso */
-  if (sty === "archer") {
+  if (sty === "archer" && !m.noOutfit) {
     px2(ctx, ox, oy, -11, -23, 3, 9, "#6b4a32");
     px2(ctx, ox, oy, -11, -23, 3, 1, "#8a6b48");
     px2(ctx, ox, oy, -11, -22, 1, 8, "#513723");
@@ -2783,14 +2952,26 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, -9, -30, 1, 2, "#d0455a");
     px2(ctx, ox, oy, -8, -28, 1, 1, "#e8e2d0");
   }
-  if (sty === "warrior") {
+  if (sty === "warrior" && !m.noOutfit) {
     ctx.save(); ctx.translate(ox - 8, oy - 26); ctx.rotate(-2.3);
     drawWarriorAxe(ctx, wskin, "back", t, m.seed);
     ctx.restore();
   }
 
   /* legs and boots (the mystic robe covers them) */
-  if (sty !== "mystic") {
+  if (m.noOutfit) {
+    /* creator preview: bare legs and simple underclothes shorts */
+    const legB = m.walking && f ? 1 : 0, legF = m.walking && !f ? 1 : 0;
+    px2(ctx, ox, oy, -4, -8, 3, 7 - legB, SKIN);
+    px2(ctx, ox, oy, -2, -8, 1, 7 - legB, SKIN_D);
+    px2(ctx, ox, oy, -4, -1 - legB, 4, 1, SKIN_D);
+    px2(ctx, ox, oy, 1, -8, 3, 7 - legF, SKIN);
+    px2(ctx, ox, oy, 3, -8, 1, 7 - legF, SKIN_D);
+    px2(ctx, ox, oy, 1, -1 - legF, 4, 1, SKIN_D);
+    px2(ctx, ox, oy, -5, -11, 10, 3, uc);
+    px2(ctx, ox, oy, -5, -11, 10, 1, ucL);
+    px2(ctx, ox, oy, -5, -9, 10, 1, ucD);
+  } else if (sty !== "mystic") {
     const pants = "#3a3550", pantsD = "#2a2740", boot = "#4a3b2c", bootL = "#5d4a36", sole = "#26232b";
     const legB = m.walking && f ? 1 : 0;
     const legF = m.walking && !f ? 1 : 0;
@@ -2807,7 +2988,15 @@ function drawAdventurer(ctx, m, t) {
   }
 
   /* torso per fighting style */
-  if (sty === "paladin") {
+  if (m.noOutfit) {
+    /* creator preview: bare torso wearing only the chosen undergarment */
+    px2(ctx, ox, oy, -6, -19, 12, 8, SKIN);
+    px2(ctx, ox, oy, -5, -19, 10, 1, SKIN_L);
+    px2(ctx, ox, oy, -6, -19, 1, 8, SKIN_D);
+    px2(ctx, ox, oy, -4, -16, 9, 1, SKIN_D);
+    px2(ctx, ox, oy, -1, -14, 1, 3, SKIN_D);
+    drawUndergarment(ctx, ox, oy, und, uc, ucD, ucL, fem);
+  } else if (sty === "paladin") {
     const pl = "#9aa3b5", plL = "#c6cddb", plD = "#6f7890";
     px2(ctx, ox, oy, -6, -19, 12, 8, pl);
     px2(ctx, ox, oy, -5, -19, 10, 1, plL);
@@ -2830,6 +3019,7 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, -1, -14, 1, 3, SKIN_D);
     px2(ctx, ox, oy, -3, -13, 2, 1, SKIN_D);
     px2(ctx, ox, oy, 1, -13, 2, 1, SKIN_D);
+    drawUndergarment(ctx, ox, oy, und, uc, ucD, ucL, fem); /* under the open harness */
     for (let i = 0; i < 6; i++) px2(ctx, ox, oy, -6 + i * 2, -19 + i * 1.5, 2, 1.5, outfit);
     px2(ctx, ox, oy, -10, -22, 6, 4, "#6b4a32");
     px2(ctx, ox, oy, -10, -23, 1, 1, "#8a6b48");
@@ -2899,14 +3089,28 @@ function drawAdventurer(ctx, m, t) {
   }
 
   /* belt (mystic wears a sash instead) */
-  if (sty !== "mystic") {
+  if (sty !== "mystic" && !m.noOutfit) {
     px2(ctx, ox, oy, -5, -11, 10, 2, "#26232b");
     px2(ctx, ox, oy, 0, -11, 2, 2, "#f2c14e");
     px2(ctx, ox, oy, 0, -10, 1, 1, "#8a6b26");
   }
 
   /* body silhouette: masc breadth vs fem taper */
-  if (!fem) {
+  if (m.noOutfit) {
+    /* creator preview: the silhouette in skin */
+    if (!fem) {
+      px2(ctx, ox, oy, -7.5, -19, 2, 3, SKIN_D);
+      px2(ctx, ox, oy, 5.5, -19, 2, 3, SKIN_D);
+      px2(ctx, ox, oy, -7.5, -19, 2, 1, SKIN);
+      px2(ctx, ox, oy, 5.5, -19, 2, 1, SKIN);
+    } else {
+      const side = shade(SKIN, 0.5);
+      px2(ctx, ox, oy, -6, -15.5, 1.5, 3, side);
+      px2(ctx, ox, oy, 4.5, -15.5, 1.5, 3, side);
+      px2(ctx, ox, oy, -5, -13, 1, 2, "rgba(16,14,26,0.30)");
+      px2(ctx, ox, oy, 4, -13, 1, 2, "rgba(16,14,26,0.30)");
+    }
+  } else if (!fem) {
     const padC = sty === "warrior" ? SKIN_D : oD;
     const padL = sty === "warrior" ? SKIN : oL;
     px2(ctx, ox, oy, -7.5, -19, 2, 3, padC);
@@ -2915,9 +3119,10 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 5.5, -19, 2, 1, padL);
   } else {
     if (sty === "warrior") {
-      px2(ctx, ox, oy, -6, -18.5, 12, 3, outfit);
-      px2(ctx, ox, oy, -6, -18.5, 12, 1, oL);
-      px2(ctx, ox, oy, -6, -16.5, 12, 1, oD);
+      /* the fem warrior's chest wrap is her chosen undergarment color */
+      px2(ctx, ox, oy, -6, -18.5, 12, 3, uc);
+      px2(ctx, ox, oy, -6, -18.5, 12, 1, ucL);
+      px2(ctx, ox, oy, -6, -16.5, 12, 1, ucD);
     }
     const side = shade(sty === "warrior" ? SKIN : outfit, 0.5);
     px2(ctx, ox, oy, -6, -15.5, 1.5, 3, side);
@@ -2934,7 +3139,7 @@ function drawAdventurer(ctx, m, t) {
 
   /* outfit construction: collar, hem, cuff trim and a sash on finer cloth */
   const oDef = OUTFITS[m.cos.outfit];
-  if (oDef.trim && !(sty === "warrior" && !fem)) {
+  if (oDef.trim && !m.noOutfit && !(sty === "warrior" && !fem)) {
     if (sty === "mystic") {
       px2(ctx, ox, oy, -7, -1.5, 14, 0.5, oDef.trim);
       px2(ctx, ox, oy, -1, -19, 2, 0.5, oDef.trim);
@@ -2945,7 +3150,7 @@ function drawAdventurer(ctx, m, t) {
       px2(ctx, ox, oy, -7, -13, 2, 0.5, oDef.trim);
     }
   }
-  if (oDef.sash && sty !== "mystic" && !(sty === "warrior" && !fem)) {
+  if (oDef.sash && !m.noOutfit && sty !== "mystic" && !(sty === "warrior" && !fem)) {
     for (let i = 0; i < 5; i++) px2(ctx, ox, oy, 4 - i * 2, -19 + i * 1.6, 2, 1.6, oDef.sash);
     px2(ctx, ox, oy, 4, -19, 2, 0.5, shade(oDef.sash, 1.3));
     px2(ctx, ox, oy, -4.5, -11.5, 2.5, 2, oDef.sash);
@@ -2954,7 +3159,7 @@ function drawAdventurer(ctx, m, t) {
   }
 
   /* earned gear rendered on the body: armor tiers on the shoulders and chest */
-  const grA = m.gear && m.gear.armor;
+  const grA = !m.noOutfit && m.gear && m.gear.armor;
   if (grA) {
     const gtier = grA.unique ? 5 : ["common", "uncommon", "rare", "epic", "legendary"].indexOf((grA.rarity && grA.rarity.id) || "common");
     const grc = grA.unique ? "#a8f2e2" : (grA.rarity && grA.rarity.color) || "#b6b3c7";
@@ -3023,21 +3228,23 @@ function drawAdventurer(ctx, m, t) {
   } else {
     px2(ctx, ox, oy, 1, -22, 3, 1, "#8a5a44");
   }
-  if (sty === "warrior") {
+  if (sty === "warrior" && !m.noOutfit) {
     px2(ctx, ox, oy, 0, -25, 2, 1, "rgba(208,69,90,0.75)");
     px2(ctx, ox, oy, 3, -25, 2, 1, "rgba(208,69,90,0.75)");
   }
+  drawRaceFace(ctx, ox, oy, m, skn);
   drawHair(ctx, ox, oy, m.cos.hairstyle, hair, hair2);
+  drawRaceCrown(ctx, ox, oy, m, skn);
 
   /* trinket charm at the throat, and the weapon-quality glow at the hand */
-  const grT = m.gear && m.gear.trinket;
+  const grT = !m.noOutfit && m.gear && m.gear.trinket;
   if (grT) {
     const trc = grT.unique ? "#a8f2e2" : (grT.rarity && grT.rarity.color) || "#b6b3c7";
     px2(ctx, ox, oy, -1, -20, 3, 0.5, "#513723");
     px2(ctx, ox, oy, -0.5, -19.5, 1.5, 1.5, trc);
     if (grT.unique || (grT.rarity && (grT.rarity.id === "epic" || grT.rarity.id === "legendary"))) px2(ctx, ox, oy, -0.5, -19.5, 0.5, 0.5, "#ffffff");
   }
-  const grW = m.gear && m.gear.weapon;
+  const grW = !m.noOutfit && m.gear && m.gear.weapon;
   if (grW && (grW.unique || (grW.rarity && (grW.rarity.id === "rare" || grW.rarity.id === "epic" || grW.rarity.id === "legendary")))) {
     const wrc = grW.unique ? "#a8f2e2" : grW.rarity.color;
     const wpl = 0.1 + 0.06 * Math.sin(t * 3.6 + m.seed * 2);
@@ -3050,7 +3257,11 @@ function drawAdventurer(ctx, m, t) {
   }
 
   /* weapons and the near arm */
-  if (sty === "paladin") {
+  if (m.noOutfit) {
+    /* creator preview: a bare near arm, no weapon */
+    px2(ctx, ox, oy, 5, -17, 2, 4, SKIN);
+    px2(ctx, ox, oy, 5, -13, 2, 1, SKIN_D);
+  } else if (sty === "paladin") {
     px2(ctx, ox, oy, 4, -16, 3, 3, "#7f8aa0");
     px2(ctx, ox, oy, 5, -14, 3, 3, SKIN);
     const ang = m.lunge > 0 ? swingAngle(m, -1.7, 1.3, 0.25) : 0.45;
@@ -3069,7 +3280,7 @@ function drawAdventurer(ctx, m, t) {
     px2(ctx, ox, oy, 9, -15, 2, 2, "#f2c14e");
     if (m.ultT > 0 && m.ultTgt) {
       const ua = Math.min(1, m.ultT / 0.7);
-      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.save(); ctx.setTransform(worldT); ctx.globalCompositeOperation = "lighter";
       const bw = 16 + 10 * (1 - ua);
       const lg = ctx.createLinearGradient(0, 0, 0, m.ultTgt.y);
       lg.addColorStop(0, "rgba(255,241,201,0)");
@@ -3128,6 +3339,7 @@ function drawAdventurer(ctx, m, t) {
     }
     if (m.ultT > 0 && m.ultTgt) {
       const uk = Math.floor(t * 24) % 3;
+      ctx.save(); ctx.setTransform(worldT);
       ctx.strokeStyle = "rgba(220,190,255,0.85)"; ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(m.ultTgt.x - 16 + uk * 6, m.ultTgt.y - 16);
@@ -3135,6 +3347,7 @@ function drawAdventurer(ctx, m, t) {
       ctx.moveTo(m.ultTgt.x + 14 - uk * 5, m.ultTgt.y - 15);
       ctx.lineTo(m.ultTgt.x - 15 + uk * 5, m.ultTgt.y + 13);
       ctx.stroke();
+      ctx.restore();
     }
   } else if (sty === "chain") {
     px2(ctx, ox, oy, 4, -16, 3, 3, oD);
@@ -3146,6 +3359,7 @@ function drawAdventurer(ctx, m, t) {
       ctx.restore();
     }
     if (m.ultT > 0 && m.ultTgts) {
+      ctx.save(); ctx.setTransform(worldT);
       for (const tg of m.ultTgts) {
         const links = Math.max(2, Math.floor(Math.hypot(tg.x - hx, tg.y - hy) / 10));
         for (let i = 1; i <= links; i++) {
@@ -3155,6 +3369,7 @@ function drawAdventurer(ctx, m, t) {
           ctx.fillRect(lx - 2, ly - 2, 4, 4);
         }
       }
+      ctx.restore();
     }
   } else {
     /* mystic staff */
@@ -3178,13 +3393,16 @@ function drawAdventurer(ctx, m, t) {
     }
   }
 
-  drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair, t);
-  drawAccessory(ctx, ox, oy, m.cos.accessory);
+  if (!m.noOutfit) {
+    drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair, t);
+    drawAccessory(ctx, ox, oy, m.cos.accessory);
+  }
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.4)");
   px2(ctx, ox, oy, 3, -30, 1, 4, "rgba(255,232,190,0.3)");
   px2(ctx, ox, oy, 4, -19, 1, 6, "rgba(255,232,190,0.2)");
   px2(ctx, ox, oy, -6, -18, 1, 9, "rgba(15,12,45,0.32)");
-  if (m.gear && SLOTS.some((sl) => m.gear[sl] && m.gear[sl].unique)) {
+  if (build !== 1) ctx.restore();
+  if (!m.noOutfit && m.gear && SLOTS.some((sl) => m.gear[sl] && m.gear[sl].unique)) {
     const tw = Math.floor(t * 7 + m.seed * 3) % 5;
     if (tw < 2) {
       const sxp = ox + (tw ? 14 : -10) + Math.sin(t * 3 + m.seed) * 3;
@@ -3194,7 +3412,7 @@ function drawAdventurer(ctx, m, t) {
       ctx.fillRect(sxp, syp - 1, 1, 3);
     }
   }
-  drawPet(ctx, m, t); /* pets walk the front-left lane, never lost behind the cape */
+  if (!m.noOutfit) drawPet(ctx, m, t); /* pets walk the front-left lane, never lost behind the cape */
   if (m.noBars) return; /* inspect portraits draw the sprite without HUD */
   /* compact ground-plate HUD below the feet, clear of cosmetics and neighbors */
   hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
@@ -3988,6 +4206,12 @@ function drawFeaster(ctx, m, t) {
   const outfit = OUTFITS[m.cos.outfit].c;
   const oD = shade(outfit, 0.7), oL = shade(outfit, 1.28);
   const fem = m.cos.body === "f";
+  /* creator identity: skin ramp shadows the module canon; feasters keep
+     their race features at the table */
+  const skn = SKINS[m.cos.skin] || SKINS[0];
+  const SKIN = skn.c, SKIN_D = skn.d, SKIN_L = skn.l;
+  const build = raceOf(m).build || 1, buildW = raceOf(m).buildW || 1;
+  if (build !== 1) { ctx.save(); ctx.translate(ox, oy); ctx.scale(buildW, build); ctx.translate(-ox, -oy); }
   drawCape(ctx, ox, oy, m.cos.cape, t, m.walking);
   /* legs: dancers kick, everyone else stands */
   const pants = "#3a3550", pantsD = "#2a2740", boot = "#4a3b2c", bootL = "#5d4a36", sole = "#26232b";
@@ -4049,7 +4273,9 @@ function drawFeaster(ctx, m, t) {
   } else {
     px2(ctx, ox, oy, 1, -22, 3, 1, "#8a5a44");
   }
+  drawRaceFace(ctx, ox, oy, m, skn);
   drawHair(ctx, ox, oy, m.cos.hairstyle, hair, hair2);
+  drawRaceCrown(ctx, ox, oy, m, skn);
   /* activity arms and props */
   if (act === "drink") {
     px2(ctx, ox, oy, -7, -17, 2, 5, oD);
@@ -4101,6 +4327,7 @@ function drawFeaster(ctx, m, t) {
   drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);
   drawAccessory(ctx, ox, oy, m.cos.accessory);
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.28)");
+  if (build !== 1) ctx.restore();
   ctx.restore();
 }
 
@@ -4444,6 +4671,106 @@ function Portrait({ m }) {
     style={{ width: 190, height: "auto", imageRendering: "pixelated", border: "1px solid #2e2947", borderRadius: 10 }} />;
 }
 
+/* The character creator: a live undressed-preview of the paperdoll plus
+   pickers for the free identity catalogs (race, body, skin tone, hairstyle,
+   hair color, undergarment). Prototype flavor: commits by calling
+   applyAppearance directly — the multiplayer build routes the same payload
+   through the `appearance` intent. */
+function CreatorPreview({ m, draft, dressed }) {
+  const cvRef = useRef(null);
+  const dRef = useRef({ m, draft, dressed });
+  dRef.current = { m, draft, dressed };
+  useEffect(() => {
+    const cv = cvRef.current;
+    if (!cv) return;
+    const ctx = cv.getContext("2d");
+    let raf;
+    const t0 = performance.now();
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const { m: src, draft: d, dressed: dr } = dRef.current;
+      if (!src) return;
+      const t = (performance.now() - t0) / 1000;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = "#141221";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      const grd = ctx.createRadialGradient(cv.width * 0.5, cv.height * 0.62, 10, cv.width * 0.5, cv.height * 0.62, 170);
+      grd.addColorStop(0, "rgba(63,58,96,0.55)");
+      grd.addColorStop(1, "rgba(63,58,96,0)");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.setTransform(4, 0, 0, 4, Math.round(cv.width * 0.5), cv.height - 24);
+      const mp = {
+        ...src, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
+        x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
+        chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999,
+      };
+      drawAdventurer(ctx, mp, t);
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={cvRef} width={300} height={400}
+    style={{ width: 190, height: "auto", imageRendering: "pixelated", border: "1px solid #2e2947", borderRadius: 10 }} />;
+}
+
+function CharacterCreator({ m, onCommit, onClose }) {
+  const [draft, setDraft] = useState({
+    race: m.cos.race || "human", body: m.cos.body || "m", skin: m.cos.skin ?? 0,
+    hairstyle: m.cos.hairstyle, hair: m.cos.hair,
+    under: m.cos.under || "wrap", underC: m.cos.underC ?? 0,
+  });
+  const [dressed, setDressed] = useState(false);
+  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
+  const styleChoices = HAIRSTYLES.filter((h) => FREE_HAIRSTYLES.includes(h.id) || (m.owned.hairstyle || []).includes(h.id));
+  const hairChoices = HAIRS.map((h, i) => ({ h, i })).filter(({ i }) => (m.owned.hair || []).includes(i));
+  const label = (txt) => <div className="gi-h" style={{ fontSize: 9, color: "#8b84ad", margin: "8px 0 4px" }}>{txt}</div>;
+  const row = { display: "flex", flexWrap: "wrap", gap: 6 };
+  const sw = (key, bg, on, click) => (
+    <button key={key} title={key} onClick={click}
+      style={{ width: 24, height: 24, borderRadius: 5, cursor: "pointer", padding: 0, background: bg, border: on ? "2px solid #f2c14e" : "2px solid #2e2947" }} />
+  );
+  return (
+    <div style={{ position: "absolute", inset: 10, zIndex: 6, display: "flex", gap: 16, padding: 14, overflow: "auto",
+      background: "rgba(13,11,22,0.94)", border: "1px solid #3a3550", borderRadius: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+        {label(m.cos.fresh ? "FORGE YOUR ADVENTURER" : "THE OUTFITTER'S MIRROR")}
+        <CreatorPreview m={m} draft={draft} dressed={dressed} />
+        <button className="gi-btn" style={{ fontSize: 15 }} onClick={() => setDressed(!dressed)}>{dressed ? "🪞 show undergarments" : "👗 show current outfit"}</button>
+        <div style={row}>
+          <button className="gi-btn" style={{ borderColor: "#7fd069", color: "#b9e8a8" }} onClick={() => onCommit(draft)}>✓ Step through the doors</button>
+          <button className="gi-btn" onClick={onClose}>✕ not now</button>
+        </div>
+      </div>
+      <div className="gi-scroll" style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+        {label("RACE")}
+        <div style={row}>{RACES.map((r) => (
+          <button key={r.id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.race === r.id ? "#f2c14e" : "#2e2947" }} onClick={() => set("race", r.id)}>{r.name}</button>
+        ))}</div>
+        {label("BODY")}
+        <div style={row}>{BODIES.map((b) => (
+          <button key={b.id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.body === b.id ? "#f2c14e" : "#2e2947" }} onClick={() => set("body", b.id)}>{b.name}</button>
+        ))}</div>
+        {label("SKIN TONE")}
+        <div style={row}>{SKINS.map((s, i) => sw(s.name, s.c, draft.skin === i, () => set("skin", i)))}</div>
+        {label("HAIRSTYLE")}
+        <div style={row}>{styleChoices.map((h) => (
+          <button key={h.id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.hairstyle === h.id ? "#f2c14e" : "#2e2947" }} onClick={() => set("hairstyle", h.id)}>{h.name}</button>
+        ))}</div>
+        {label("HAIR COLOR")}
+        <div style={row}>{hairChoices.map(({ h, i }) => sw(h.name, h.c2 ? `linear-gradient(180deg, ${h.c} 55%, ${h.c2})` : h.c, draft.hair === i, () => set("hair", i)))}</div>
+        {label("UNDERGARMENTS")}
+        <div style={row}>{UNDERGARMENTS.map((u) => (
+          <button key={u.id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.under === u.id ? "#f2c14e" : "#2e2947" }} onClick={() => set("under", u.id)}>{u.name}</button>
+        ))}</div>
+        <div style={{ ...row, marginTop: 6 }}>{UNDER_COLORS.map((u, i) => sw(u.name, u.c, draft.underC === i, () => set("underC", i)))}</div>
+        <div style={{ color: "#8b84ad", fontSize: 15, marginTop: 10 }}>Race, body, skin, and starter styles are free — wardrobe pieces you own stay owned. Reopen any time with 🪞 Appearance.</div>
+      </div>
+    </div>
+  );
+}
+
 export default function GuildIdle() {
   const cvsRef = useRef(null);
   const gRef = useRef(null);
@@ -4457,6 +4784,7 @@ export default function GuildIdle() {
   const [sfxOff, setSfxOffUI] = useState(false);
   const [musicOff, setMusicOffUI] = useState(false);
   const [confirmP, setConfirmP] = useState(false); // member id awaiting retell confirm
+  const [creatorFor, setCreatorFor] = useState(null); // member id in the character creator
 
   useEffect(() => { autoSimRef.current = autoSim; }, [autoSim]);
 
@@ -4761,12 +5089,18 @@ export default function GuildIdle() {
               onClick={() => { audioInit(); audioResume(); setMusicMuted(!musicOff); setMusicOffUI(!musicOff); }}>🎵</button>
           </header>
 
-          <div style={{ background: "#100e1a", padding: "6px 10px" }}>
+          <div style={{ background: "#100e1a", padding: "6px 10px", position: "relative" }}>
             {/* 2x device canvas: the world renders at 2 device px per logical
                 unit so HD sprites draw source-native (the renderer derives
                 the scale; CSS sizing and mouse math are logical-relative). */}
             <canvas ref={cvsRef} width={W * 2} height={H * 2}
               style={{ width: "100%", maxWidth: 900, display: "block", margin: "0 auto", imageRendering: "pixelated", border: "2px solid #2e2947", background: "#141221" }} />
+            {creatorFor != null && (() => {
+              const cm = g.members.find((x) => x.id === creatorFor);
+              return cm ? <CharacterCreator m={cm}
+                onCommit={(draft) => { applyAppearance(g, cm, draft); setCreatorFor(null); force((v) => v + 1); }}
+                onClose={() => setCreatorFor(null)} /> : null;
+            })()}
           </div>
 
           <nav style={{ display: "flex", gap: 6, padding: "6px 12px" }}>
@@ -4792,6 +5126,7 @@ export default function GuildIdle() {
                   <button className="gi-btn" onClick={() => setSelId(null)}>← Party</button>
                   <span className="gi-h" style={{ fontSize: 11, color: CLASSES[sel.cls].color }}>{sel.name}</span>
                   {chip(`${CLASSES[sel.cls].name} · Lv ${sel.level}`, CLASSES[sel.cls].color)}
+                  <button className="gi-btn" title="race, body, skin, hair, undergarments" onClick={() => setCreatorFor(sel.id)}>🪞 Appearance</button>
                   <span style={{ color: "#8b84ad", fontSize: 16 }}>
                     XP {fmt(sel.xp)}/{fmt(xpNeed(sel.level))} · {fmt(sel.dmgDone)} dmg dealt · {fmt(sel.healDone)} healed
                   </span>

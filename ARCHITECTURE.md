@@ -48,6 +48,8 @@ State snapshots broadcast at 10Hz to every connected socket. A snapshot contains
 
 Everything a player can do arrives as an intent message, for example `{a: "cosmetic", memberId: 3, kind: "hat", key: "witch"}`. The server validates every intent against the world (does the guild have the gold, is the rank below max, does the item exist) and applies it or silently drops it. Clients never mutate shared state directly, so a modified client can request things but cannot take them.
 
+The character creator commits through the owner-gated `appearance` intent (`{a: "appearance", memberId, race, body, skin, hairstyle, hair, under, underC}`), validated in `applyAppearance` against the free identity catalogs (RACES, SKINS, UNDERGARMENTS, UNDER_COLORS; hairstyles and hair colors must be free-tier or owned). New characters spawn with `cos.fresh = true`, which the client uses to auto-open the creator on first join; the flag clears on the first successful commit and persists inside `cos` (no schema change — `cos` is a JSON column). Characters that predate the creator are backfilled to Human defaults on rehydrate and granted the five starter hairstyles.
+
 ## Instance lifecycle
 
 Wake: the voice channel is empty and someone joins. The bot calls `joinVoice`. If the world is not in memory, the server loads it from the database, restores the person's character from the roster, and the tick loop resumes mid-stage, exactly where the campaign froze.
