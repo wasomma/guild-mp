@@ -281,6 +281,65 @@ if (cmd === "bald") {
   }
   writeFileSync(`${DIR}/kitsune-donor.png`, PNG.sync.write(img));
   console.log(`kitsune-donor.png (from base s${baseSeed}) usd ~${usd.toFixed(3)}`);
+} else if (cmd === "spearless") {
+  /* owner call (checkpoint 3): the donor goes empty-handed.
+     LEARNING (3 seeds): chroma-clearing the spear leaves fragments (the
+     head's RED gem facets sit below hue 30) and the model reconnects them
+     into a new spear; closure bands that touch the thigh shadows bulk the
+     legs. So: clear the whole spear BAND geometrically wherever no anatomy
+     overlaps, chroma-clear only inside the hand rows, and repaint nothing
+     but the two hand boxes. */
+  const seed = Number(a1) || 1;
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-donor.png`));
+  const clear = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4;
+    if (img.data[i + 3] < 128) continue;
+    if (y < 100 && x >= 91) { clear[y * W + x] = 1; continue; }          /* head + upper shaft: spear only */
+    if (y > 164 && x >= 90 && x <= 106) { clear[y * W + x] = 1; continue; } /* lower shaft beside the leg */
+    if (y >= 100 && y <= 164 && x >= 88) {
+      const [h, s, l] = rgb2hsl(img.data[i], img.data[i + 1], img.data[i + 2]);
+      const wood = l < 0.32;
+      const metal = ((h >= 25 && h <= 58) || h <= 25) && s > 0.5 && l < 0.55;
+      const wrap = l > 0.75 && s < 0.28 && x >= 94;
+      if (wood || metal || wrap) clear[y * W + x] = 1;
+    }
+  }
+  for (let i = 0; i < W * H; i++) if (clear[i]) img.data[i * 4 + 3] = 0;
+  /* repaint: the two hand boxes only, plus a 2px closure band that stays
+     inside the hand rows so the body silhouette is never touched */
+  const band = new Uint8Array(W * H);
+  for (let y = 104; y <= 130; y++) for (let x = 92; x <= 112; x++) band[y * W + x] = 1;
+  for (let y = 130; y <= 158; y++) for (let x = 86; x <= 104; x++) band[y * W + x] = 1;
+  const usd = await inpaintWindow(img, band, 0, 199,
+    "bare natural hands relaxed as loose fists, smooth golden skin, simple fingers, empty hands holding nothing, soft painterly cel shading",
+    "spear, weapon, staff, pole, stick, gloves, gauntlets, clothing, gold, metal, muddy, blurry, deformed hands, extra fingers",
+    SKIN_PAL, seed);
+  /* drop disconnected leftovers (spearhead fragments, shaft stubs) */
+  {
+    const seen = new Uint8Array(W * H);
+    const stack = [];
+    const keep = new Uint8Array(W * H);
+    for (let s0 = 0; s0 < W * H; s0++) {
+      if (seen[s0] || img.data[s0 * 4 + 3] < 128) continue;
+      const comp = [];
+      stack.push(s0); seen[s0] = 1;
+      while (stack.length) {
+        const i = stack.pop(); comp.push(i);
+        const cx = i % W, cy = (i / W) | 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          const ni = ny * W + nx;
+          if (!seen[ni] && img.data[ni * 4 + 3] >= 128) { seen[ni] = 1; stack.push(ni); }
+        }
+      }
+      if (comp.length >= 50) for (const i of comp) keep[i] = 1;
+    }
+    for (let i = 0; i < W * H; i++) if (!keep[i]) img.data[i * 4 + 3] = 0;
+  }
+  writeFileSync(`${DIR}/kitsune-donor-nospear-s${seed}.png`, PNG.sync.write(img));
+  console.log(`kitsune-donor-nospear-s${seed}.png usd ~${usd.toFixed(3)}`);
 } else {
-  console.log("usage: bald <seed> | skin <baldSeed> <seed> | finish <baseSeed> <seed>");
+  console.log("usage: bald <seed> | skin <baldSeed> <seed> | finish <baseSeed> <seed> | spearless <seed>");
 }
