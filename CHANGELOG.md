@@ -2,6 +2,15 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.26 — 2026-07-24
+
+**The feast turns to face you.** A polish release for the character creator and the mead hall:
+
+- **South-facing feast**: feasters now look out at the hall — eyes, smiles, blushes, and race features drawn front-on instead of the combat profile. Orc tusks frame the smile, the dwarf's beard sits square, and whisker marks show on both cheeks.
+- **Creator polish**: elves grew their second ear (the portrait view made the missing one obvious), tiefling horns are now proper swept hooks instead of thin stalks, freckles take your skin tone so they show on every shade, and warpaint stays visible on Crimson skin.
+- **HD heroes show off their gear**: the HD kitsune now carries the earned-gear glow — legendary/unique armor shimmer, the weapon-quality light at her hand, and the unique twinkle — like every paperdoll hero does.
+- Enemy health bars now rise to clear tall heads (and the Kings' crowns) instead of drawing through them.
+
 ## v0.1.25 — 2026-07-24
 
 **The character creator.** Your adventurer is now yours to make:
