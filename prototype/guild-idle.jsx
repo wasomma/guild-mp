@@ -2195,7 +2195,7 @@ function drawPet(ctx, m, t) {
   }
 }
 
-function drawAccessory(ctx, ox, oy, acc, sk) {
+function drawAccessory(ctx, ox, oy, acc, sk, south) {
   if (acc === "earrings") {
     px2(ctx, ox, oy, -5, -23, 1, 1, "#f2c14e");
     px2(ctx, ox, oy, -5, -22, 1, 2, "#c78a3b");
@@ -2215,22 +2215,36 @@ function drawAccessory(ctx, ox, oy, acc, sk) {
   } else if (acc === "warpaint") {
     /* crimson paint vanishes on Crimson skin — swap to bone cream there */
     const wp = sk && sk.name === "Crimson" ? "rgba(245,227,187,0.85)" : "rgba(208,69,90,0.8)";
-    px2(ctx, ox, oy, 0, -25, 2, 1, wp);
-    px2(ctx, ox, oy, 3, -25, 2, 1, wp);
-    px2(ctx, ox, oy, -1, -28, 4, 1, wp);
+    if (south) {
+      px2(ctx, ox, oy, -3.5, -25, 2, 1, wp);
+      px2(ctx, ox, oy, 1.5, -25, 2, 1, wp);
+      px2(ctx, ox, oy, -2, -28, 4, 1, wp);
+    } else {
+      px2(ctx, ox, oy, 0, -25, 2, 1, wp);
+      px2(ctx, ox, oy, 3, -25, 2, 1, wp);
+      px2(ctx, ox, oy, -1, -28, 4, 1, wp);
+    }
   } else if (acc === "freckles") {
     /* freckles ride the wearer's own skin ramp so they read on every tone */
     const fr = sk ? shade(sk.d, 0.72) : "#965a3c";
-    px2(ctx, ox, oy, 0, -24, 1, 1, hexA(fr, 0.85));
-    px2(ctx, ox, oy, 3, -24, 1, 1, hexA(fr, 0.85));
-    px2(ctx, ox, oy, 2, -23, 1, 1, hexA(fr, 0.7));
-    px2(ctx, ox, oy, 4, -23, 1, 1, hexA(fr, 0.7));
+    if (south) {
+      px2(ctx, ox, oy, -3, -24, 1, 1, hexA(fr, 0.85));
+      px2(ctx, ox, oy, 2, -24, 1, 1, hexA(fr, 0.85));
+      px2(ctx, ox, oy, -4, -23, 1, 1, hexA(fr, 0.7));
+      px2(ctx, ox, oy, 3, -23, 1, 1, hexA(fr, 0.7));
+    } else {
+      px2(ctx, ox, oy, 0, -24, 1, 1, hexA(fr, 0.85));
+      px2(ctx, ox, oy, 3, -24, 1, 1, hexA(fr, 0.85));
+      px2(ctx, ox, oy, 2, -23, 1, 1, hexA(fr, 0.7));
+      px2(ctx, ox, oy, 4, -23, 1, 1, hexA(fr, 0.7));
+    }
   } else if (acc === "foxmarks") {
     const fx = sk && sk.name === "Crimson" ? "58,26,20" : "178,72,40";
-    px2(ctx, ox, oy, -1, -25, 2, 0.5, `rgba(${fx},0.85)`); /* whisker stripes */
-    px2(ctx, ox, oy, -1, -24, 2, 0.5, `rgba(${fx},0.6)`);
-    px2(ctx, ox, oy, 3, -25, 2, 0.5, `rgba(${fx},0.85)`);
-    px2(ctx, ox, oy, 3, -24, 2, 0.5, `rgba(${fx},0.6)`);
+    const wx = south ? -4.5 : -1, ex = south ? 2.5 : 3; /* whisker stripes on both cheeks */
+    px2(ctx, ox, oy, wx, -25, 2, 0.5, `rgba(${fx},0.85)`);
+    px2(ctx, ox, oy, wx, -24, 2, 0.5, `rgba(${fx},0.6)`);
+    px2(ctx, ox, oy, ex, -25, 2, 0.5, `rgba(${fx},0.85)`);
+    px2(ctx, ox, oy, ex, -24, 2, 0.5, `rgba(${fx},0.6)`);
   }
 }
 
@@ -2238,21 +2252,30 @@ function drawAccessory(ctx, ox, oy, acc, sk) {
    feaster — same head-local px2 coordinates in both poses. The face pass
    (elf ears, orc tusks, dwarf beard) draws with the face so hair falls over
    it; fox ears and tiefling horns ride on top of the finished hair. */
-function drawRaceFace(ctx, ox, oy, m, sk) {
+function drawRaceFace(ctx, ox, oy, m, sk, south) {
   const race = raceOf(m);
   if (race.tusks) {
-    px2(ctx, ox, oy, 0.5, -22.5, 1, 1.5, "#efe6cf");
-    px2(ctx, ox, oy, 4, -22.5, 1, 1.5, "#efe6cf");
-    px2(ctx, ox, oy, 0.5, -21.5, 1, 0.5, "#c9bfa4");
-    px2(ctx, ox, oy, 4, -21.5, 1, 0.5, "#c9bfa4");
+    if (south) {
+      /* south face: tusks flank the centered mouth */
+      px2(ctx, ox, oy, -3, -22.5, 1, 1.5, "#efe6cf");
+      px2(ctx, ox, oy, 2, -22.5, 1, 1.5, "#efe6cf");
+      px2(ctx, ox, oy, -3, -21.5, 1, 0.5, "#c9bfa4");
+      px2(ctx, ox, oy, 2, -21.5, 1, 0.5, "#c9bfa4");
+    } else {
+      px2(ctx, ox, oy, 0.5, -22.5, 1, 1.5, "#efe6cf");
+      px2(ctx, ox, oy, 4, -22.5, 1, 1.5, "#efe6cf");
+      px2(ctx, ox, oy, 0.5, -21.5, 1, 0.5, "#c9bfa4");
+      px2(ctx, ox, oy, 4, -21.5, 1, 0.5, "#c9bfa4");
+    }
   }
   if (race.beard && m.cos.body !== "f") {
     const bc = HAIRS[m.cos.hair].c, bd = shade(bc, 0.7);
-    px2(ctx, ox, oy, -1, -21.5, 6, 2, bc);
-    px2(ctx, ox, oy, 0, -19.5, 5, 1.5, bc);
-    px2(ctx, ox, oy, 1, -18, 3, 1, bd);
-    px2(ctx, ox, oy, -1, -21.5, 1, 1.5, bd);
-    px2(ctx, ox, oy, 1, -22, 3, 0.5, bd);
+    const bs = south ? -2 : 0; /* the east jaw sits +2 of the south centerline */
+    px2(ctx, ox, oy, -1 + bs, -21.5, 6, 2, bc);
+    px2(ctx, ox, oy, 0 + bs, -19.5, 5, 1.5, bc);
+    px2(ctx, ox, oy, 1 + bs, -18, 3, 1, bd);
+    px2(ctx, ox, oy, -1 + bs, -21.5, 1, 1.5, bd);
+    px2(ctx, ox, oy, 1 + bs, -22, 3, 0.5, bd);
   }
 }
 function drawRaceCrown(ctx, ox, oy, m, sk) {
@@ -4299,7 +4322,8 @@ function drawFeaster(ctx, m, t) {
     px2(ctx, ox, oy, -5, -13, 1, 2, "rgba(16,14,26,0.30)");
     px2(ctx, ox, oy, 4, -13, 1, 2, "rgba(16,14,26,0.30)");
   }
-  /* head */
+  /* head — the feast is the south-facing scene: the skull is shared with
+     the combat paperdoll but every feature centers on it, facing the hall */
   px2(ctx, ox, oy, -4, -31, 8, 1, SKIN);
   px2(ctx, ox, oy, -5, -30, 10, 9, SKIN);
   px2(ctx, ox, oy, -4, -21, 8, 1, SKIN_D);
@@ -4307,34 +4331,38 @@ function drawFeaster(ctx, m, t) {
   px2(ctx, ox, oy, -5, -29, 1, 8, SKIN_D);
   px2(ctx, ox, oy, -4, -22, 8, 1, SKIN_D);
   px2(ctx, ox, oy, -5, -26, 2, 3, SKIN);
-  px2(ctx, ox, oy, -1, -20, 4, 1, SKIN_D);
+  px2(ctx, ox, oy, -2, -20, 4, 1, SKIN_D);
   const browC = shade(hair, 0.6);
   const merry = act === "sing" || act === "dance" || (act === "drink" && ((t * 0.8 + fs.seed) % 3) < 0.7);
-  px2(ctx, ox, oy, 0, -27, 2, 1, browC);
-  px2(ctx, ox, oy, 3, -27, 2, 1, browC);
+  px2(ctx, ox, oy, -3.5, -27, 2, 1, browC);
+  px2(ctx, ox, oy, 1.5, -27, 2, 1, browC);
+  if (!fem) {
+    px2(ctx, ox, oy, -4, -27.5, 3, 1, browC);
+    px2(ctx, ox, oy, 1, -27.5, 3, 1, browC);
+  }
   if (merry) {
     /* happy closed eyes */
-    px2(ctx, ox, oy, 0, -25, 2, 1, "#2b2436");
-    px2(ctx, ox, oy, 3, -25, 2, 1, "#2b2436");
+    px2(ctx, ox, oy, -3.5, -25, 2, 1, "#2b2436");
+    px2(ctx, ox, oy, 1.5, -25, 2, 1, "#2b2436");
   } else {
-    px2(ctx, ox, oy, 0, -26, 2, 2, "#f7f4ff");
-    px2(ctx, ox, oy, 3, -26, 2, 2, "#f7f4ff");
-    px2(ctx, ox, oy, 1, -26, 1, 2, "#2b2436");
-    px2(ctx, ox, oy, 4, -26, 1, 2, "#2b2436");
+    px2(ctx, ox, oy, -3.5, -26, 2, 2, "#f7f4ff");
+    px2(ctx, ox, oy, 1.5, -26, 2, 2, "#f7f4ff");
+    px2(ctx, ox, oy, -2.5, -26, 1, 2, "#2b2436");
+    px2(ctx, ox, oy, 2.5, -26, 1, 2, "#2b2436");
   }
-  px2(ctx, ox, oy, 5, -24, 1, 2, SKIN_D);
+  px2(ctx, ox, oy, -0.5, -24.5, 1, 1.5, SKIN_D);
   /* feast-flushed cheeks for all */
-  px2(ctx, ox, oy, -1, -23, 1, 1, "rgba(224,122,110,0.55)");
-  px2(ctx, ox, oy, 4, -23, 1, 1, "rgba(224,122,110,0.55)");
+  px2(ctx, ox, oy, -4.5, -23, 1, 1, "rgba(224,122,110,0.55)");
+  px2(ctx, ox, oy, 3.5, -23, 1, 1, "rgba(224,122,110,0.55)");
   if (act === "sing") {
-    px2(ctx, ox, oy, 1, -23, 3, 2, "#5a2f35");
-    px2(ctx, ox, oy, 2, -22, 1, 1, "#e77fb3");
+    px2(ctx, ox, oy, -1.5, -23, 3, 2, "#5a2f35");
+    px2(ctx, ox, oy, -0.5, -22, 1, 1, "#e77fb3");
   } else if (fem) {
-    px2(ctx, ox, oy, 1, -22, 3, 1, "#c96a7a");
+    px2(ctx, ox, oy, -1.5, -22, 3, 1, "#c96a7a");
   } else {
-    px2(ctx, ox, oy, 1, -22, 3, 1, "#8a5a44");
+    px2(ctx, ox, oy, -1.5, -22, 3, 1, "#8a5a44");
   }
-  drawRaceFace(ctx, ox, oy, m, skn);
+  drawRaceFace(ctx, ox, oy, m, skn, true);
   drawHair(ctx, ox, oy, m.cos.hairstyle, hair, hair2);
   drawRaceCrown(ctx, ox, oy, m, skn);
   /* activity arms and props */
@@ -4386,7 +4414,7 @@ function drawFeaster(ctx, m, t) {
     }
   }
   drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);
-  drawAccessory(ctx, ox, oy, m.cos.accessory, skn);
+  drawAccessory(ctx, ox, oy, m.cos.accessory, skn, true);
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.28)");
   if (build !== 1) ctx.restore();
   ctx.restore();
