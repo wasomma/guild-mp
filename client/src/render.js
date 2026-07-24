@@ -2271,10 +2271,15 @@ function drawEnemy(ctx, e, t) {
     ctx.fillStyle = "rgba(127,208,105,0.85)";
     ctx.fillRect(ox - 2, oy - 60 * s - Math.sin(t * 6 + e.seed) * 4, 4, 4);
   }
-  hpBar(ctx, e.x, e.y - 54 * s, e.boss ? 60 : e.elite ? 40 : 26, e.hp / e.maxHp, "#ef6461");
+  /* the bar never sits below the classic -54, but tall heads push it up:
+     HD sprites set `top` from their real height, procedural imp horns reach
+     past their `top`, and elite marks / the boss crown stack above it */
+  const crest = e.kind === "imp" && !spr ? -29 : top;
+  const barY = Math.min(-54, (crest - (e.boss ? 7 : e.elite ? 3 : 0)) * P2 - 12) * s;
+  hpBar(ctx, e.x, e.y + barY, e.boss ? 60 : e.elite ? 40 : 26, e.hp / e.maxHp, "#ef6461");
   if (e.elite) {
     ctx.font = "7px 'Press Start 2P', monospace"; ctx.textAlign = "center";
-    ctx.fillStyle = "#e77463"; ctx.fillText(e.name, e.x, e.y - 54 * s - 8);
+    ctx.fillStyle = "#e77463"; ctx.fillText(e.name, e.x, e.y + barY - 8);
   }
 }
 
