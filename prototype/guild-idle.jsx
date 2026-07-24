@@ -2195,7 +2195,7 @@ function drawPet(ctx, m, t) {
   }
 }
 
-function drawAccessory(ctx, ox, oy, acc) {
+function drawAccessory(ctx, ox, oy, acc, sk) {
   if (acc === "earrings") {
     px2(ctx, ox, oy, -5, -23, 1, 1, "#f2c14e");
     px2(ctx, ox, oy, -5, -22, 1, 2, "#c78a3b");
@@ -2213,19 +2213,24 @@ function drawAccessory(ctx, ox, oy, acc) {
     px2(ctx, ox, oy, -6, -17, 1, 4, "#a84358");
     px2(ctx, ox, oy, -7, -13, 2, 1, "#93384a");
   } else if (acc === "warpaint") {
-    px2(ctx, ox, oy, 0, -25, 2, 1, "rgba(208,69,90,0.8)");
-    px2(ctx, ox, oy, 3, -25, 2, 1, "rgba(208,69,90,0.8)");
-    px2(ctx, ox, oy, -1, -28, 4, 1, "rgba(208,69,90,0.8)");
+    /* crimson paint vanishes on Crimson skin — swap to bone cream there */
+    const wp = sk && sk.name === "Crimson" ? "rgba(245,227,187,0.85)" : "rgba(208,69,90,0.8)";
+    px2(ctx, ox, oy, 0, -25, 2, 1, wp);
+    px2(ctx, ox, oy, 3, -25, 2, 1, wp);
+    px2(ctx, ox, oy, -1, -28, 4, 1, wp);
   } else if (acc === "freckles") {
-    px2(ctx, ox, oy, 0, -24, 1, 1, "rgba(150,90,60,0.85)");
-    px2(ctx, ox, oy, 3, -24, 1, 1, "rgba(150,90,60,0.85)");
-    px2(ctx, ox, oy, 2, -23, 1, 1, "rgba(150,90,60,0.7)");
-    px2(ctx, ox, oy, 4, -23, 1, 1, "rgba(150,90,60,0.7)");
+    /* freckles ride the wearer's own skin ramp so they read on every tone */
+    const fr = sk ? shade(sk.d, 0.72) : "#965a3c";
+    px2(ctx, ox, oy, 0, -24, 1, 1, hexA(fr, 0.85));
+    px2(ctx, ox, oy, 3, -24, 1, 1, hexA(fr, 0.85));
+    px2(ctx, ox, oy, 2, -23, 1, 1, hexA(fr, 0.7));
+    px2(ctx, ox, oy, 4, -23, 1, 1, hexA(fr, 0.7));
   } else if (acc === "foxmarks") {
-    px2(ctx, ox, oy, -1, -25, 2, 0.5, "rgba(178,72,40,0.85)"); /* whisker stripes */
-    px2(ctx, ox, oy, -1, -24, 2, 0.5, "rgba(178,72,40,0.6)");
-    px2(ctx, ox, oy, 3, -25, 2, 0.5, "rgba(178,72,40,0.85)");
-    px2(ctx, ox, oy, 3, -24, 2, 0.5, "rgba(178,72,40,0.6)");
+    const fx = sk && sk.name === "Crimson" ? "58,26,20" : "178,72,40";
+    px2(ctx, ox, oy, -1, -25, 2, 0.5, `rgba(${fx},0.85)`); /* whisker stripes */
+    px2(ctx, ox, oy, -1, -24, 2, 0.5, `rgba(${fx},0.6)`);
+    px2(ctx, ox, oy, 3, -25, 2, 0.5, `rgba(${fx},0.85)`);
+    px2(ctx, ox, oy, 3, -24, 2, 0.5, `rgba(${fx},0.6)`);
   }
 }
 
@@ -2253,12 +2258,18 @@ function drawRaceFace(ctx, ox, oy, m, sk) {
 function drawRaceCrown(ctx, ox, oy, m, sk) {
   const race = raceOf(m);
   if (race.ears === "point") {
-    /* pointed ears ride over the hair — they poke through long styles */
+    /* pointed ears ride over the hair — they poke through long styles;
+       the head is drawn frontal, so both ears show like the fox pair */
     px2(ctx, ox, oy, -7, -26.5, 2, 2, sk.c);
     px2(ctx, ox, oy, -8.5, -27.5, 2, 1.5, sk.c);
     px2(ctx, ox, oy, -9.5, -28, 1, 1, sk.c);
     px2(ctx, ox, oy, -7, -25, 2, 0.5, sk.d);
     px2(ctx, ox, oy, -8.5, -26.5, 1.5, 0.5, sk.d);
+    px2(ctx, ox, oy, 5, -26.5, 2, 2, sk.c);
+    px2(ctx, ox, oy, 6.5, -27.5, 2, 1.5, sk.c);
+    px2(ctx, ox, oy, 8.5, -28, 1, 1, sk.c);
+    px2(ctx, ox, oy, 5, -25, 2, 0.5, sk.d);
+    px2(ctx, ox, oy, 7, -26.5, 1.5, 0.5, sk.d);
   }
   if (race.ears === "fox") {
     const fc = HAIRS[m.cos.hair].c, fd = shade(fc, 0.72), fi = "#f2dcc9";
@@ -2270,13 +2281,21 @@ function drawRaceCrown(ctx, ox, oy, m, sk) {
     px2(ctx, ox, oy, 3.5, -33.5, 1, 3, fd);
   }
   if (race.horns) {
-    const hc = "#6e3a44", hl = "#9a5560";
-    px2(ctx, ox, oy, -4, -33.5, 1.5, 3, hc);
-    px2(ctx, ox, oy, -4.5, -34.5, 1.5, 1.5, hc);
-    px2(ctx, ox, oy, -4.5, -34.5, 1, 0.5, hl);
-    px2(ctx, ox, oy, 3, -33.5, 1.5, 3, hc);
-    px2(ctx, ox, oy, 3.5, -34.5, 1.5, 1.5, hc);
-    px2(ctx, ox, oy, 4, -34.5, 1, 0.5, hl);
+    /* swept horns: thick hooks rooted at the temples, curling out and up —
+       thin straight stalks read as antennae at portrait zoom */
+    const hc = "#6e3a44", hd = "#4e2830", hl = "#9a5560";
+    px2(ctx, ox, oy, -6, -32.5, 3, 3, hc);
+    px2(ctx, ox, oy, -6, -30.5, 3, 1, hd);
+    px2(ctx, ox, oy, -7.5, -34.5, 2.5, 2, hc);
+    px2(ctx, ox, oy, -8, -36, 1.5, 1.5, hc);
+    px2(ctx, ox, oy, -7.5, -34.5, 1, 0.5, hl);
+    px2(ctx, ox, oy, -8, -36, 1, 0.5, hl);
+    px2(ctx, ox, oy, 3, -32.5, 3, 3, hc);
+    px2(ctx, ox, oy, 3, -30.5, 3, 1, hd);
+    px2(ctx, ox, oy, 5, -34.5, 2.5, 2, hc);
+    px2(ctx, ox, oy, 6.5, -36, 1.5, 1.5, hc);
+    px2(ctx, ox, oy, 6.5, -34.5, 1, 0.5, hl);
+    px2(ctx, ox, oy, 7, -36, 1, 0.5, hl);
   }
 }
 /* Starter undergarments (creator identity): drawn alone in the creator's
@@ -2440,6 +2459,43 @@ function drawHdHero(ctx, m, t, ox, oy, hset) {
   } else {
     const hw = hset.body.width / 2, hh = hset.body.height / 2;
     ctx.drawImage(hset.body, Math.round(ox - hw / 2), Math.round(oy - hh), hw, hh);
+  }
+  /* earned-gear reward visuals, sized for the ~123-px HD frame: armor
+     shimmer, weapon-quality hand glow, and the unique twinkle — the
+     paperdoll's plate/charm geometry stays procedural-only */
+  if (m.gear) {
+    const grA = m.gear.armor;
+    if (grA && (grA.unique || (grA.rarity && grA.rarity.id === "legendary"))) {
+      const gc = grA.unique ? "#a8f2e2" : "#f2a94e";
+      const gpl = 0.10 + 0.07 * Math.sin(t * 3.2 + m.seed);
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = hexA(gc, gpl);
+      ctx.fillRect(ox - 22, oy - 74, 44, 26);
+      ctx.restore();
+    }
+    const grW = m.gear.weapon;
+    if (grW && (grW.unique || (grW.rarity && (grW.rarity.id === "rare" || grW.rarity.id === "epic" || grW.rarity.id === "legendary")))) {
+      const wrc = grW.unique ? "#a8f2e2" : grW.rarity.color;
+      const wpl = 0.1 + 0.06 * Math.sin(t * 3.6 + m.seed * 2);
+      const wx = hset.meta ? ox + (hset.meta.hand[0] - hset.meta.cx) / 2 : ox + 12;
+      const wy = hset.meta ? oy - (hset.meta.foot - hset.meta.hand[1]) / 2 : oy - 44;
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const wg = ctx.createRadialGradient(wx, wy, 1, wx, wy, 18);
+      wg.addColorStop(0, hexA(wrc, wpl + 0.12));
+      wg.addColorStop(1, hexA(wrc, 0));
+      ctx.fillStyle = wg; ctx.beginPath(); ctx.arc(wx, wy, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if (SLOTS.some((sl) => m.gear[sl] && m.gear[sl].unique)) {
+      const tw = Math.floor(t * 7 + m.seed * 3) % 5;
+      if (tw < 2) {
+        const sxp = ox + (tw ? 18 : -14) + Math.sin(t * 3 + m.seed) * 3;
+        const syp = oy - 58 - (tw ? 22 : 8);
+        ctx.fillStyle = "#a8f2e2";
+        ctx.fillRect(sxp - 1, syp, 3, 1);
+        ctx.fillRect(sxp, syp - 1, 1, 3);
+      }
+    }
   }
   drawPet(ctx, m, t);
   if (!m.noBars) hpBar(ctx, ox, oy + 5, 20, m.hp / Math.max(1, m._st ? m._st.hp : m.hp), CLASSES[m.cls].color);
@@ -3395,7 +3451,7 @@ function drawAdventurer(ctx, m, t) {
 
   if (!m.noOutfit) {
     drawHat(ctx, ox, oy, m.cos.hat, outfit, tint, hair, t);
-    drawAccessory(ctx, ox, oy, m.cos.accessory);
+    drawAccessory(ctx, ox, oy, m.cos.accessory, skn);
   }
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.4)");
   px2(ctx, ox, oy, 3, -30, 1, 4, "rgba(255,232,190,0.3)");
@@ -4330,7 +4386,7 @@ function drawFeaster(ctx, m, t) {
     }
   }
   drawHat(ctx, ox, oy, m.cos.hat, outfit, WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c, hair, t);
-  drawAccessory(ctx, ox, oy, m.cos.accessory);
+  drawAccessory(ctx, ox, oy, m.cos.accessory, skn);
   px2(ctx, ox, oy, -4, -31, 8, 1, "rgba(255,232,190,0.28)");
   if (build !== 1) ctx.restore();
   ctx.restore();
