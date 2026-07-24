@@ -90,6 +90,14 @@ async function inpaintWindow(img, mask, y0, y1, desc, neg, pal, seed) {
   const j = await r.json().catch(() => null);
   if (!r.ok) throw new Error("inpaint " + r.status + ": " + JSON.stringify(j).slice(0, 300));
   const res = PNG.sync.read(Buffer.from(j.image.base64, "base64"));
+  /* the API repaints loosely around the mask — composite strictly through
+     it so only masked pixels can change */
+  for (let y = 0; y < winH; y++) for (let x = 0; x < W; x++) {
+    if (mask[(y0 + y) * W + x]) continue;
+    const i = (y * W + x) * 4;
+    res.data[i] = crop.data[i]; res.data[i + 1] = crop.data[i + 1];
+    res.data[i + 2] = crop.data[i + 2]; res.data[i + 3] = crop.data[i + 3];
+  }
   res.data.copy(img.data, y0 * W * 4);
   return (j.usage && j.usage.usd) || 0;
 }
@@ -340,6 +348,325 @@ if (cmd === "bald") {
   }
   writeFileSync(`${DIR}/kitsune-donor-nospear-s${seed}.png`, PNG.sync.write(img));
   console.log(`kitsune-donor-nospear-s${seed}.png usd ~${usd.toFixed(3)}`);
+} else if (cmd === "repose") {
+  /* owner call: arms preemptively reposed to relaxed at-sides so the style
+     reference doesn't teach every mannequin her raised-hands pose. The
+     forearms cross the chest, so there is no clean arm/torso separation —
+     instead the whole arm band is cleared and rebuilt from shaped zones:
+     the torso trapezoid refills as chest (shape prior = body), and two
+     arm strips + fist boxes grow the hanging arms (the cranium-dome trick,
+     sideways). Head, hips, and legs stay untouched as identity anchors. */
+  const seed = Number(a1) || 1;
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-donor-nospear.png`));
+  for (let y = 80; y <= 126; y++) for (let x = 0; x < W; x++) img.data[(y * W + x) * 4 + 3] = 0;
+  const band = new Uint8Array(W * H);
+  const zone = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) band[y * W + x] = 1; };
+  /* torso: interpolated trapezoid from shoulder line to the hip join */
+  for (let y = 80; y <= 126; y++) {
+    const t = (y - 80) / 46;
+    const x0 = Math.round(48 + 8 * t), x1 = Math.round(84 - 4 * t);
+    for (let x = x0; x <= x1; x++) band[y * W + x] = 1;
+  }
+  zone(78, 84, 92, 148);   /* near arm, hanging in front of the hip line */
+  zone(78, 148, 92, 162);  /* near fist beside the thigh */
+  zone(42, 84, 54, 142);   /* far arm sliver behind the torso */
+  zone(42, 142, 54, 156);  /* far fist */
+  const usd = await inpaintWindow(img, band, 0, 199,
+    "young woman standing in three-quarter view facing right, bare natural body with smooth golden skin, both arms hanging relaxed straight down at her sides, hands in loose fists resting beside her thighs, well-drawn five-fingered hands, soft painterly cel shading",
+    "raised arms, crossed arms, bent elbows, hands in front, clothing, weapon, muddy, blurry, deformed hands, extra fingers, extra limbs",
+    SKIN_PAL, seed);
+  writeFileSync(`${DIR}/kitsune-posed-s${seed}.png`, PNG.sync.write(img));
+  console.log(`kitsune-posed-s${seed}.png usd ~${usd.toFixed(3)}`);
+} else if (cmd === "repose2") {
+  /* LEARNING (repose, 4 seeds): open repaint zones are permission, not
+     command — the model's prior painted crossed arms inside them every
+     time. repose2 removes the choice: the armless torso and both hanging
+     arms are BUILT deterministically as a shaded scaffold from her own
+     skin ramp, then ONE shape-preserving polish inpaint refines the
+     shading over exactly those pixels. Geometry ours, brushwork the
+     model's. */
+  const seed = Number(a1) || 1;
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-donor-nospear.png`));
+  const set = (x, y, hex) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    img.data[i] = parseInt(hex.slice(1, 3), 16);
+    img.data[i + 1] = parseInt(hex.slice(3, 5), 16);
+    img.data[i + 2] = parseInt(hex.slice(5, 7), 16);
+    img.data[i + 3] = 255;
+  };
+  const SK = "#e8b98a", SKD = "#c99465", SKDD = "#a87952", SKL = "#f6d4a6";
+  for (let y = 80; y <= 126; y++) for (let x = 0; x < W; x++) img.data[(y * W + x) * 4 + 3] = 0;
+  const scaffold = new Uint8Array(W * H);
+  const mark = (x, y) => { if (x >= 0 && y >= 0 && x < W && y < H) scaffold[y * W + x] = 1; };
+  /* torso: tapered capsule, back (left) in shadow, light from upper right */
+  for (let y = 80; y <= 126; y++) {
+    const t = (y - 80) / 46;
+    const x0 = Math.round(48 + 8 * t), x1 = Math.round(84 - 4 * t);
+    for (let x = x0; x <= x1; x++) {
+      const f = (x - x0) / Math.max(1, x1 - x0);
+      set(x, y, f < 0.16 ? SKDD : f < 0.4 ? SKD : f < 0.82 ? SK : SKL);
+      mark(x, y);
+    }
+  }
+  /* hanging arms: shaded capsules ending in simple fists */
+  const capsule = (cx0, y0, cx1, y1, w, shade) => {
+    for (let y = y0; y <= y1; y++) {
+      const t = (y - y0) / Math.max(1, y1 - y0);
+      const cx = cx0 + (cx1 - cx0) * t;
+      for (let dx = -w / 2; dx <= w / 2; dx++) {
+        const x = Math.round(cx + dx);
+        const f = (dx + w / 2) / w;
+        set(x, y, shade === "far" ? (f < 0.3 ? SKDD : SKD) : (f < 0.2 ? SKD : f < 0.75 ? SK : SKL));
+        mark(x, y);
+      }
+    }
+  };
+  const fist = (cx, top, shade) => {
+    for (let y = top; y <= top + 9; y++) for (let dx = -4; dx <= 4; dx++) {
+      if ((y === top || y === top + 9) && Math.abs(dx) > 2) continue;
+      const x = Math.round(cx + dx);
+      const f = (dx + 4) / 8;
+      set(x, y, shade === "far" ? (f < 0.35 ? SKDD : SKD) : (y > top + 6 ? SKD : f < 0.25 ? SKD : SK));
+      mark(x, y);
+    }
+    for (let dx = -3; dx <= 3; dx++) { const x = Math.round(cx + dx); set(x, top + 4, shade === "far" ? SKDD : SKD); mark(x, top + 4); }
+  };
+  capsule(85, 84, 86, 146, 8, "near");
+  fist(86, 147, "near");
+  capsule(48, 86, 46, 136, 6, "far");
+  fist(46, 137, "far");
+  /* shoulder caps rounding into the arms */
+  for (let y = 80; y <= 88; y++) for (let x = 80; x <= 90; x++) { const f = (x - 80) / 10; set(x, y, f < 0.5 ? SK : SKL); mark(x, y); }
+  for (let y = 82; y <= 90; y++) for (let x = 44; x <= 52; x++) { set(x, y, x < 48 ? SKDD : SKD); mark(x, y); }
+  writeFileSync(`${DIR}/kitsune-scaffold.png`, PNG.sync.write(img));
+  /* polish: shape-preserving repaint over the scaffold pixels only */
+  const band = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!scaffold[y * W + x]) continue;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const yy = y + dy, xx = x + dx;
+      if (yy >= 0 && yy < H && xx >= 0 && xx < W) band[yy * W + xx] = 1;
+    }
+  }
+  const usd = await inpaintWindow(img, band, 0, 199,
+    "young woman standing in three-quarter view facing right, bare slim torso with smooth golden skin, both arms hanging relaxed straight down at her sides, hands in loose fists resting beside her thighs, soft painterly cel shading with warm light from the upper right",
+    "raised arms, crossed arms, bent elbows, clothing, weapon, muddy, blurry, deformed hands, extra fingers, extra limbs",
+    SKIN_PAL, seed);
+  writeFileSync(`${DIR}/kitsune-posed2-s${seed}.png`, PNG.sync.write(img));
+  console.log(`kitsune-posed2-s${seed}.png usd ~${usd.toFixed(3)}`);
+} else if (cmd === "repose3") {
+  /* LEARNING (repose2): even a scaffold-shaped mask admits the crossed-arm
+     solution when torso and arms share one repaint region. repose3 polishes
+     in three separately masked passes — torso alone, then each arm capsule
+     alone — so no mask can fit anything but its own limb. */
+  const seed = Number(a1) || 1;
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-scaffold.png`));
+  const torso = new Uint8Array(W * H), armN = new Uint8Array(W * H), armF = new Uint8Array(W * H);
+  for (let y = 80; y <= 126; y++) {
+    const t = (y - 80) / 46;
+    const x0 = Math.round(48 + 8 * t), x1 = Math.round(84 - 4 * t);
+    for (let x = x0; x <= x1; x++) torso[y * W + x] = 1;
+  }
+  /* subtract the arm capsules from the torso mask so each pass owns its pixels */
+  const cap = (m, cx0, y0, cx1, y1, w) => {
+    for (let y = y0; y <= y1; y++) {
+      const t = (y - y0) / Math.max(1, y1 - y0);
+      const cx = cx0 + (cx1 - cx0) * t;
+      for (let dx = -w / 2 - 1; dx <= w / 2 + 1; dx++) {
+        const x = Math.round(cx + dx);
+        if (x >= 0 && x < W) { m[y * W + x] = 1; torso[y * W + x] = 0; }
+      }
+    }
+  };
+  cap(armN, 85, 82, 86, 158, 9);
+  cap(armF, 48, 84, 46, 148, 8);
+  let usd = 0;
+  usd += await inpaintWindow(img, torso, 0, 199,
+    "bare slim female torso in three-quarter view facing right, smooth golden skin, flat stomach, no arms visible, soft painterly cel shading with warm light from the upper right",
+    "arms, hands, elbows, fingers, clothing, muddy, blurry", SKIN_PAL, seed);
+  usd += await inpaintWindow(img, armN, 0, 199,
+    "a single bare slender arm hanging straight down relaxed, smooth golden skin, ending in a small loose fist with simple fingers, soft painterly cel shading",
+    "bent elbow, raised arm, crossed arm, open palm, clothing, muddy, blurry, deformed hands, extra fingers", SKIN_PAL, seed + 40);
+  usd += await inpaintWindow(img, armF, 0, 199,
+    "a single bare slender arm in shadow hanging straight down relaxed behind the body, muted golden skin, ending in a small loose fist, soft painterly cel shading",
+    "bent elbow, raised arm, crossed arm, open palm, clothing, muddy, blurry, deformed hands, extra fingers", SKIN_PAL, seed + 80);
+  writeFileSync(`${DIR}/kitsune-posed3-s${seed}.png`, PNG.sync.write(img));
+  console.log(`kitsune-posed3-s${seed}.png usd ~${usd.toFixed(3)}`);
+} else if (cmd === "armfix") {
+  /* FINAL repose recipe, fully deterministic: the inpaint model draws
+     crossed arms in wide masks and smudge in narrow ones, and its
+     "contained" torso came back ragged — so the whole upper body is
+     AUTHORED: a cleanly shaded torso trapezoid (collarbone + chest crease
+     hints) with both hanging arms attached to its edges, drawn in the
+     body's own skin ramp. Head, hips, legs remain her real pixels. */
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-donor-nospear.png`));
+  const T = { dd: "#a87952", d: "#c99465", m: "#e8b98a", l: "#f6d4a6" };
+  const px = (x, y, hex) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    img.data[i] = parseInt(hex.slice(1, 3), 16);
+    img.data[i + 1] = parseInt(hex.slice(3, 5), 16);
+    img.data[i + 2] = parseInt(hex.slice(5, 7), 16);
+    img.data[i + 3] = 255;
+  };
+  /* wipe the whole old arm band, plus the old hand remnants that reach
+     below it beyond the hip silhouette */
+  for (let y = 80; y <= 126; y++) for (let x = 0; x < W; x++) img.data[(y * W + x) * 4 + 3] = 0;
+  for (let y = 127; y <= 166; y++) for (let x = 86; x < W; x++) img.data[(y * W + x) * 4 + 3] = 0;
+  const xL = (y) => 48 + 8 * (y - 80) / 46, xR = (y) => 84 - 4 * (y - 80) / 46;
+  /* torso */
+  for (let y = 80; y <= 126; y++) {
+    const x0 = Math.round(xL(y)), x1 = Math.round(xR(y));
+    for (let x = x0; x <= x1; x++) {
+      const f = (x - x0) / Math.max(1, x1 - x0);
+      px(x, y, f < 0.14 ? T.dd : f < 0.38 ? T.d : f < 0.86 ? T.m : T.l);
+    }
+  }
+  /* neck join shadow, collarbone, chest crease */
+  for (let x = 60; x <= 74; x++) px(x, 81, T.d);
+  for (let x = 62; x <= 77; x++) px(x, 85 - ((x - 62) % 5 === 4 ? 1 : 0), T.d);
+  for (let x = 66; x <= 79; x++) px(x, 101, T.d);
+  for (let x = 68; x <= 77; x++) px(x, 100, T.m);
+  /* hanging arms: capsule + fist, attached at the silhouette */
+  const arm = (cxAt, sy, ey, w0, w1, tones, thumbSide) => {
+    for (let y = sy; y <= ey; y++) {
+      const t = (y - sy) / (ey - sy);
+      const cx = cxAt(y);
+      const w = w0 + (w1 - w0) * t;
+      const x0 = Math.round(cx - w / 2), x1 = Math.round(cx + w / 2);
+      for (let x = x0; x <= x1; x++) {
+        const f = (x - x0) / Math.max(1, x1 - x0);
+        let c = f < 0.2 ? tones[0] : f < 0.5 ? tones[1] : f < 0.85 ? tones[2] : tones[3];
+        if (Math.abs(t - 0.42) < 0.018 && f > 0.25 && f < 0.9) c = tones[1]; /* elbow crease */
+        px(x, y, c);
+      }
+    }
+    const fy = ey + 1, fcx = Math.round(cxAt(ey));
+    for (let y = fy; y <= fy + 8; y++) for (let dx = -4; dx <= 4; dx++) {
+      const x = fcx + dx;
+      if ((y === fy || y === fy + 8) && Math.abs(dx) > 2) continue;
+      const f = (dx + 4) / 8;
+      px(x, y, y >= fy + 6 ? tones[1] : f < 0.2 ? tones[0] : f < 0.8 ? tones[2] : tones[3]);
+    }
+    px(fcx + thumbSide * 4, fy + 2, tones[2]);
+    px(fcx + thumbSide * 4, fy + 3, tones[1]);
+    for (const dx of [-2, 0, 2]) px(fcx + dx, fy + 6, tones[0]);
+  };
+  /* near arm hugs the right edge; deltoid cap first */
+  for (let y = 79; y <= 88; y++) {
+    const w = 9 - Math.abs(y - 83.5);
+    const cx = Math.round(xR(y)) + 1;
+    for (let x = cx - Math.round(w / 2); x <= cx + Math.round(w / 2); x++)
+      px(x, y, x > cx + 1 ? T.l : x > cx - 2 ? T.m : T.d);
+  }
+  arm((y) => xR(Math.min(y, 126)) + 2 - (y > 126 ? (y - 126) * 0.05 : 0), 88, 146, 8, 6, [T.d, T.m, T.m, T.l], 1);
+  /* far arm follows the back's slope, in shadow */
+  for (let y = 83; y <= 90; y++) {
+    const cx = Math.round(xL(y)) - 1;
+    for (let x = cx - 3; x <= cx + 3; x++) px(x, y, x < cx - 1 ? T.dd : T.d);
+  }
+  arm((y) => xL(Math.min(y, 126)) - 1 + (y > 126 ? (y - 126) * 0.02 : 0), 90, 138, 7, 5, [T.dd, T.d, T.d, T.m], -1);
+  /* soften authored banding with checker dithering at tone boundaries,
+     and close the white neck notch */
+  const ramp = ["#a87952", "#c99465", "#e8b98a", "#f6d4a6"];
+  const toneAt = (x, y) => {
+    const i = (y * W + x) * 4;
+    if (img.data[i + 3] < 128) return -1;
+    const hex = "#" + [0, 1, 2].map((k) => img.data[i + k].toString(16).padStart(2, "0")).join("");
+    return ramp.indexOf(hex);
+  };
+  for (let y = 80; y <= 158; y++) for (let x = 38; x <= 96; x++) {
+    if ((x + y) % 2) continue;
+    const t = toneAt(x, y);
+    if (t < 0) continue;
+    const tr = toneAt(x + 1, y);
+    if (tr >= 0 && Math.abs(tr - t) === 1) px(x, y, ramp[tr]);
+  }
+  for (let y = 74; y <= 82; y++) for (let x = 62; x <= 74; x++) {
+    const i = (y * W + x) * 4;
+    if (img.data[i + 3] < 128) {
+      let solid = 0;
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const j = ((y + dy) * W + (x + dx)) * 4;
+        if (img.data[j + 3] >= 128) solid++;
+      }
+      if (solid >= 2) px(x, y, T.m);
+    }
+  }
+  writeFileSync(`${DIR}/kitsune-posed.png`, PNG.sync.write(img));
+  console.log("kitsune-posed.png (fully authored upper body, dithered)");
+} else if (cmd === "dress") {
+  /* STEP 2: basic undergarments in neutral linen — the creator's chest
+     wrap plus simple briefs, drawn deterministically over the posed donor
+     with the same dithered banding. Output is the standing style
+     reference, plus a 100x200 resample for bitforge (style_image must
+     match the output size exactly). */
+  const img = PNG.sync.read(readFileSync(`${DIR}/kitsune-posed.png`));
+  const L = { d: "#aea28c", m: "#d9cbb0", l: "#ece2cd" };
+  const px = (x, y, hex) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    img.data[i] = parseInt(hex.slice(1, 3), 16);
+    img.data[i + 1] = parseInt(hex.slice(3, 5), 16);
+    img.data[i + 2] = parseInt(hex.slice(5, 7), 16);
+    img.data[i + 3] = 255;
+  };
+  const solid = (x, y) => img.data[(y * W + x) * 4 + 3] >= 128;
+  const xL = (y) => 48 + 8 * (y - 80) / 46, xR = (y) => 84 - 4 * (y - 80) / 46;
+  /* chest wrap: rows 96-110 across the torso, under the near arm */
+  for (let y = 96; y <= 110; y++) {
+    const x0 = Math.round(xL(y)), x1 = Math.round(xR(y)) - 3;
+    for (let x = x0; x <= x1; x++) {
+      if (!solid(x, y)) continue;
+      const f = (x - x0) / Math.max(1, x1 - x0);
+      let c = f < 0.16 ? L.d : f < 0.85 ? L.m : L.l;
+      if (y === 96 || y === 110) c = L.d;                     /* band edges */
+      if ((x + y * 2) % 11 === 0 && y > 97 && y < 109) c = L.d; /* fold hints */
+      px(x, y, c);
+    }
+  }
+  /* briefs: rows 128-145 over the actual hip pixels, waistband on top */
+  for (let y = 128; y <= 145; y++) {
+    let x0 = -1, x1 = -1;
+    for (let x = 54; x <= 84; x++) if (solid(x, y)) { if (x0 < 0) x0 = x; x1 = x; }
+    if (x0 < 0) continue;
+    for (let x = x0; x <= x1; x++) {
+      if (!solid(x, y)) continue;
+      const f = (x - x0) / Math.max(1, x1 - x0);
+      let c = f < 0.16 ? L.d : f < 0.85 ? L.m : L.l;
+      if (y <= 129) c = L.l;                                   /* waistband */
+      if (y >= 144) c = L.d;                                   /* leg hem */
+      px(x, y, c);
+    }
+  }
+  /* checker dither on the linen tone boundaries */
+  const ramp = ["#aea28c", "#d9cbb0", "#ece2cd"];
+  const toneAt = (x, y) => {
+    const i = (y * W + x) * 4;
+    if (img.data[i + 3] < 128) return -1;
+    const hex = "#" + [0, 1, 2].map((k) => img.data[i + k].toString(16).padStart(2, "0")).join("");
+    return ramp.indexOf(hex);
+  };
+  for (let y = 96; y <= 145; y++) for (let x = 46; x <= 86; x++) {
+    if ((x + y) % 2) continue;
+    const t = toneAt(x, y);
+    if (t < 0) continue;
+    const tr = toneAt(x + 1, y);
+    if (tr >= 0 && Math.abs(tr - t) === 1) px(x, y, ramp[tr]);
+  }
+  writeFileSync(`${DIR}/kitsune-styleref.png`, PNG.sync.write(img));
+  /* 100x200 resample for bitforge */
+  const st = new PNG({ width: 100, height: 200 });
+  for (let y = 0; y < 200; y++) for (let x = 0; x < 100; x++) {
+    const sx = Math.min(W - 1, Math.floor(((x + 0.5) / 100) * W));
+    const sy = Math.min(H - 1, Math.floor(((y + 0.5) / 200) * H));
+    const si = (sy * W + sx) * 4, di = (y * 100 + x) * 4;
+    st.data[di] = img.data[si]; st.data[di + 1] = img.data[si + 1];
+    st.data[di + 2] = img.data[si + 2]; st.data[di + 3] = img.data[si + 3] > 127 ? 255 : 0;
+  }
+  writeFileSync(`${DIR}/kitsune-styleref-100x200.png`, PNG.sync.write(st));
+  console.log("kitsune-styleref.png + 100x200 resample written");
 } else {
-  console.log("usage: bald <seed> | skin <baldSeed> <seed> | finish <baseSeed> <seed> | spearless <seed>");
+  console.log("usage: bald <seed> | skin <baldSeed> <seed> | finish <baseSeed> <seed> | spearless <seed> | repose <seed> | repose2 <seed> | repose3 <seed> | armfix <posed3Seed> | dress");
 }
