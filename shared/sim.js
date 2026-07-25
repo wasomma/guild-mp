@@ -600,16 +600,27 @@ function dropLoot(g, uniqueChance) {
 export const CHAPTER_DEPTH = 8;
 export const FLOOR_SLACK = 10;
 export function threatOf(g) {
-  const told = g.stage + (g.prestiges || 0) * CHAPTER_DEPTH;
   let top = 0;
   for (const m of g.members) if (m.level > top) top = m.level;
-  /* The level floor keeps a chapter reset from handing out free stages, but
-     it is deliberately capped. Uncapped it feeds back on itself: a party that
-     wipes still earns XP from what it did kill, levels up, and so raises the
-     very threat that just beat it — measured as a solo hero spiralling to
-     level 211 and 1,154 wipes in a single chapter. With the cap, losing a
-     stage genuinely lowers the pressure again. */
-  return Math.max(1, told, Math.min(top, told + FLOOR_SLACK));
+  if (!top) return Math.max(1, g.stage);
+  const told = g.stage + (g.prestiges || 0) * CHAPTER_DEPTH;
+  /* Threat is the party's own level, floored at the stage and capped a little
+     above whichever of the two is SMALLER: how deep the guild has told, and
+     how strong it actually is. Both halves of that cap are load-bearing, and
+     each was learned the hard way.
+
+     Capping by depth stops the level floor feeding back on itself — a party
+     that wipes still earns XP from what it did kill, levels, and would
+     otherwise raise the very threat that just beat it (measured: a solo hero
+     at level 211 and 1,154 wipes inside one chapter).
+
+     Capping by the party's own level stops a long-lived world exploding. The
+     live guild had told 1,757 chapters; depth alone asked for threat 14,058
+     and made the world unplayable the instant it shipped. Nothing a guild has
+     already survived should ever demand more than the heroes standing in it
+     can answer. */
+  const cap = Math.min(told, top) + FLOOR_SLACK;
+  return Math.max(1, clamp(top, Math.max(1, g.stage), cap));
 }
 /* Heroes gain level growth AND gear power at once, so their damage climbs
    faster than any straight line. Enemy bulk and bite follow the same gentle

@@ -9,17 +9,29 @@ and legacy ranks, so on its own it stops describing how hard anything is. Every
 enemy is therefore built from **threat**, not stage:
 
 ```
-threat = max( stage + chaptersCompleted × 8 ,  min(topPartyLevel, that + 10) )
+depth  = stage + chaptersCompleted × 8
+threat = clamp( topPartyLevel,  stage,  min(depth, topPartyLevel) + 10 )
 ```
 
-Two terms, both deliberate. The first makes each 20-stage tale start deeper
-than the last, so the chapter loop is a ladder rather than a victory lap. The
-second is the old boss-only level floor, generalised to every enemy — but
-**capped ten above the tale depth**, because uncapped it feeds back on itself:
-a party that wipes still earns XP from what it did kill, levels up, and so
-raises the very threat that just beat it. (Measured: a solo hero spiralling to
-level 211 and 1,154 wipes inside one chapter.) With the cap, losing a stage
-genuinely lowers the pressure again.
+Threat is **the party's own level**, floored at the stage and capped a little
+above whichever is smaller: how deep the guild has told, and how strong it
+actually is. The floor is the old boss-only level floor generalised to every
+enemy — a chapter reset can no longer hand out twenty free stages, because the
+heroes walking into it kept everything they earned.
+
+Both halves of the cap are load-bearing, and each was learned by breaking
+something:
+
+- **Capped by depth**, or the level floor feeds back on itself: a party that
+  wipes still earns XP from what it did kill, levels up, and so raises the
+  very threat that just beat it. Measured as a solo hero spiralling to level
+  211 and 1,154 wipes inside one chapter.
+- **Capped by the party's own level**, or a long-lived world explodes. The
+  live guild had told **1,757 chapters** — the game was previously so trivial
+  that it burned through a whole tale every few minutes — and depth alone
+  asked for threat 14,058, which made the world unplayable the instant it
+  shipped. Nothing a guild has already survived should demand more than the
+  heroes standing in it can answer.
 
 Bulk and bite both follow `threat^1.18` rather than a straight line, because
 heroes gain level growth *and* gear power at once. Rewards ride threat too —

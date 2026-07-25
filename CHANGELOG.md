@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.28 — 2026-07-25
+
+**Hotfix for v0.1.27.** Threat was floored on how many chapters the guild had told — and the live world had told 1,757 of them (the old balance was so slight that a whole tale went by every few minutes). That asked for a threat of fourteen thousand, and the world became unfightable the moment it went up. Threat is now the party's own level, floored at the wave and capped just above whichever is smaller — the tale's depth or the heroes' actual strength. A guild can never be asked for more than the people standing in it can answer. Deep worlds are playable again, and a fresh world plays as v0.1.27 intended.
+
 ## v0.1.27 — 2026-07-24
 
 **The damage pass.** The formal balance pass BALANCE.md kept deferring. Fights had quietly stopped being fights: past the first chapter a party took *zero* damage for entire tales, Kings fell in under two seconds, and nine heroes had an easier time than one. All of it is measured, and all of it is fixed.
