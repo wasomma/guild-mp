@@ -18,12 +18,15 @@
    below only if you truly mean to reset again.
    ===================================================================== */
 
-import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 
 const repo = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+/* better-sqlite3 lives in server/node_modules — resolve from there so the
+   script runs from any cwd on the box */
+const Database = createRequire(path.join(repo, "server", "package.json"))("better-sqlite3");
 const DB_PATH = process.argv[2] || path.join(repo, "server", "guild.db");
 if (!fs.existsSync(DB_PATH)) {
   console.error(`No database at ${DB_PATH}`);
