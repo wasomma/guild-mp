@@ -10,6 +10,15 @@ import {
   ascendCost, ASC_PER_RANK, legaciesMaxed,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
+
+/* The one in-game menu: an overlay window on the canvas. The first four
+   tabs are hero-scoped (they read the selected party card, falling back to
+   your own hero); the last three are world-scoped. */
+const MENU_TABS = [
+  ["stats", "📊 Stats"], ["equipment", "🗡️ Equipment"], ["skills", "📚 Skills"], ["wardrobe", "👗 Wardrobe"],
+  ["guild", "🏛️ Guild Hall"], ["shop", "🧪 Alchemist"], ["log", "📜 Chronicle"],
+];
+const MEMBER_TABS = ["stats", "equipment", "skills", "wardrobe"];
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
 
 /* HD hero layer sets (ART-PIPELINE Phase 7C/7D): the kitsune full-body set,
@@ -139,9 +148,8 @@ export default function App() {
   });
   const [snap, setSnap] = useState(null);       // latest snapshot, drives the React UI
   const [connected, setConnected] = useState(false);
-  const [tab, setTab] = useState(null);
-  const [selId, setSelId] = useState(null);
-  const [wardTab, setWardTab] = useState("wardrobe");
+  const [menu, setMenu] = useState(null);       // open overlay tab id, null = closed
+  const [selId, setSelId] = useState(null);     // which hero the member tabs show
   const [creatorFor, setCreatorFor] = useState(null); // member id in the character creator
   const creatorAutoRef = useRef(false); // auto-open once per session for a fresh character
   const [confirmRetell, setConfirmRetell] = useState(null); // member id awaiting confirm
@@ -322,6 +330,15 @@ export default function App() {
 
   const g = snap;
   const sel = g ? g.members.find((m) => m.id === selId) : null;
+  const mine = g && me ? g.members.find((x) => x.key === me.key) : null;
+  const menuMember = sel || mine || (g && g.members[0]) || null;
+
+  /* Esc closes the menu overlay */
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") setMenu(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const zone = g ? zoneOf(g) : null;
   /* who may act on a member: open in dev mode; owner-only for Discord characters */
   const lockOf = (m) => {
@@ -365,7 +382,10 @@ export default function App() {
                   : <>⚖ The trinity — shield, blade, mercy — stokes momentum</>}
               </div>
             )}
-            {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); setTab(null); }} />}
+            {g && <PartyList g={g} onSel={(id) => {
+              if (id === selId && MEMBER_TABS.includes(menu)) { setMenu(null); }
+              else { setSelId(id); setMenu((mm) => (MEMBER_TABS.includes(mm) ? mm : "stats")); }
+            }} />}
           </aside>
           <section className="stage">
             <div className="canvaswrap">
@@ -374,6 +394,31 @@ export default function App() {
                   derives the scale; CSS sizing and mouse math are
                   logical-relative and unchanged). */}
               <canvas ref={canvasRef} width={W * 2} height={H * 2} />
+              {g && menu && (
+                <div className="menuwin">
+                  <div className="menutabs">
+                    {MENU_TABS.map(([id, label]) => (
+                      <button key={id} className={"tab" + (menu === id ? " on" : "")} onClick={() => setMenu(id)}>{label}</button>
+                    ))}
+                    <span className="spacer" />
+                    <button className="mini" title="close (Esc)" onClick={() => setMenu(null)}>✕</button>
+                  </div>
+                  <div className="menubody">
+                    {MEMBER_TABS.includes(menu) && (menuMember
+                      ? <MemberDetail g={g} m={menuMember} send={send} tab={menu} lock={lockOf(menuMember)}
+                          onAppearance={() => setCreatorFor(menuMember.id)} />
+                      : <div className="dim pad">No adventurers yet — the tavern waits for a voice.</div>)}
+                    {menu === "guild" && <GuildHall g={g} send={send} confirm={confirmRetell} setConfirm={setConfirmRetell} lock={guildLock} lockOf={lockOf} />}
+                    {menu === "shop" && <Shop g={g} send={send} lock={guildLock} />}
+                    {menu === "log" && (
+                      <div className="logbox">
+                        {g.log.map((l, i) => <div key={i} className="logline" style={{ color: l.color }}>{l.text}</div>)}
+                        {!g.log.length && <div className="dim pad">The chronicle is empty. Deeds await.</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               {g && creatorFor != null && (() => {
                 const cm = g.members.find((x) => x.id === creatorFor);
                 return cm && !lockOf(cm)
@@ -401,16 +446,11 @@ export default function App() {
                   )}
                   <span className="wgold">🪙 {fmt(g.gold)}</span>
                   <span className="wrenown">✨ {fmt(g.renown)}</span>
+                  <button className={"tab menubtn" + (menu ? " on" : "")} title="open the guild menu (Esc closes)"
+                    onClick={() => setMenu(menu ? null : "guild")}>☰ Menu</button>
                 </div>
               </div>
             )}
-            <div className="tabs">
-              {["guild", "shop", "log"].map((t2) => (
-                <button key={t2} className={"tab" + (tab === t2 ? " on" : "")} onClick={() => { setTab(tab === t2 ? null : t2); setSelId(null); }}>
-                  {{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[t2]}
-                </button>
-              ))}
-            </div>
           </section>
           {g && (
             <aside className="bossrail">
@@ -427,28 +467,6 @@ export default function App() {
                   </div>
                 );
               })}
-            </aside>
-          )}
-          {g && sel && (
-            <aside className="rightcol">
-              <MemberDetail g={g} m={sel} send={send} wardTab={wardTab} setWardTab={setWardTab} onBack={() => setSelId(null)} lock={lockOf(sel)}
-                onAppearance={() => setCreatorFor(sel.id)} />
-            </aside>
-          )}
-          {g && !sel && tab && (
-            <aside className="rightcol">
-              <div className="drow">
-                <button className="mini" onClick={() => setTab(null)}>✕ close</button>
-                <span>{{ guild: "🏛️ Guild Hall", shop: "🧪 Alchemist", log: "📜 Chronicle" }[tab]}</span>
-              </div>
-              {tab === "guild" && <GuildHall g={g} send={send} confirm={confirmRetell} setConfirm={setConfirmRetell} lock={guildLock} lockOf={lockOf} />}
-              {tab === "shop" && <Shop g={g} send={send} lock={guildLock} />}
-              {tab === "log" && (
-                <div className="logbox">
-                  {g.log.map((l, i) => <div key={i} className="logline" style={{ color: l.color }}>{l.text}</div>)}
-                  {!g.log.length && <div className="dim pad">The chronicle is empty. Deeds await.</div>}
-                </div>
-              )}
             </aside>
           )}
         </div>
@@ -668,30 +686,26 @@ function PartyList({ g, onSel }) {
   );
 }
 
-function MemberDetail({ g, m, send, wardTab, setWardTab, onBack, lock, onAppearance }) {
+function MemberDetail({ g, m, send, tab, lock, onAppearance }) {
   return (
     <div className="detail">
       <div className="drow">
-        <button className="mini" onClick={onBack}>✕ close</button>
         <span style={{ color: CLASSES[m.cls].color }}>{CLASSES[m.cls].icon} {m.name} · Lv {m.level} {styleOf(m).name}</span>
         {!lock && <button className="mini" onClick={onAppearance} title="race, body, skin, hair, undergarments">🪞 Appearance</button>}
         <span className="dim small">dmg {fmt(m.dmgDone)} · heal {fmt(m.healDone)} · kills {m.kills}</span>
       </div>
-      <div className="inspect">
-        <Portrait m={m} />
-      </div>
-      <div className="subtabs">
-        {["stats", "equipment", "skills", "wardrobe"].map((t2) => (
-          <button key={t2} className={"tab sm" + (wardTab === t2 ? " on" : "")} onClick={() => setWardTab(t2)}>
-            {{ stats: "📊 Stats", equipment: "🗡️ Equipment", skills: "📚 Skills", wardrobe: "👗 Wardrobe" }[t2]}
-          </button>
-        ))}
-      </div>
       {lock && <div className="lockmsg">🔒 {lock}</div>}
-      {wardTab === "stats" && <StatsPanel g={g} m={m} />}
-      {wardTab === "equipment" && <Equipment m={m} />}
-      {wardTab === "skills" && <Skills g={g} m={m} send={send} lock={lock} />}
-      {wardTab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} />}
+      <div className="dsplit">
+        <div className="inspect">
+          <Portrait m={m} />
+        </div>
+        <div className="dpane">
+          {tab === "stats" && <StatsPanel g={g} m={m} />}
+          {tab === "equipment" && <Equipment m={m} />}
+          {tab === "skills" && <Skills g={g} m={m} send={send} lock={lock} />}
+          {tab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} />}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1122,7 +1136,6 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .main { display: flex; min-height: 560px; flex: 1; }
 .voice { width: 240px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
 .voice .plist { grid-template-columns: 1fr; }
-.rightcol { width: 340px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 56px); align-self: flex-start; }
 .bossrail { width: 130px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 56px); align-self: flex-start; }
 .bossent { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-bottom: 1px solid #2b2740; width: 100%; opacity: 0.7; }
 .bossent:last-child { border-bottom: none; }
@@ -1171,7 +1184,16 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .creator .csw.on { border-color: #f2c14e; box-shadow: 0 0 0 1px #f2c14e; }
 .creator .confirm { border-color: #7fd069; color: #b9e8a8; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; }
-.tabs { display: flex; gap: 4px; padding: 8px 10px; }
+.menubtn { padding: 2px 10px; }
+.menuwin { position: absolute; inset: 10px; z-index: 5; display: flex; flex-direction: column; overflow: hidden;
+  background: rgba(13,11,22,0.95); border: 1px solid #3a3550; border-radius: 10px; }
+.menutabs { display: flex; gap: 4px; padding: 8px 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #2b2740; background: #131022; }
+.menutabs .spacer { flex: 1; }
+.menubody { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px; }
+.dsplit { display: flex; gap: 14px; align-items: flex-start; }
+.dsplit .inspect { flex: none; padding: 0; }
+.dpane { flex: 1; min-width: 0; }
+@media (max-width: 900px) { .dsplit { flex-direction: column; align-items: center; } .dpane { width: 100%; } }
 .tab { font-family: 'VT323', monospace; font-size: 18px; background: #161326; color: #8b84ad; border: 1px solid #2b2740; border-radius: 7px; padding: 4px 12px; cursor: pointer; }
 .tab.on { background: #1e1a30; color: #efeaff; }
 .tab.sm { font-size: 16px; border-radius: 6px; border: 1px solid #2b2740; }
@@ -1187,7 +1209,6 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .drow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .inspect { display: flex; justify-content: center; padding: 4px 0 2px; }
 .portrait { width: 190px; height: auto; image-rendering: pixelated; border: 1px solid #2e2947; border-radius: 10px; }
-.subtabs { display: flex; gap: 5px; }
 .cosgroup { margin-bottom: 10px; }
 .coshead { color: #f2c14e; margin-bottom: 5px; }
 .cosgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 5px; }
@@ -1219,5 +1240,5 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .qbar { height: 5px; background: #26213c; border-radius: 3px; overflow: hidden; }
 .qfill { height: 100%; }
 .auto { display: flex; align-items: center; gap: 4px; }
-@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } .rightcol { width: 100%; border-left: none; border-top: 2px solid #2b2740; } .bossrail { width: 100%; border-left: none; border-top: 2px solid #2b2740; } }
+@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } .bossrail { width: 100%; border-left: none; border-top: 2px solid #2b2740; } }
 `;

@@ -2,6 +2,15 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.38 — 2026-07-25
+
+**One menu over the world.** The multiplayer client's side panels are gone — everything now lives in a single window that opens over the game.
+
+- The menu overlays the canvas with seven tabs: **📊 Stats, 🗡️ Equipment, 📚 Skills, 👗 Wardrobe** for the selected hero (with the 🪞 Appearance button), and **🏛️ Guild Hall, 🧪 Alchemist, 📜 Chronicle** for the guild.
+- Open it with the new **☰ Menu** button on the world bar, or by clicking any party card (which jumps straight to that hero's Stats). Switch heroes by clicking another card; close with ✕ or **Esc**.
+- The hero tabs put the portrait beside the sheet instead of above it — more room for skills, talents, and the Trove.
+- The old right-side detail column and the three page-bottom buttons are retired; the world view keeps the full width of the screen. Client-only change: the sim, balance, and the public demo are untouched.
+
 ## v0.1.37 — 2026-07-25
 
 **The Chronicle Trove.** Phase 6 of the combat rework — the economy endgame — and with it, the rework is complete. Ships with the one-time **alpha fresh start** (owner's call): every hero begins again at level 1 with a fresh wardrobe, and gold, renown, and legacies reset. Your identity, retelling count, and the guild's 1,888-chapter Hall of Legends endure.

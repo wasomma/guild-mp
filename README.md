@@ -61,7 +61,7 @@ Open the URL Vite prints (usually http://localhost:5173). Open it in two browser
 
 `server/index.js` runs the world at 20Hz, broadcasts snapshots at 10Hz over WebSockets, validates every client intent, and freezes the simulation whenever nobody is in the party (the hibernation rule). `server/db.js` persists everything to SQLite (`server/guild.db`): every 20 seconds, on shutdown, and instantly whenever a purchase, skill point, retelling, or departure happens.
 
-`client/` renders snapshots on a canvas with interpolation, turns server events into particles and floating numbers locally, and sends every button press to the server as an intent. The sidebar lists a party card for everyone currently in the voice channel; clicking one opens that character's detail column (stats, equipment, skills, wardrobe) on the right. Presence is driven entirely by the Discord bot — the client has no manual join controls.
+`client/` renders snapshots on a canvas with interpolation, turns server events into particles and floating numbers locally, and sends every button press to the server as an intent. The sidebar lists a party card for everyone currently in the voice channel; clicking one opens the overlay menu on that character (stats, equipment, skills, wardrobe), alongside the world tabs (guild hall, alchemist, chronicle) reachable any time via ☰ Menu on the world bar. Presence is driven entirely by the Discord bot — the client has no manual join controls.
 
 `server/bot.js` is the Discord bot. It runs inside the game server process and turns voice-channel presence into party membership, keyed by Discord user IDs.
 
