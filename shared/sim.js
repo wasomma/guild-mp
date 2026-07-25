@@ -217,11 +217,16 @@ const SLOT_NOUNS = {
 };
 export const SLOTS = ["weapon", "armor", "trinket"];
 
+/* Potions are per-chapter CHARGES, not purchases (COMBAT-REWORK Phase 3):
+   the feast restocks the satchel to base + 2×(Alchemist Stipend rank) and
+   nothing refills it mid-chapter. Gold could always outbuy danger — the
+   live guild's 62M made sustain effectively infinite — so scarcity, not
+   price, is what makes a potion a decision. Gold's sink is cosmetics. */
 export const POTIONS = {
-  heal: { name: "Healing Potion", icon: "🧪", price: 30, desc: "Auto sips when an ally drops below 40% HP. Restores 45%." },
-  armor: { name: "Armor Elixir", icon: "🛡️", price: 45, desc: "Auto used at the start of combat. Party gains armor for 12s." },
-  poison: { name: "Poison Vial", icon: "☠️", price: 40, desc: "Auto thrown at the start of combat. Poisons all enemies for 8s." },
-  res: { name: "Phoenix Draught", icon: "🔥", price: 140, desc: "Auto revives a fallen ally at 60% HP after a few seconds." },
+  heal: { name: "Healing Potion", icon: "🧪", desc: "Auto sips when an ally drops below 40% HP. Restores 45%." },
+  armor: { name: "Armor Elixir", icon: "🛡️", desc: "Auto used at the start of combat. Party gains armor for 12s." },
+  poison: { name: "Poison Vial", icon: "☠️", desc: "Auto thrown at the start of combat. Poisons all enemies for 8s." },
+  res: { name: "Phoenix Draught", icon: "🔥", desc: "Auto revives a fallen ally at 60% HP after a few seconds." },
 };
 
 export const LEGACY = [
@@ -982,10 +987,12 @@ export function endChapter(g) {
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
   g.momentum = 0;
-  /* the feast restocks the pantry: top potions up to the stipend baseline */
+  /* the feast restocks the satchel to EXACTLY the stipend baseline (Phase 3):
+     potions are per-chapter charges now, so leftovers don't bank and the old
+     bought hoards convert to charges at the first feast after the change */
   const st = g.legacy.stipend * 2;
   const refill = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
-  for (const k of Object.keys(refill)) g.stock[k] = Math.max(g.stock[k] || 0, refill[k]);
+  for (const k of Object.keys(refill)) g.stock[k] = refill[k];
   g.enemies = []; g.projectiles = []; g.pending = []; g.buffT = 0;
   g.prestigeT = 3;
   if (g.members.length) { g.phase = "feast"; setupFeast(g); }
@@ -1330,10 +1337,15 @@ export function tick(g, dt) {
   if (g.phase === "wipe") {
     g.wipeT -= dt;
     if (g.wipeT <= 0) {
-      g.stage = Math.max(1, g.stage - 1);
+      /* A wipe costs the road back to the last King's fallen ground (Phase 3,
+         owner decision 2): up to four stages refought through re-rolled
+         packs. Time is the price — clamped to the Veteran Paths start so a
+         chapter's opening stages can't be lost to a stage the guild never
+         had to clear. */
+      g.stage = Math.max(1 + g.legacy.head * 2, Math.floor((g.stage - 1) / 5) * 5 + 1);
       for (const m of g.members) { m.alive = true; m.hp = m._st.hp * 0.6; }
       g.phase = "advance"; g.advanceT = 2.2; g.enemies = [];
-      addLog(g, `The party regroups and retreats to stage ${g.stage}.`, "#8b84ad");
+      addLog(g, `Broken, the party falls back to the last King's fallen ground — stage ${g.stage}.`, "#8b84ad");
     }
     return;
   }
@@ -1623,11 +1635,6 @@ export function applyIntent(g, msg) {
       break;
     }
     case "autoSim": g.autoSim = !!msg.on; break;
-    case "buyPotion": {
-      const p = POTIONS[msg.k];
-      if (p && g.gold >= p.price) { g.gold -= p.price; g.stock[msg.k]++; }
-      break;
-    }
     case "toggleAuto": if (msg.k in g.auto) g.auto[msg.k] = !g.auto[msg.k]; break;
     case "skillUp": {
       const m = byId(msg.memberId);

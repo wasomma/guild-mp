@@ -117,8 +117,8 @@ hero level → personal retell → renown → legacy upgrades → everything ↑
 
 | Event | Resets | Survives |
 |---|---|---|
-| Party wipe | stage −1, party revives at 60% HP | everything else (no gold loss) |
-| Chapter end (automatic at stage 20) | stage → 1 + 2×(Veteran Paths rank) | **every character** (levels, gear, skills), gold, renown, legacy ranks, cosmetics, Hall of Legends, daily quests, `everBest`; potion stock is topped **up** to base + 2×(Stipend rank), never down |
+| Party wipe | stage → just after the last defeated King (`max(chapterStart, floor((stage−1)/5)×5 + 1)`), momentum → 0, party revives at 60% HP | everything else (no gold loss) |
+| Chapter end (automatic at stage 20) | stage → 1 + 2×(Veteran Paths rank); potion charges **set** to base + 2×(Stipend rank) — leftovers don't bank, hoards convert down | **every character** (levels, gear, skills), gold, renown, legacy ranks, cosmetics, Hall of Legends, daily quests, `everBest` |
 | Personal retell (level 21+, per player) | that hero → level 1, no gear, no skills, no XP | everyone else entirely; the hero's cosmetics, style, autoSkill, and retelling count |
 | Server restart | nothing (SQLite) | everything |
 
@@ -135,10 +135,10 @@ The practical consequence: **gold and characters now flow across chapters.** Not
 
 ### Sinks
 
-- **Potions** (the tactical sink): Healing Potion 30g, Poison Vial 40g, Armor Elixir 45g, Phoenix Draught 140g. All are auto-consumed (toggleable per type).
-- **Cosmetics** (the long-horizon sink): prices run from 60g accents to the 4,000g Golden Aura — hats to 1,600g, capes to 1,400g, pets to 2,000g, auras 1,800–4,000g, weapon skins to 680g, plus outfits, hairstyles, colors, and accessories. Purchases are per-character and permanent.
+- **Cosmetics** (the long-horizon sink, and as of v0.1.34 the only one): prices run from 60g accents to the 4,000g Golden Aura — hats to 1,600g, capes to 1,400g, pets to 2,000g, auras 1,800–4,000g, weapon skins to 680g, plus outfits, hairstyles, colors, and accessories. Purchases are per-character and permanent.
+- **Potions are no longer a gold sink** (v0.1.34, Phase 3): they are **per-chapter charges** — the feast sets stock to base + 2×(Alchemist Stipend rank) (heal base 3, others 1) and nothing refills it mid-chapter. The `buyPotion` intent is gone. Gold could always outbuy danger (the live guild's 62M made sustain infinite); scarcity is what makes a potion a decision. All still auto-consume (toggleable per type).
 
-There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys consumables and looks only. Skill points auto-assign at random by default (idle-first); resetting reclaims every rank and switches that character to manual assignment until auto is turned back on.
+There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys looks only. Skill points auto-assign at random by default (idle-first); resetting reclaims every rank and switches that character to manual assignment until auto is turned back on.
 
 ## Renown
 
@@ -246,7 +246,7 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 - Healing Potion: auto-sips when anyone drops below 40%, restoring 45% max HP (1s internal cooldown between sips).
 - Phoenix Draught: auto-revives a member at 60% HP after 2.5s down.
 - Lifesteal returns its percentage of all damage dealt.
-- A full wipe costs one stage and 4 seconds, then revives everyone at 60%.
+- A full wipe costs the road back to just after the last defeated King (up to 4 stages, refought through re-rolled packs; clamped to the Veteran Paths chapter start) plus 4 seconds, then revives everyone at 60%. Momentum resets. The re-farmed stages pay XP and loot, so repeated failure quietly strengthens the hero — the wall teaches.
 
 ## The difficulty and reward curve
 
@@ -261,7 +261,7 @@ Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes
 
 ## Tuning knobs, by location
 
-All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`); prices in `POTIONS` and the cosmetics lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`); potion charge baselines in `endChapter`'s refill (and `newWorld`'s starting stock); cosmetics prices in their lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
 
 To re-measure after any of these, drive the sim headlessly: build a world,
 `joinVoice` N members, `tick` at 1/20s, and record per cleared stage the combat

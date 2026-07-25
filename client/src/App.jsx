@@ -973,20 +973,21 @@ function GuildHall({ g, send, confirm, setConfirm, lock, lockOf }) {
 }
 
 function Shop({ g, send, lock }) {
+  const cap = (k) => (k === "heal" ? 3 : 1) + g.legacy.stipend * 2;
   return (
     <div className="shop">
       {lock && <div className="lockmsg">🔒 {lock}</div>}
+      <div className="dim small pad">The satchel holds the chapter's charges — the feast restocks it. Alchemist Stipend (Guild Hall) deepens every pocket.</div>
       {Object.entries(POTIONS).map(([k, p]) => (
         <div key={k} className="skrow">
           <div>
-            <div>{p.icon} {p.name} <span className="dim small">× {g.stock[k]}</span></div>
+            <div>{p.icon} {p.name} <span className="dim small">{g.stock[k]} / {cap(k)} this chapter</span></div>
             <div className="dim small">{p.desc}</div>
           </div>
           <div className="drow">
             <label className="dim small auto">
               <input type="checkbox" disabled={!!lock} checked={!!g.auto[k]} onChange={() => send({ a: "toggleAuto", k })} /> auto
             </label>
-            <button className="mini" disabled={!!lock || g.gold < p.price} onClick={() => send({ a: "buyPotion", k })}>{p.price}g</button>
           </div>
         </div>
       ))}

@@ -100,17 +100,9 @@ export function buildWorld(comp, opts = {}) {
   return g;
 }
 
-/* Keep potions topped up to the stipend baseline the way an attentive
-   player would — the auto-consume toggles are already on by default. */
-function restock(g) {
-  const st = g.legacy.stipend * 2;
-  const base = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
-  for (const k of Object.keys(base)) {
-    while (g.stock[k] < base[k] && g.gold >= sim.POTIONS[k].price) {
-      sim.applyIntent(g, { a: "buyPotion", k });
-    }
-  }
-}
+/* Potions became per-chapter charges in v0.1.34 (Phase 3): nothing refills
+   the satchel mid-chapter, so the harness no longer restocks. The feast
+   refill inside endChapter is the whole economy. */
 
 /* ---------------- the measured run ---------------- */
 export function runMeasured(g, opts = {}) {
@@ -135,7 +127,6 @@ export function runMeasured(g, opts = {}) {
     simSteps++;
     g.events.length = 0; // drained by the server in real play; must not grow here
     if (g.phase === "feast") g.feastT = Math.min(g.feastT, dt); // fast-forward
-    if (opts.restock !== false) restock(g);
 
     if (g.phase === "combat" && prevPhase !== "combat") {
       cur = {

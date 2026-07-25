@@ -2,6 +2,16 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.34 — 2026-07-25
+
+**Stakes.** Phase 3 of the combat rework: failure costs something now, and preparation is a real resource.
+
+- **Wiping sends you back to the last King's fallen ground.** A defeated party no longer shrugs off one wave — it falls back to just after the last King it felled, up to four waves refought through fresh packs. Nothing permanent is lost, and the road back pays XP and loot — the wall teaches — but a King you aren't ready for will cost you every attempt.
+- **Potions are charges, not purchases.** The Alchemist no longer sells; the satchel holds the chapter's charges and the feast restocks it (Alchemist Stipend deepens every pocket). Gold could always outbuy danger — now scarcity, not price, makes every auto-sip a real spend. Gold's calling is cosmetics.
+- Momentum, fittingly, gutters on a wipe — the fire pill goes dark with the party.
+
+Together with Phases 1–2: soloing any class is viable and always was meant to cost blood and time; a covered party barely feels the new stakes, and that's the point.
+
 ## v0.1.33 — 2026-07-25
 
 **Roles are the party buff now.** Phase 2 of the combat rework: the Chorus of Courage — +4% might per voice, no questions asked — retires. What empowers a party is *who* stands in it:

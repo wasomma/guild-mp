@@ -215,11 +215,16 @@ const SLOT_NOUNS = {
 };
 const SLOTS = ["weapon", "armor", "trinket"];
 
+/* Potions are per-chapter CHARGES, not purchases (COMBAT-REWORK Phase 3):
+   the feast restocks the satchel to base + 2×(Alchemist Stipend rank) and
+   nothing refills it mid-chapter. Gold could always outbuy danger — the
+   live guild's 62M made sustain effectively infinite — so scarcity, not
+   price, is what makes a potion a decision. Gold's sink is cosmetics. */
 const POTIONS = {
-  heal:   { name: "Healing Potion",  icon: "🧪", price: 30,  desc: "Auto sips when an ally drops below 40% HP. Restores 45%." },
-  armor:  { name: "Armor Elixir",    icon: "🛡️", price: 45,  desc: "Auto used at the start of combat. Party gains armor for 12s." },
-  poison: { name: "Poison Vial",     icon: "☠️", price: 40,  desc: "Auto thrown at the start of combat. Poisons all enemies for 8s." },
-  res:    { name: "Phoenix Draught", icon: "🔥", price: 140, desc: "Auto revives a fallen ally at 60% HP after a few seconds." },
+  heal:   { name: "Healing Potion",  icon: "🧪", desc: "Auto sips when an ally drops below 40% HP. Restores 45%." },
+  armor:  { name: "Armor Elixir",    icon: "🛡️", desc: "Auto used at the start of combat. Party gains armor for 12s." },
+  poison: { name: "Poison Vial",     icon: "☠️", desc: "Auto thrown at the start of combat. Poisons all enemies for 8s." },
+  res:    { name: "Phoenix Draught", icon: "🔥", desc: "Auto revives a fallen ally at 60% HP after a few seconds." },
 };
 
 const LEGACY = [
@@ -1193,10 +1198,15 @@ function tick(g, dt) {
   if (g.phase === "wipe") {
     g.wipeT -= dt;
     if (g.wipeT <= 0) {
-      g.stage = Math.max(1, g.stage - 1);
+      /* A wipe costs the road back to the last King's fallen ground (Phase 3,
+         owner decision 2): up to four stages refought through re-rolled
+         packs. Time is the price — clamped to the Veteran Paths start so a
+         chapter's opening stages can't be lost to a stage the guild never
+         had to clear. */
+      g.stage = Math.max(1 + g.legacy.head * 2, Math.floor((g.stage - 1) / 5) * 5 + 1);
       for (const m of g.members) { m.alive = true; m.hp = m._st.hp * 0.6; }
       g.phase = "advance"; g.advanceT = 2.2; g.enemies = [];
-      addLog(g, `The party regroups and retreats to stage ${g.stage}.`, "#8b84ad");
+      addLog(g, `Broken, the party falls back to the last King's fallen ground — stage ${g.stage}.`, "#8b84ad");
     }
     return;
   }
@@ -1619,10 +1629,12 @@ function endChapter(g) {
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
   g.momentum = 0;
-  /* the feast restocks the pantry: top potions up to the stipend baseline */
+  /* the feast restocks the satchel to EXACTLY the stipend baseline (Phase 3):
+     potions are per-chapter charges now, so leftovers don't bank and the old
+     bought hoards convert to charges at the first feast after the change */
   const st = g.legacy.stipend * 2;
   const refill = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
-  for (const k of Object.keys(refill)) g.stock[k] = Math.max(g.stock[k] || 0, refill[k]);
+  for (const k of Object.keys(refill)) g.stock[k] = refill[k];
   g.enemies = []; g.projectiles = []; g.pending = []; g.floaters = []; g.buffT = 0;
   g.prestigeT = 3;
   if (g.members.length) { g.phase = "feast"; setupFeast(g); }
@@ -5320,25 +5332,24 @@ export default function GuildIdle() {
   );
 
   const shopPanel = () => (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 8 }}>
-      {Object.entries(POTIONS).map(([k, p]) => (
-        <div key={k} style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>{p.icon} {p.name}</span>
-            <span style={{ color: "#8b84ad" }}>x{g.stock[k]}</span>
+    <div>
+      <div style={{ fontSize: 15, color: "#8b84ad", marginBottom: 8 }}>The satchel holds the chapter's charges — the feast restocks it. Alchemist Stipend (Guild Hall) deepens every pocket.</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 8 }}>
+        {Object.entries(POTIONS).map(([k, p]) => (
+          <div key={k} style={{ background: "#1f1b30", border: "1px solid #2e2947", padding: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>{p.icon} {p.name}</span>
+              <span style={{ color: "#8b84ad" }}>{g.stock[k]} / {(k === "heal" ? 3 : 1) + g.legacy.stipend * 2} this chapter</span>
+            </div>
+            <div style={{ fontSize: 15, color: "#8b84ad", minHeight: 40 }}>{p.desc}</div>
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: 6 }}>
+              <label style={{ fontSize: 15, color: g.auto[k] ? "#7fd069" : "#8b84ad", cursor: "pointer" }}>
+                <input type="checkbox" checked={g.auto[k]} onChange={() => { g.auto[k] = !g.auto[k]; force((v) => v + 1); }} /> auto
+              </label>
+            </div>
           </div>
-          <div style={{ fontSize: 15, color: "#8b84ad", minHeight: 40 }}>{p.desc}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-            <button className="gi-btn" disabled={g.gold < p.price}
-              onClick={() => { g.gold -= p.price; g.stock[k]++; force((v) => v + 1); }}>
-              Buy · {p.price}g
-            </button>
-            <label style={{ fontSize: 15, color: g.auto[k] ? "#7fd069" : "#8b84ad", cursor: "pointer" }}>
-              <input type="checkbox" checked={g.auto[k]} onChange={() => { g.auto[k] = !g.auto[k]; force((v) => v + 1); }} /> auto
-            </label>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 

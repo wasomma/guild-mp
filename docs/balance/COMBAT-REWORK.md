@@ -169,8 +169,22 @@ codebases.
   trinity out-earns via momentum. Solo DPS raw King TTK is still the fastest;
   the inversion lands with Phase 4's enrage clocks and enemy retuning, as
   planned. Lifeward's regen split front-loads a slice of Phase 3's attrition.
-- **Phase 3 — Stakes.** Regen trickle; potion charges; wipe set-back to last
-  King; the ramp-in mutator arc for the live save.
+- **Phase 3 — Stakes. ✅ DONE (v0.1.34, 2026-07-25).**
+  Shipped in both sims: potions are per-chapter charges (`buyPotion` intent
+  removed, feast SETS stock to base + 2×stipend — the live hoard converts
+  automatically at its first feast; Alchemist panels show charges, not
+  prices); wipe = set-back to just after the last defeated King, clamped to
+  the Veteran Paths chapter start; the regen trickle had already shipped as
+  Phase 2's Lifeward split (8%/s with a living healer, 2.5%/s without).
+  Measured v0.1.34: solo runs now carry real stakes (fresh: tank 24 / dps 11
+  / healer 71 wipes across 3 chapters; live solo healer 47) while covered
+  groups stay smooth (0 wipes trinity+); the set-back re-farm pays XP, so
+  walls self-correct by strengthening the hero. **Ramp-in disposition
+  (decision 4):** the planned "world sharpens" mutator arc was not built —
+  the rework itself shipped as three separate live releases (v0.1.31/33/34),
+  which staged the difficulty in practice, and Phase 3's remaining cuts only
+  bite on wipes or at the feast conversion. Revisit only if the live guild
+  reports whiplash.
 - **Phase 4 — Bosses + encounters.** Tri-fold King checks; honor-guard gauntlet
   at every stage % 5 == 4 with herald elites; advance-phase ambushes; camp rest
   nodes; party-voted retreat intent (and optional manual-ult toggle).

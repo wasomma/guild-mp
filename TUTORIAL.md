@@ -38,7 +38,7 @@ Combat is fully automatic: the party attacks, heals, dodges, crits, and casts ul
 - **Two waves before each boss** an **elite** appears: tougher, meaner, better loot.
 - The world cycles through four zones — Verdant Fields, Gloomwood, Forgotten Crypt, Emberdeep — every five waves.
 
-If a hero falls, they lie there until the fight ends (or a Phoenix Draught revives them). If the whole party wipes, the survivors regroup a wave back — no permanent loss, ever.
+If a hero falls, they lie there until the fight ends (or a Phoenix Draught revives them). If the whole party wipes, it **falls back to just after the last King it defeated** — up to four waves refought through fresh packs. Nothing permanent is ever lost, but the road back is real: a King you aren't ready for will cost you time and potions every attempt.
 
 **The world rises to meet you.** Enemies aren't built from the wave number alone — they're built from **Threat**, shown next to the wave. Threat counts how deep the guild has pushed across *every* chapter it has told, and never drops below your heroes' own level. That's why a fresh chapter doesn't hand you twenty easy waves: your heroes kept everything they earned, so the world keeps pace.
 
@@ -63,7 +63,7 @@ Nobody manages inventory: an item **auto-equips if it beats what's worn, otherwi
 
 Gold is a **guild pool**, spent on:
 
-- **🧪 Potions** at the Alchemist — all used automatically at the right moment: Healing Potions when an ally drops low, Armor Elixirs and Poison Vials as combat opens, Phoenix Draughts to revive the fallen.
+- **🧪 Potions** at the Alchemist — a satchel of **per-chapter charges**, not purchases: the feast restocks it and nothing refills it mid-chapter, so every sip is a real spend. All are used automatically at the right moment: Healing Potions when an ally drops low, Armor Elixirs and Poison Vials as combat opens, Phoenix Draughts to revive the fallen. The Alchemist Stipend legacy deepens every pocket.
 - **👗 Cosmetics** in your Wardrobe — hats, hair colors and styles, outfits, weapon skins, capes, accessories, pets, and auras. Pure vanity, deeply important.
 
 ## Daily guild quests
@@ -75,7 +75,7 @@ The Guild Hall board posts **three contracts each day** — slay foes, defeat el
 The campaign runs in **Chapters**, and a chapter ends itself: when the party fells the **wave 20 King** — the fourth King, closing the full tour of all four zones — the guild hall doors swing wide, a **feast** breaks out (mugs clink, a jig plays, and every equipped pet piles onto the corner rug to play — cats groom, pups roll, drakes puff embers, slimelets bounce, moon owls hoot with a full head-turn, wisps shine), the guild earns **✨ renown**, and a new chapter begins from wave 1. No votes, no buttons — just fight your way to the finale.
 
 - **Heroes keep their levels, gear, and skills** across chapters. Only the wave counter resets; you march into the new chapter as strong as you left the old one — and the world is correspondingly deeper, so each tale you tell begins harder than the last. Watch the Threat number: it never goes back to the beginning.
-- The feast also **restocks the pantry** — potion stocks are topped up to the guild's baseline.
+- The feast also **restocks the satchel** — potion charges reset to the guild's baseline for the new chapter.
 - From Chapter 2 on, each chapter carries a **mutator** — a twist like tougher bosses or faster ultimates — shown as a pill in the header, and worth bonus renown at the chapter's end.
 - Every finished chapter is enshrined as a plaque in the **Hall of Legends**: its mutator, MVP, heroes, and uniques, forever.
 
@@ -103,7 +103,7 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Skill points | +1 per level, auto-assigned (reset for manual) |
 | Respec class/style | Free, in the Skills tab |
 | Loot | Auto-equips upgrades, salvages the rest |
-| Potions | Bought with guild gold, used automatically |
+| Potions | Per-chapter charges, restocked at the feast, used automatically |
 | Party buff | +4% dmg/heal, +3% HP per extra voice (max 9) |
 | Chapter end | Automatic when the wave 20 King falls; feast + renown; heroes keep everything |
 | Retell your Tale | Level 21+, personal; resets your hero, earns renown scaled to level |
