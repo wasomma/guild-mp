@@ -821,6 +821,19 @@ function drawCape(ctx, ox, oy, capeId, t, walking) {
   px2(ctx, ox, oy, -12 - s2, -5 + w1, 2, 1, trim);
   px2(ctx, ox, oy, -7, -4.5, 1, 0.5, shade(trim, 1.25)); /* stitch dots */
   px2(ctx, ox, oy, -10 - s1, -4.5 + w1 * 0.5, 1, 0.5, shade(trim, 1.25));
+  if (cape.id === "starweave") {
+    /* the mantle carries a night sky: stars wink in and out of the weave */
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 6; i++) {
+      const tw = Math.abs(Math.sin(t * 1.7 + i * 1.9));
+      if (tw < 0.45) continue;
+      const sx = -11 + ((i * 2.7) % 7);
+      const sy = -16 + ((i * 3.1) % 11);
+      px2(ctx, ox, oy, sx, sy, 1, 1, i % 3 ? "#cfe8ff" : "#8fe3ff");
+      if (tw > 0.88) { px2(ctx, ox, oy, sx - 1, sy, 3, 0.5, "#eafaff"); px2(ctx, ox, oy, sx, sy - 1, 0.5, 3, "#eafaff"); }
+    }
+    ctx.restore();
+  }
 }
 
 function drawPet(ctx, m, t) {
@@ -876,6 +889,26 @@ function drawPet(ctx, m, t) {
     px(ctx, bx, yy, fl ? -2 : -1, fl ? -8 : -6, 3, 3, "#8a2f24");
     px(ctx, bx, yy, 4, -5, 1, 1, "#f7e28b");
     if (Math.floor(t * 2 + m.seed) % 5 === 0) px(ctx, bx, yy, 7, -5, 1, 1, "#ff8a4a");
+  } else if (id === "phoenix") {
+    /* the Emberling: a fledgling firebird riding its own warmth */
+    const yy = by - 20 + hover * 2;
+    const fl = Math.floor(t * 9 + m.seed) % 2;
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const gg = ctx.createRadialGradient(bx, yy, 1, bx, yy, 9);
+    gg.addColorStop(0, "rgba(255,138,74,0.45)"); gg.addColorStop(1, "rgba(255,138,74,0)");
+    ctx.fillStyle = gg; ctx.fillRect(bx - 9, yy - 9, 18, 18);
+    ctx.restore();
+    px(ctx, bx, yy, -2, -4, 5, 4, "#ff8a4a");
+    px(ctx, bx, yy, 2, -6, 3, 3, "#f2a94e");
+    px(ctx, bx, yy, 4, -5, 1, 1, "#fff1c9");
+    px(ctx, bx, yy, fl ? -5 : -6, fl ? -7 : -4, 3, 2, "#f2c14e");
+    px(ctx, bx, yy, fl ? 3 : 4, fl ? -7 : -4, 3, 2, "#f2c14e");
+    px(ctx, bx, yy, -4, -2, 2, 1, "#e05a2a");
+    /* embers rise off the wingbeats */
+    for (let k = 0; k < 2; k++) {
+      const p = (t * 1.4 + m.seed + k * 0.5) % 1;
+      px(ctx, bx, yy, -1 + k * 2, Math.round(-7 - p * 6), 1, 1, p < 0.5 ? "#ff8a4a" : "#f2c14e");
+    }
   }
 }
 
@@ -907,6 +940,21 @@ function drawAura(ctx, m, t, ox, oy) {
         const tw = 0.4 + 0.6 * Math.abs(Math.sin(ph * 3));
         ctx.fillStyle = hexA("#ffe9a0", tw);
         ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3);
+      }
+      ctx.restore();
+    }
+    if (auraDef.id === "aurora") {
+      /* curtains of borealis light climbing around the hero, hue on a slow wheel */
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < 3; i++) {
+        const hue = (t * 40 + i * 120) % 360;
+        const ph = t * 1.2 + i * 2.1 + m.seed;
+        for (let k = 0; k < 5; k++) {
+          const yy = oy - 4 - k * 5;
+          const sx = ox + Math.sin(ph + k * 0.55) * (10 + i * 3);
+          ctx.fillStyle = `hsla(${hue}, 80%, 70%, ${0.28 - k * 0.045})`;
+          ctx.fillRect(sx, yy, 2, 4);
+        }
       }
       ctx.restore();
     }
@@ -2757,6 +2805,26 @@ function drawFeastPets(ctx, g, t) {
           if (p > 1) continue;
           px(ctx, bx, by, Math.round(7 + p * 10), Math.round(-5 - Math.sin(p * Math.PI) * 4 + k), 1, 1, k % 2 ? "#ff8a4a" : "#f2a94e");
         }
+      }
+    } else if (id === "phoenix") {
+      /* struts the rug trailing warmth; now and then flares into a
+         little crown of fire to impress the corner */
+      drawShadow(ctx, bx, by, 9);
+      const fp = (t * 0.5 + m.seed) % 4;
+      px(ctx, bx, by, -2, -4, 5, 4, "#ff8a4a");
+      px(ctx, bx, by, 2, -6, 3, 3, "#f2a94e");
+      px(ctx, bx, by, 4, -5, 1, 1, "#fff1c9");
+      if (fp < 0.7) {
+        const fl = Math.floor(t * 10 + m.seed) % 2;
+        px(ctx, bx, by, -5, -7 - fl, 3, 3, "#f2c14e"); px(ctx, bx, by, 3, -8 + fl, 3, 3, "#f2c14e");
+        for (let k = 0; k < 4; k++) {
+          const p = (t * 2 + k * 0.25) % 1;
+          px(ctx, bx, by, -2 + k * 2, Math.round(-8 - p * 5), 1, 1, k % 2 ? "#ff8a4a" : "#f7e28b");
+        }
+      } else {
+        const step = Math.floor(t * 6 + m.seed) % 2;
+        px(ctx, bx, by, -4, -2, 2, 1, "#e05a2a");
+        px(ctx, bx, by, -1 + step, -1, 1, 1, "#c9503f"); px(ctx, bx, by, 2 - step, -1, 1, 1, "#c9503f");
       }
     } else if (id === "slimelet") {
       const b = Math.abs(Math.sin(t * 4 + m.seed));

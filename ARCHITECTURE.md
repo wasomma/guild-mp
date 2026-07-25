@@ -64,7 +64,7 @@ Crash safety comes from periodic snapshots (every 20 seconds while awake), a sav
 
 A character is keyed by the player's Discord user ID (their snowflake), which is permanent and globally unique. The database's `user_key` column holds it. The same person always gets the same character regardless of device, browser, or how many times they disconnect. With the bot wired in, `user_key` holds the real snowflake; characters created in open dev mode (no bot) fall back to display names as keys and remain manageable by any logged-in user.
 
-The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, lifetime combat totals, the retelling count, and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, chapter (prestige) count, legacy upgrade ranks, potion stock and auto-use settings, the user roster, daily quests, the active mutator, the Hall of Legends, and the running chapter accumulators.
+The persistent character record contains: name, class, fighting style, body type, level, XP, skill points and allocations, the three equipment slots, lifetime combat totals, the retelling count, the crate economy fields (held Chronicle Crates, Encore balance, Myth pity counter, first-King-of-the-day stamp), and the full cosmetic wardrobe (both owned and equipped, across all nine cosmetic categories). The persistent world record contains: stage, best stage, gold, renown, chapter (prestige) count, legacy upgrade ranks, the lifetime Gold Key counter and Eternal Saga rank, potion stock and auto-use settings, the user roster, daily quests, the active mutator, the Hall of Legends, and the running chapter accumulators.
 
 The data model is three tables (see `server/db.js`; columns added after launch arrive via guarded `ALTER TABLE` migrations):
 
@@ -73,13 +73,18 @@ worlds
   guild_id (pk)   stage   best   ever_best   gold   renown   prestiges
   join_count   auto_sim   legacy (json)   stock (json)   auto (json)
   users (json)   quests (json)   quest_day   mutator   hall (json)
-  chapter (json)   updated_at
+  chapter (json)   keys_cut   ascension   updated_at
+  -- keys_cut = Gold Keys ever cut (drives the escalating price, never resets)
+  -- ascension = Eternal Saga rank
 
 characters
   guild_id + user_key (pk, user_key = Discord snowflake)
   name  class  style  level  xp  sp  kills  dmg_done  heal_done  retellings
-  path  ult_mode  skills (json)  gear (json)  cos (json)  owned (json)  updated_at
+  path  ult_mode  crates  encores  pity  king_day
+  skills (json)  gear (json)  cos (json)  owned (json)  updated_at
   -- path = chosen talent path id (null until picked); ult_mode = auto|manual
+  -- crates/encores/pity = the Phase 6 crate economy; king_day = UTC-day stamp
+  --   of the last first-King Encore payout
 
 sessions
   token (pk)   user_key   name   avatar   created_at   -- web OAuth sessions
@@ -95,7 +100,7 @@ A discord.js client with the `Guilds` and `GuildVoiceStates` intents (neither is
 
 Spectating requires nothing. Acting on a character (spending gold, allocating skill points) requires proving which Discord user you are, which is solved with "Log in with Discord" OAuth2, implemented in `server/auth.js`. The game server doubles as a small HTTP server: `/auth/login` redirects to Discord's consent screen with only the identify scope, `/auth/callback` exchanges the code, fetches the user's identity, mints a random session token stored in the SQLite sessions table, and bounces the browser back to the client with the token in the URL fragment. The client stores it and presents it over the WebSocket, binding the socket to that Discord user.
 
-Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character (skills and talents — `skillUp`, `choosePath`, `respecSkills`, `setAutoSkill`, the manual-ultimate pair `setUltMode`/`fireUlt` — wardrobe, retelling their tale) require the socket to be bound to that exact snowflake; guild-wide intents (potion auto-toggles, legacy upgrades, retreat votes — the `retreat` intent is per-user-keyed and needs a majority of the party within 25s) require any authenticated user; characters not owned by a Discord identity (from open dev mode) remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
+Enforcement happens per intent before the simulation ever sees it. When OAuth is configured: intents targeting a Discord-owned character (skills and talents — `skillUp`, `choosePath`, `respecSkills`, `setAutoSkill`, the manual-ultimate pair `setUltMode`/`fireUlt` — wardrobe, crate opening `openCrate`/`commissionCrate`, retelling their tale) require the socket to be bound to that exact snowflake; guild-wide intents (potion auto-toggles, legacy upgrades, Eternal Saga `ascend`, retreat votes — the `retreat` intent is per-user-keyed and needs a majority of the party within 25s) require any authenticated user; characters not owned by a Discord identity (from open dev mode) remain manageable by any logged-in user; spectating stays open. Denied intents get an explicit denial message so the client can react. When OAuth is not configured, everything is open, which is the local development mode. Sessions survive server restarts and expire after 30 days; logout revokes them immediately.
 
 An alternative packaging is a Discord Activity, where the game runs in an iframe inside the voice channel itself and identity arrives from the Activities SDK for free. Everything server-side stays the same; only the client shell and auth flow change. The standalone web client should be built first because the Activity can be layered on top of the identical backend later.
 

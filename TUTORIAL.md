@@ -67,10 +67,19 @@ Enemies drop gold and gear for three slots: **weapon, armor, trinket**. Rarity r
 
 Nobody manages inventory: an item **auto-equips if it beats what's worn, otherwise it's salvaged into gold** on the spot. Boss drops are special — each one is recorded in the session chronicle with the item, its rarity, and who won it.
 
-Gold is a **guild pool**, spent on:
+Gold is a **guild pool**. Potions are **per-chapter charges**, not purchases: the feast restocks the satchel and nothing refills it mid-chapter, so every sip is a real spend (all are used automatically at the right moment; the Alchemist Stipend legacy deepens every pocket). What gold actually buys is **🔑 Gold Keys**.
 
-- **🧪 Potions** at the Alchemist — a satchel of **per-chapter charges**, not purchases: the feast restocks it and nothing refills it mid-chapter, so every sip is a real spend. All are used automatically at the right moment: Healing Potions when an ally drops low, Armor Elixirs and Poison Vials as combat opens, Phoenix Draughts to revive the fallen. The Alchemist Stipend legacy deepens every pocket.
-- **👗 Cosmetics** in your Wardrobe — hats, hair colors and styles, outfits, weapon skins, capes, accessories, pets, and auras. Pure vanity, deeply important.
+## Chronicle Crates: how looks are earned
+
+Every fallen **King** leaves a **📦 Chronicle Crate** for each player's hero (find yours in the Wardrobe's Trove). Opening one takes a **Gold Key**, cut from the guild's coffers — and every key ever cut makes the next one dearer, forever. Inside is a cosmetic — hats, hair, outfits, weapon skins, capes, accessories, pets, auras — rolled on the rarity ladder:
+
+**Folk · Ballad · Saga · Legend · Myth** — the rarer the tier, the grander the tale. A crate never wastes a roll on something you own while that tier still holds something new; a fully-collected tier pays **♪ Encores** instead. And the ladder is honest: after 35 opens without a Myth, your **next crate is a sure Myth** — the pity meter in the Trove counts it down.
+
+**♪ Encores** are yours alone — the game's only personal currency:
+
+- **Retell your Tale** and you earn Encores equal to the renown the guild receives — the higher the level you sacrifice, the bigger your ovation.
+- Each daily contract fulfilled pays every hero in voice a couple, and your first King each day adds a few more.
+- Spend them in the Trove: open a held crate without touching the guild's gold, or **commission** a crate outright when the Kings are being stingy.
 
 ## Daily guild quests
 
@@ -89,9 +98,9 @@ The campaign runs in **Chapters**, and a chapter ends itself: when the party fel
 
 Renown's real engine is personal. Once **your hero** reaches **level 21**, the Guild Hall offers **"Retell your Tale"** — your own choice, on your own schedule, no vote:
 
-- Your hero returns to **level 1**: gear, skills, and XP are given up, transmuted into **✨ renown for the whole guild**. The higher your level when you retell, the more renown it's worth.
-- Cosmetics, fighting styles, and your retelling count endure — and every chapter's mutator multiplies what a retelling earns.
-- Renown is the only permanent currency. Spend it on **legacy upgrades** that multiply gold, XP, damage, and HP for every hero, forever. This is how the guild snowballs: level high, cash in, rise again.
+- Your hero returns to **level 1**: gear, skills, and XP are given up, transmuted into **✨ renown for the whole guild** — and the same figure in **♪ Encores for you alone**. The higher your level when you retell, the more both are worth.
+- Cosmetics, Encores, fighting styles, and your retelling count endure — and every chapter's mutator multiplies what a retelling earns.
+- Renown buys **legacy upgrades** that multiply gold, XP, damage, and HP for every hero, forever. And when every legacy is fully told, the **♾️ Eternal Saga** opens: an endless ascension track, each rank a permanent +0.5% to the whole guild's damage, healing, and HP at an ever-steeper price. The guild never runs out of somewhere to grow.
 
 ## When everyone leaves
 
@@ -111,9 +120,11 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Respec class/style | Free, in the Skills tab |
 | Loot | Auto-equips upgrades, salvages the rest |
 | Potions | Per-chapter charges, restocked at the feast, used automatically |
-| Party buff | +4% dmg/heal, +3% HP per extra voice (max 9) |
+| Party buffs | Role coverage: Vanguard (tank), Warpath (DPS), Lifeward (healer), 🔥 trinity momentum |
 | Chapter end | Automatic when the wave 20 King falls; feast + renown; heroes keep everything |
-| Retell your Tale | Level 21+, personal; resets your hero, earns renown scaled to level |
-| Renown | Permanent; buys legacy multipliers |
+| Retell your Tale | Level 21+, personal; resets your hero, earns renown for the guild + ♪ Encores for you |
+| Renown | Permanent; buys legacy multipliers, then ♾️ Eternal Saga ranks |
+| Cosmetics | Won from 📦 Chronicle Crates (Kings drop them; 🔑 gold keys or ♪ Encores open them) |
+| Crate tiers | Folk · Ballad · Saga · Legend · Myth — sure Myth after 35 opens without one |
 
 Now get in voice — the guild needs you.

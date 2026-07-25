@@ -274,19 +274,23 @@ export function canBuyTalent(m, id) {
   return r < t.node.ranks && (m.skills[t.path.key.id] || 0) > 0;
 }
 
+/* Cosmetics carry a `tier` — the Chronicle Crate rarity ladder (Phase 6):
+   Folk / Ballad / Saga / Legend / Myth. Tierless entries (spawn defaults,
+   free identity picks) never drop from crates. `price` is historical — the
+   gold shop closed when crates arrived; gold now buys Keys. */
 export const HATS = [
   { id: "none", name: "Bare Head", price: 0 },
-  { id: "hood", name: "Rogue Hood", price: 200 },
-  { id: "helm", name: "Knight Helm", price: 350 },
-  { id: "wizard", name: "Wizard Hat", price: 450 },
-  { id: "horns", name: "Demon Horns", price: 700 },
-  { id: "crown", name: "Royal Crown", price: 1200 },
-  { id: "halo", name: "Saint Halo", price: 1600 },
-  { id: "ribbon", name: "Silk Ribbon", price: 180 },
-  { id: "flower", name: "Flower Crown", price: 260 },
-  { id: "witch", name: "Witch Hat", price: 480 },
-  { id: "catears", name: "Cat Ears", price: 550 },
-  { id: "circlet", name: "Gold Circlet", price: 650 },
+  { id: "hood", name: "Rogue Hood", price: 200, tier: "folk" },
+  { id: "helm", name: "Knight Helm", price: 350, tier: "ballad" },
+  { id: "wizard", name: "Wizard Hat", price: 450, tier: "ballad" },
+  { id: "horns", name: "Demon Horns", price: 700, tier: "saga" },
+  { id: "crown", name: "Royal Crown", price: 1200, tier: "legend" },
+  { id: "halo", name: "Saint Halo", price: 1600, tier: "legend" },
+  { id: "ribbon", name: "Silk Ribbon", price: 180, tier: "folk" },
+  { id: "flower", name: "Flower Crown", price: 260, tier: "ballad" },
+  { id: "witch", name: "Witch Hat", price: 480, tier: "ballad" },
+  { id: "catears", name: "Cat Ears", price: 550, tier: "ballad" },
+  { id: "circlet", name: "Gold Circlet", price: 650, tier: "saga" },
 ];
 export const BODIES = [
   { id: "m", name: "Male" },
@@ -339,83 +343,175 @@ export const HAIRSTYLES = [
   { id: "bob", name: "Sleek Bob", price: 90 },
   { id: "pony", name: "Ponytail", price: 120 },
   { id: "long", name: "Long Flow", price: 150 },
-  { id: "bun", name: "War Bun", price: 180 },
-  { id: "twin", name: "Twintails", price: 220 },
-  { id: "braid", name: "Battle Braid", price: 260 },
-  { id: "kitsune", name: "Kitsune Crown", price: 320 },
+  { id: "bun", name: "War Bun", price: 180, tier: "folk" },
+  { id: "twin", name: "Twintails", price: 220, tier: "ballad" },
+  { id: "braid", name: "Battle Braid", price: 260, tier: "ballad" },
+  { id: "kitsune", name: "Kitsune Crown", price: 320, tier: "myth" },
 ];
 export const ACCESSORIES = [
   { id: "none", name: "None", price: 0 },
-  { id: "freckles", name: "Freckles", price: 60 },
-  { id: "warpaint", name: "Warpaint", price: 120 },
-  { id: "earrings", name: "Gold Earrings", price: 140 },
-  { id: "scarf", name: "Silk Scarf", price: 200 },
-  { id: "pendant", name: "Ruby Pendant", price: 220 },
-  { id: "foxmarks", name: "Fox Markings", price: 180 },
+  { id: "freckles", name: "Freckles", price: 60, tier: "folk" },
+  { id: "warpaint", name: "Warpaint", price: 120, tier: "folk" },
+  { id: "earrings", name: "Gold Earrings", price: 140, tier: "folk" },
+  { id: "scarf", name: "Silk Scarf", price: 200, tier: "folk" },
+  { id: "pendant", name: "Ruby Pendant", price: 220, tier: "ballad" },
+  { id: "foxmarks", name: "Fox Markings", price: 180, tier: "myth" },
 ];
 export const CAPES = [
   { id: "none", name: "No Cape", price: 0 },
-  { id: "traveler", name: "Traveler Cloak", price: 300, c: "#4d5a8a", lining: "#33304f" },
-  { id: "crimson", name: "Crimson Cape", price: 450, c: "#93384a", lining: "#5e2430" },
-  { id: "forest", name: "Forest Cloak", price: 450, c: "#3f6d4a", lining: "#2a4a33" },
-  { id: "shadow", name: "Shadow Cloak", price: 700, c: "#26232b", lining: "#141221" },
-  { id: "royal", name: "Royal Cape", price: 950, c: "#6a4a9e", trim: "#f2c14e", lining: "#4e3675" },
-  { id: "gilded", name: "Gilded Cape", price: 1400, c: "#f2c14e", trim: "#fff1c9", lining: "#c78a3b" },
-  { id: "ninetails", name: "Nine-Tails", price: 1600, c: "#5cc94a", tip: "#e05aa8", lining: "#3a7a35" },
+  { id: "traveler", name: "Traveler Cloak", price: 300, c: "#4d5a8a", lining: "#33304f", tier: "ballad" },
+  { id: "crimson", name: "Crimson Cape", price: 450, c: "#93384a", lining: "#5e2430", tier: "ballad" },
+  { id: "forest", name: "Forest Cloak", price: 450, c: "#3f6d4a", lining: "#2a4a33", tier: "ballad" },
+  { id: "shadow", name: "Shadow Cloak", price: 700, c: "#26232b", lining: "#141221", tier: "saga" },
+  { id: "royal", name: "Royal Cape", price: 950, c: "#6a4a9e", trim: "#f2c14e", lining: "#4e3675", tier: "saga" },
+  { id: "gilded", name: "Gilded Cape", price: 1400, c: "#f2c14e", trim: "#fff1c9", lining: "#c78a3b", tier: "legend" },
+  { id: "ninetails", name: "Nine-Tails", price: 1600, c: "#5cc94a", tip: "#e05aa8", lining: "#3a7a35", tier: "myth" },
+  { id: "starweave", name: "Starweave Mantle", price: 5000, c: "#2a2547", trim: "#8fe3ff", lining: "#141221", tier: "myth" },
 ];
 export const PETS = [
   { id: "none", name: "No Pet", price: 0 },
-  { id: "wisp", name: "Glimmer Wisp", price: 600 },
-  { id: "slimelet", name: "Slimelet", price: 750 },
-  { id: "cat", name: "Alley Cat", price: 900 },
-  { id: "pup", name: "Loyal Pup", price: 900 },
-  { id: "owl", name: "Moon Owl", price: 1200 },
-  { id: "drake", name: "Drakeling", price: 2000 },
+  { id: "wisp", name: "Glimmer Wisp", price: 600, tier: "ballad" },
+  { id: "slimelet", name: "Slimelet", price: 750, tier: "saga" },
+  { id: "cat", name: "Alley Cat", price: 900, tier: "saga" },
+  { id: "pup", name: "Loyal Pup", price: 900, tier: "saga" },
+  { id: "owl", name: "Moon Owl", price: 1200, tier: "legend" },
+  { id: "drake", name: "Drakeling", price: 2000, tier: "legend" },
+  { id: "phoenix", name: "Emberling", price: 5000, tier: "myth" },
 ];
 export const AURAS = [
   { id: "none", name: "No Aura", price: 0 },
-  { id: "ember", name: "Ember Aura", price: 1800, c: "#ff8a4a" },
-  { id: "frost", name: "Frost Aura", price: 1800, c: "#8fe3ff" },
-  { id: "verdant", name: "Verdant Aura", price: 1800, c: "#8fd069" },
-  { id: "arcane", name: "Arcane Aura", price: 2600, c: "#b07fe0" },
-  { id: "golden", name: "Golden Aura", price: 4000, c: "#f2c14e" },
-  { id: "starfire", name: "Starfire Aura", price: 4200, c: "#f2c14e" },
+  { id: "ember", name: "Ember Aura", price: 1800, c: "#ff8a4a", tier: "legend" },
+  { id: "frost", name: "Frost Aura", price: 1800, c: "#8fe3ff", tier: "legend" },
+  { id: "verdant", name: "Verdant Aura", price: 1800, c: "#8fd069", tier: "legend" },
+  { id: "arcane", name: "Arcane Aura", price: 2600, c: "#b07fe0", tier: "legend" },
+  { id: "golden", name: "Golden Aura", price: 4000, c: "#f2c14e", tier: "myth" },
+  { id: "starfire", name: "Starfire Aura", price: 4200, c: "#f2c14e", tier: "myth" },
+  { id: "aurora", name: "Aurora Veil", price: 5000, c: "#8fffc9", tier: "myth" },
 ];
 export const HAIRS = [
   { name: "Chestnut", c: "#6b4a32", price: 0 },
   { name: "Raven", c: "#26232b", price: 60 },
   { name: "Gold", c: "#e8c15a", price: 60 },
   { name: "Ember", c: "#c94f3d", price: 90 },
-  { name: "Arcane", c: "#8a6fe0", price: 150 },
-  { name: "Seafoam", c: "#69d2c8", price: 150 },
-  { name: "Rose", c: "#e77fb3", price: 150 },
-  { name: "Lime", c: "#a6e34d", price: 150 },
-  { name: "Foxfire", c: "#5cc94a", c2: "#e05aa8", price: 260 },
+  { name: "Arcane", c: "#8a6fe0", price: 150, tier: "folk" },
+  { name: "Seafoam", c: "#69d2c8", price: 150, tier: "folk" },
+  { name: "Rose", c: "#e77fb3", price: 150, tier: "folk" },
+  { name: "Lime", c: "#a6e34d", price: 150, tier: "folk" },
+  { name: "Foxfire", c: "#5cc94a", c2: "#e05aa8", price: 260, tier: "myth" },
 ];
 export const OUTFITS = [
   { name: "Traveler", c: "#4d5a8a", price: 0 },
-  { name: "Forest", c: "#3f6d4a", price: 80, trim: "#8fd069" },
-  { name: "Crimson", c: "#93384a", price: 120, trim: "#f2c14e" },
-  { name: "Midnight", c: "#33304f", price: 120, trim: "#8d87a3" },
-  { name: "Royal", c: "#6a4a9e", price: 220, trim: "#f2c14e", sash: "#f2c14e" },
-  { name: "Sunburst", c: "#c78a3b", price: 220, trim: "#fff1c9", sash: "#93384a" },
-  { name: "Ivory", c: "#c9c3b8", price: 300, trim: "#f2c14e", sash: "#5aa9e6" },
-  { name: "Lavender", c: "#9a86c9", price: 160, trim: "#efeaff" },
-  { name: "Blush", c: "#d98aa3", price: 160, trim: "#fff1c9" },
-  { name: "Mint", c: "#8fd0b0", price: 160, trim: "#efeaff" },
-  { name: "Wine", c: "#7a2f45", price: 200, trim: "#f2c14e", sash: "#33304f" },
+  { name: "Forest", c: "#3f6d4a", price: 80, trim: "#8fd069", tier: "folk" },
+  { name: "Crimson", c: "#93384a", price: 120, trim: "#f2c14e", tier: "folk" },
+  { name: "Midnight", c: "#33304f", price: 120, trim: "#8d87a3", tier: "folk" },
+  { name: "Royal", c: "#6a4a9e", price: 220, trim: "#f2c14e", sash: "#f2c14e", tier: "ballad" },
+  { name: "Sunburst", c: "#c78a3b", price: 220, trim: "#fff1c9", sash: "#93384a", tier: "ballad" },
+  { name: "Ivory", c: "#c9c3b8", price: 300, trim: "#f2c14e", sash: "#5aa9e6", tier: "ballad" },
+  { name: "Lavender", c: "#9a86c9", price: 160, trim: "#efeaff", tier: "folk" },
+  { name: "Blush", c: "#d98aa3", price: 160, trim: "#fff1c9", tier: "folk" },
+  { name: "Mint", c: "#8fd0b0", price: 160, trim: "#efeaff", tier: "folk" },
+  { name: "Wine", c: "#7a2f45", price: 200, trim: "#f2c14e", sash: "#33304f", tier: "folk" },
 ];
 export const WEAPON_SKINS = [
   { id: "steel", name: "Steel", c: "#cfd6e0", cD: "#7f8aa0", cL: "#eef2f8", edge: "#ffffff", price: 0 },
-  { id: "gold", name: "Gilded", c: "#f2c14e", cD: "#a06b24", cL: "#ffe08a", edge: "#fff6d8", price: 280 },
-  { id: "obsidian", name: "Obsidian", c: "#5b4d7d", cD: "#2e2742", cL: "#8a77b8", edge: "#cdbcff", price: 420 },
-  { id: "blood", name: "Bloodrot", c: "#d0455a", cD: "#6e1f30", cL: "#f27d8d", edge: "#ffb3bd", price: 520 },
-  { id: "crystal", name: "Crystal", c: "#8fe3ff", cD: "#4a9cc9", cL: "#d1f4ff", edge: "#ffffff", price: 680 },
+  { id: "gold", name: "Gilded", c: "#f2c14e", cD: "#a06b24", cL: "#ffe08a", edge: "#fff6d8", price: 280, tier: "ballad" },
+  { id: "obsidian", name: "Obsidian", c: "#5b4d7d", cD: "#2e2742", cL: "#8a77b8", edge: "#cdbcff", price: 420, tier: "ballad" },
+  { id: "blood", name: "Bloodrot", c: "#d0455a", cD: "#6e1f30", cL: "#f27d8d", edge: "#ffb3bd", price: 520, tier: "ballad" },
+  { id: "crystal", name: "Crystal", c: "#8fe3ff", cD: "#4a9cc9", cL: "#d1f4ff", edge: "#ffffff", price: 680, tier: "saga" },
 ];
 export const COSMETIC_LISTS = {
   hat: HATS, hair: HAIRS, hairstyle: HAIRSTYLES, outfit: OUTFITS,
   weapon: WEAPON_SKINS, accessory: ACCESSORIES, cape: CAPES, pet: PETS, aura: AURAS,
 };
+
+/* ---------------- Chronicle Crates (COMBAT-REWORK Phase 6) ----------------
+   Kings drop a crate to every hero's player. Opening one takes a Gold Key —
+   priced from the SHARED gold pool at a permanently escalating rate (the
+   veteran gold sink) — or the player's own Encores. Encores are the
+   per-player currency: retells pay the teller the same figure the guild
+   pool receives, dailies and each day's first King drip a little more.
+   `enc` per tier is the dupe conversion once a tier's tale is fully told. */
+export const COS_TIERS = [
+  { id: "folk", name: "Folk", color: "#b6b3c7", w: 50, enc: 2 },
+  { id: "ballad", name: "Ballad", color: "#7fd069", w: 26, enc: 4 },
+  { id: "saga", name: "Saga", color: "#5aa9e6", w: 15, enc: 8 },
+  { id: "legend", name: "Legend", color: "#f2a94e", w: 7, enc: 15 },
+  { id: "myth", name: "Myth", color: "#e05aa8", w: 2, enc: 30 },
+];
+export const tierOf = (id) => COS_TIERS.find((t) => t.id === id) || null;
+export const PITY_AT = 35;          /* mythless opens before the next is a sure Myth */
+export const CRATE_CAP = 12;        /* held crates; overflow converts to Encores */
+export const CRATE_OVERFLOW_ENC = 3;
+export const OPEN_ENC = 30;         /* open a held crate without a Key */
+export const COMMISSION_ENC = 40;   /* conjure and open a crate outright */
+export const DAILY_ENC = 2;         /* per player in voice, per finished contract */
+export const KING_DAY_ENC = 3;      /* the day's first King, per player */
+export const keyPrice = (n) => Math.round((250 * Math.pow(n + 1, 1.5)) / 10) * 10;
+
+/* every crate-eligible cosmetic in one tier, keyed like `owned` entries */
+export function tierItems(tierId) {
+  const out = [];
+  for (const [kind, list] of Object.entries(COSMETIC_LISTS)) {
+    list.forEach((it, idx) => {
+      if (it.tier === tierId) out.push({ kind, key: it.id !== undefined ? it.id : idx, item: it });
+    });
+  }
+  return out;
+}
+
+/* The one crate-opening path (both codebases, UIs, and tests ride it).
+   pay: "key" (guild gold at the escalating price), "enc" (open a held
+   crate with Encores), "comm" (commission: no held crate needed).
+   All rolls happen HERE, at intent time — never inside tick — so combat
+   RNG call order is untouched and seeded sweeps stay comparable. */
+export function doOpenCrate(g, m, pay) {
+  if (pay === "key") {
+    const price = keyPrice(g.keysCut || 0);
+    if ((m.crates || 0) < 1 || g.gold < price) return false;
+    g.gold -= price; g.keysCut = (g.keysCut || 0) + 1; m.crates--;
+    addLog(g, `${m.name} cuts a Gold Key for ${fmt(price)}g — the next will cost ${fmt(keyPrice(g.keysCut))}g.`, "#f2c14e");
+  } else if (pay === "enc") {
+    if ((m.crates || 0) < 1 || (m.encores || 0) < OPEN_ENC) return false;
+    m.encores -= OPEN_ENC; m.crates--;
+  } else if (pay === "comm") {
+    if ((m.encores || 0) < COMMISSION_ENC) return false;
+    m.encores -= COMMISSION_ENC;
+  } else return false;
+  /* the roll: pity first, then the weighted ladder */
+  let tier;
+  if ((m.pity || 0) >= PITY_AT) {
+    tier = COS_TIERS[COS_TIERS.length - 1];
+  } else {
+    let r = Math.random() * COS_TIERS.reduce((s, t) => s + t.w, 0);
+    tier = COS_TIERS[0];
+    for (const t of COS_TIERS) { r -= t.w; if (r <= 0) { tier = t; break; } }
+  }
+  m.pity = tier.id === "myth" ? 0 : (m.pity || 0) + 1;
+  /* grant something the hero doesn't own within the tier; a fully-told
+     tier converts to Encores instead */
+  const pool = tierItems(tier.id).filter((e) => !(m.owned[e.kind] || []).includes(e.key));
+  sfxEv(g, "quest");
+  if (!pool.length) {
+    m.encores = (m.encores || 0) + tier.enc;
+    addLog(g, `${m.name}'s crate sings a ${tier.name} tale already told — ${tier.enc} Encores instead.`, tier.color);
+    return { tier: tier.id, dupe: true, enc: tier.enc };
+  }
+  const won = pool[Math.floor(Math.random() * pool.length)];
+  m.owned[won.kind].push(won.key);
+  m.cos[won.kind] = won.key;
+  addFloat(g, m.x, m.y - 92, `${tier.name.toUpperCase()}! ${won.item.name}`, tier.color, true);
+  sparkle(g, m.x, m.y - 40, tier.color, tier.id === "myth" ? 26 : 12);
+  addLog(g, `${m.name} opens a Chronicle Crate: ${won.item.name} — a ${tier.name} piece!`, tier.color);
+  return { tier: tier.id, kind: won.kind, key: won.key, name: won.item.name };
+}
+
+/* ---------------- the Eternal Saga (renown ascension) ----------------
+   An infinite track past the maxed legacies: each rank +0.5% damage,
+   healing, and max HP, at steeply superlinear renown cost. The same trick
+   that keeps level meaningful forever keeps renown meaningful forever. */
+export const ASC_PER_RANK = 0.005;
+export const ascendCost = (rank) => Math.ceil(2 * Math.pow(rank + 1, 1.9));
+export const legaciesMaxed = (g) => LEGACY.every((u) => g.legacy[u.id] >= u.max);
 
 export const RARITIES = [
   { id: "common", name: "Common", color: "#b6b3c7", mult: 1.0, w: 54, pre: ["Worn", "Plain", "Simple"] },
@@ -524,6 +620,7 @@ export function newWorld() {
     stage: 1, best: 1, gold: 150, joinCount: 0, momentum: 0,
     wave: 0, waveMax: 0, camp: false, ambush: false, retreatV: null,
     renown: 0, prestiges: 0, everBest: 1, prestigeT: 0,
+    keysCut: 0, ascension: 0,
     legacy: { hymn: 0, banner: 0, merchant: 0, scholar: 0, head: 0, stipend: 0 },
     phase: "advance", advanceT: 1.6, wipeT: 0, scroll: 0, bossT: 0,
     stock: { heal: 3, armor: 1, poison: 1, res: 1 },
@@ -559,6 +656,7 @@ export function makeMember(g, key, name, cls) {
     id: g.uid++, key, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
     skills: {}, autoSkill: true, path: null, ultMode: "auto", ultFire: false, ksCd: 0, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
+    crates: 0, encores: 0, pity: 0, kingDay: 0,
     cos: { body: fem ? "f" : "m", race, skin: startSkin, under: pick(UNDERGARMENTS).id, underC: Math.floor(Math.random() * UNDER_COLORS.length), fresh: true, hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: [...FREE_HAIRSTYLES], outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -603,6 +701,12 @@ export function stats(m, g) {
       dmg *= 1 + 0.10 * g.legacy.hymn;
       heal *= 1 + 0.10 * g.legacy.hymn;
       hp *= 1 + 0.10 * g.legacy.banner;
+    }
+    /* the Eternal Saga (Phase 6): every ascension rank lifts the whole
+       guild a half-percent — the infinite tail of the legacy family */
+    if (g.ascension) {
+      const asc = 1 + ASC_PER_RANK * g.ascension;
+      dmg *= asc; heal *= asc; hp *= asc;
     }
     if (g.mutator === "moon") spd *= 0.8;
     if (g.mutator === "glass") { dmg *= 1.35; hp *= 0.75; }
@@ -662,6 +766,7 @@ export function dehydrateMember(m) {
     skills: m.skills, gear: m.gear, cos: m.cos, owned: m.owned,
     kills: m.kills, dmgDone: m.dmgDone, healDone: m.healDone,
     retellings: m.retellings || 0,
+    crates: m.crates || 0, encores: m.encores || 0, pity: m.pity || 0, kingDay: m.kingDay || 0,
   };
 }
 
@@ -673,6 +778,7 @@ export function rehydrateMember(g, d) {
     skills: d.skills || {}, gear: d.gear, cos: d.cos, owned: d.owned,
     kills: d.kills || 0, dmgDone: d.dmgDone || 0, healDone: d.healDone || 0,
     retellings: d.retellings || 0,
+    crates: d.crates || 0, encores: d.encores || 0, pity: d.pity || 0, kingDay: d.kingDay || 0,
   });
   /* pre-creator characters: backfill identity defaults (no fresh flag — a
      hero who predates the creator keeps their look until they open it) and
@@ -1194,6 +1300,16 @@ function killEnemy(g, killer, e) {
     if (Math.random() < 0.6) drops.push(dropLoot(g, 0.10));
     if (g.session) for (const d of drops) if (d) (g.session.bossLoot = g.session.bossLoot || []).push({ boss: e.name, item: d.item.name, rarity: d.item.rarity.name, to: d.m.name, kept: d.kept });
     addLog(g, `${e.name} defeated! The path ahead opens.`, "#f2a94e");
+    /* the King's hoard (Phase 6): a Chronicle Crate for every hero's
+       player, and the day's first King pays a few Encores each */
+    const kday = Math.floor(Date.now() / 86400000);
+    let crated = 0;
+    for (const m of g.members) {
+      if ((m.crates || 0) < CRATE_CAP) { m.crates = (m.crates || 0) + 1; crated++; }
+      else m.encores = (m.encores || 0) + CRATE_OVERFLOW_ENC;
+      if ((m.kingDay || 0) !== kday) { m.kingDay = kday; m.encores = (m.encores || 0) + KING_DAY_ENC; }
+    }
+    if (crated) addLog(g, `The King's hoard yields a Chronicle Crate for each hero! A Gold Key awaits the telling.`, "#e05aa8");
   }
   else if (e.elite) { dropLoot(g, 0.05); addLog(g, `${e.name} slain! It drops its prize.`, "#b07fe0"); }
   else if (Math.random() < 0.13) dropLoot(g, 0.01);
@@ -1569,7 +1685,9 @@ function questProg(g, kind, amt) {
       q.done = true;
       g.gold += q.gold;
       g.renown += q.renown;
-      addLog(g, `📜 QUEST COMPLETE: ${questLabel(q)}! The guild earns ${q.gold}g and ${q.renown} renown.`, "#c9a24b");
+      /* Phase 6: every player standing in the hall shares the credit */
+      for (const m of g.members) m.encores = (m.encores || 0) + DAILY_ENC;
+      addLog(g, `📜 QUEST COMPLETE: ${questLabel(q)}! The guild earns ${q.gold}g and ${q.renown} renown; each hero pockets ${DAILY_ENC} Encores.`, "#c9a24b");
       sfxEv(g, "quest");
       if (g.members.length) addFloat(g, g.members[0].x, g.members[0].y - 108, "QUEST COMPLETE!", "#c9a24b", true);
       if (g.session) g.session.quests = (g.session.quests || 0) + 1;
@@ -2411,20 +2529,35 @@ export function applyIntent(g, msg) {
       break;
     }
     case "cosmetic": {
+      /* equip-only since Phase 6: the wardrobe shop is closed — looks are
+         earned from Chronicle Crates, and gold buys Keys instead */
       const m = byId(msg.memberId);
       const list = COSMETIC_LISTS[msg.kind];
       if (!m || !list) break;
       const item = list.find((it) => it.id === msg.key) || (typeof msg.key === "number" ? list[msg.key] : null);
       if (!item) break;
       const key = item.id !== undefined ? item.id : list.indexOf(item);
-      if (m.owned[msg.kind].includes(key)) {
-        m.cos[msg.kind] = key;
-      } else if (g.gold >= item.price) {
-        g.gold -= item.price;
-        m.owned[msg.kind].push(key);
-        m.cos[msg.kind] = key;
-        addLog(g, `${m.name} bought the ${item.name} style for ${item.price}g. Looking sharp!`, "#f2c14e");
-      }
+      if (m.owned[msg.kind].includes(key)) m.cos[msg.kind] = key;
+      break;
+    }
+    case "openCrate": {
+      const m = byId(msg.memberId);
+      if (m) doOpenCrate(g, m, msg.pay === "enc" ? "enc" : "key");
+      break;
+    }
+    case "commissionCrate": {
+      const m = byId(msg.memberId);
+      if (m) doOpenCrate(g, m, "comm");
+      break;
+    }
+    case "ascend": {
+      /* the Eternal Saga opens only once every legacy is fully told */
+      if (!legaciesMaxed(g)) break;
+      const cost = ascendCost(g.ascension || 0);
+      if (g.renown < cost) break;
+      g.renown -= cost; g.ascension = (g.ascension || 0) + 1;
+      sfxEv(g, "prestige");
+      addLog(g, `The Eternal Saga grows: rank ${g.ascension}! The guild stands +${(g.ascension * ASC_PER_RANK * 100).toFixed(1)}% mightier, forever.`, "#b07fe0");
       break;
     }
     case "retell": {
@@ -2433,11 +2566,14 @@ export function applyIntent(g, msg) {
       const mu = mutatorOf(g);
       const earn = Math.round(renownEarn(m.level) * (mu ? mu.renownMult : 1));
       g.renown += earn;
+      /* Phase 6: the teller keeps an equal share of the applause — the
+         retell's cost is personal, so is this reward */
+      m.encores = (m.encores || 0) + earn;
       m.retellings = (m.retellings || 0) + 1;
       if (g.session) g.session.retellings = (g.session.retellings || 0) + 1;
       resetChar(g, m);
       sfxEv(g, "prestige");
-      addLog(g, `${m.name} retells their tale! The guild gains ${earn} renown, and a hero is born anew.`, "#b07fe0");
+      addLog(g, `${m.name} retells their tale! The guild gains ${earn} renown, and the teller earns ${earn} Encores.`, "#b07fe0");
       break;
     }
     case "legacyUp": {
@@ -2461,6 +2597,7 @@ export function snapshot(g, events) {
     stage: g.stage, best: g.best, everBest: g.everBest, threat: threatOf(g), momentum: g.momentum || 0,
     retreat: g.retreatV ? { n: g.retreatV.keys.length, need: Math.floor(g.members.length / 2) + 1 } : null,
     gold: g.gold, renown: g.renown, prestiges: g.prestiges,
+    keysCut: g.keysCut || 0, ascension: g.ascension || 0,
     legacy: g.legacy, stock: g.stock, auto: g.auto,
     phase: g.phase, scroll: g.scroll, advanceT: g.advanceT, mutator: g.mutator,
     hall: (g.hall || []).slice(-25),

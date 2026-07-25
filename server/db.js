@@ -92,28 +92,36 @@ for (const ddl of [
   "ALTER TABLE characters ADD COLUMN retellings INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE characters ADD COLUMN path TEXT",
   "ALTER TABLE characters ADD COLUMN ult_mode TEXT",
+  "ALTER TABLE worlds ADD COLUMN keys_cut INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE worlds ADD COLUMN ascension INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN crates INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN encores INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN pity INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN king_day INTEGER NOT NULL DEFAULT 0",
 ]) { try { db.exec(ddl); } catch { /* column already exists */ } }
 
 const upsertWorld = db.prepare(`
   INSERT INTO worlds (guild_id, stage, best, ever_best, gold, renown, prestiges,
-                      join_count, auto_sim, legacy, stock, auto, users, quests, quest_day, mutator, hall, chapter, updated_at)
+                      join_count, auto_sim, legacy, stock, auto, users, quests, quest_day, mutator, hall, chapter, keys_cut, ascension, updated_at)
   VALUES (@guild_id, @stage, @best, @ever_best, @gold, @renown, @prestiges,
-          @join_count, @auto_sim, @legacy, @stock, @auto, @users, @quests, @quest_day, @mutator, @hall, @chapter, @updated_at)
+          @join_count, @auto_sim, @legacy, @stock, @auto, @users, @quests, @quest_day, @mutator, @hall, @chapter, @keys_cut, @ascension, @updated_at)
   ON CONFLICT(guild_id) DO UPDATE SET
     stage=@stage, best=@best, ever_best=@ever_best, gold=@gold, renown=@renown,
     prestiges=@prestiges, join_count=@join_count, auto_sim=@auto_sim,
-    legacy=@legacy, stock=@stock, auto=@auto, users=@users, quests=@quests, quest_day=@quest_day, mutator=@mutator, hall=@hall, chapter=@chapter, updated_at=@updated_at
+    legacy=@legacy, stock=@stock, auto=@auto, users=@users, quests=@quests, quest_day=@quest_day, mutator=@mutator, hall=@hall, chapter=@chapter,
+    keys_cut=@keys_cut, ascension=@ascension, updated_at=@updated_at
 `);
 
 const upsertChar = db.prepare(`
   INSERT INTO characters (guild_id, user_key, name, class, style, level, xp, sp,
-                          kills, dmg_done, heal_done, retellings, path, ult_mode, skills, gear, cos, owned, updated_at)
+                          kills, dmg_done, heal_done, retellings, path, ult_mode, crates, encores, pity, king_day, skills, gear, cos, owned, updated_at)
   VALUES (@guild_id, @user_key, @name, @class, @style, @level, @xp, @sp,
-          @kills, @dmg_done, @heal_done, @retellings, @path, @ult_mode, @skills, @gear, @cos, @owned, @updated_at)
+          @kills, @dmg_done, @heal_done, @retellings, @path, @ult_mode, @crates, @encores, @pity, @king_day, @skills, @gear, @cos, @owned, @updated_at)
   ON CONFLICT(guild_id, user_key) DO UPDATE SET
     name=@name, class=@class, style=@style, level=@level, xp=@xp, sp=@sp,
     kills=@kills, dmg_done=@dmg_done, heal_done=@heal_done, retellings=@retellings,
     path=@path, ult_mode=@ult_mode,
+    crates=@crates, encores=@encores, pity=@pity, king_day=@king_day,
     skills=@skills, gear=@gear, cos=@cos, owned=@owned, updated_at=@updated_at
 `);
 
@@ -129,6 +137,7 @@ function charRow(guildId, key, d, now) {
     kills: d.kills, dmg_done: d.dmgDone, heal_done: d.healDone,
     retellings: d.retellings || 0,
     path: d.path || null, ult_mode: d.ultMode || "auto",
+    crates: d.crates || 0, encores: d.encores || 0, pity: d.pity || 0, king_day: d.kingDay || 0,
     skills: JSON.stringify(d.skills), gear: JSON.stringify(d.gear),
     cos: JSON.stringify(d.cos), owned: JSON.stringify(d.owned),
     updated_at: now,
@@ -148,6 +157,7 @@ export const saveWorld = db.transaction((guildId, g) => {
     mutator: g.mutator || null,
     hall: JSON.stringify(g.hall || []),
     chapter: JSON.stringify(g.chapter || { kills: 0, gold: 0, uniques: [] }),
+    keys_cut: g.keysCut || 0, ascension: g.ascension || 0,
     updated_at: now,
   });
   // characters in the active party and characters waiting in the roster
@@ -173,6 +183,8 @@ export function loadWorld(guildId) {
   g.mutator = row.mutator || null;
   g.hall = row.hall ? JSON.parse(row.hall) : [];
   g.chapter = row.chapter ? JSON.parse(row.chapter) : { kills: 0, gold: 0, uniques: [] };
+  g.keysCut = row.keys_cut || 0;
+  g.ascension = row.ascension || 0;
   g.users.forEach((u) => (u.inVoice = false)); // nobody is in voice after a cold boot
   for (const c of selChars.all(guildId)) {
     g.roster[c.user_key] = rehydrateMember(g, {
@@ -181,6 +193,7 @@ export function loadWorld(guildId) {
       kills: c.kills, dmgDone: c.dmg_done, healDone: c.heal_done,
       retellings: c.retellings || 0,
       path: c.path || null, ultMode: c.ult_mode || "auto",
+      crates: c.crates || 0, encores: c.encores || 0, pity: c.pity || 0, kingDay: c.king_day || 0,
       skills: JSON.parse(c.skills), gear: JSON.parse(c.gear),
       cos: JSON.parse(c.cos), owned: JSON.parse(c.owned),
     });

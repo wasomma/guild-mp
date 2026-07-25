@@ -2,6 +2,19 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.37 — 2026-07-25
+
+**The Chronicle Trove.** Phase 6 of the combat rework — the economy endgame — and with it, the rework is complete. Ships with the one-time **alpha fresh start** (owner's call): every hero begins again at level 1 with a fresh wardrobe, and gold, renown, and legacies reset. Your identity, retelling count, and the guild's 1,888-chapter Hall of Legends endure.
+
+- **📦 Chronicle Crates.** Every fallen King leaves a crate for each hero's player. Opening one takes a **🔑 Gold Key**, cut from the guild coffers at a price that rises with every key ever cut, forever — gold finally has a sink that never fills. The wardrobe shop is closed: from now on, looks are *won*.
+- **The rarity ladder: Folk · Ballad · Saga · Legend · Myth** (50/26/15/7/2). Crates never waste a roll while a tier holds something you lack, and a fully-told tier pays Encores instead. After 35 opens without a Myth, **your next crate is a sure Myth** — the Trove's pity meter counts it down.
+- **Three new Myth treasures**: the **Aurora Veil** (curtains of borealis light on a slow-turning hue), the **Emberling** (a fledgling firebird that flares its crown of fire on the feast rug), and the **Starweave Mantle** (a cape carrying its own night sky). They join the kitsune set, Nine-Tails, and the Golden and Starfire auras as the chase.
+- **♪ Encores — the first currency that is yours alone.** Retell your Tale and the applause is personal: you earn Encores equal to the renown the guild receives, scaled to the level you sacrificed. Daily contracts pay a couple to everyone in voice; your first King each day adds more. Spend them to open crates without touching guild gold — or **commission** a crate outright.
+- **♾️ The Eternal Saga.** When every legacy is fully told, renown's story continues: an endless ascension track, each rank a permanent +0.5% to the whole guild's damage, healing, and HP, at an ever-steeper price. No currency in the game ever goes dead again.
+- The Trove lives in your Wardrobe tab (crates, key price, odds, pity); the Saga sits under the Guild Hall's legacies. Both in the multiplayer client and the public demo.
+
+Measured: the combat sweep is numerically identical to v0.1.36 — the economy touches no fight until the guild *chooses* to ascend. 13 new economy tests (55 total) plus a key-drain model (`scripts/balance/economy-model.mjs`): a fresh guild affords its first key in the first session, and the escalating curve absorbs a matured guild's surplus without ever walling off.
+
 ## v0.1.36 — 2026-07-25
 
 **Walk your path.** Phase 5 of the combat rework — every fighting style grows a talent tree, and the biggest single feature of the rework closes its combat arc.

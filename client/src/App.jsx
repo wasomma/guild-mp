@@ -6,6 +6,8 @@ import {
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
   RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, classNeed,
   TALENTS, GATE_PTS, spentPts, pathPreDone,
+  COS_TIERS, tierOf, keyPrice, PITY_AT, CRATE_CAP, OPEN_ENC, COMMISSION_ENC,
+  ascendCost, ASC_PER_RANK, legaciesMaxed,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
@@ -265,7 +267,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "threat", "momentum", "retreat", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "threat", "momentum", "retreat", "gold", "renown", "prestiges", "keysCut", "ascension", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -737,6 +739,8 @@ function StatsPanel({ g, m }) {
 }
 
 function CosmeticGrid({ g, m, kind, list, title, send, lock }) {
+  /* Phase 6: the wardrobe is a collection, not a shop — unowned pieces show
+     their crate tier and wait to be won from a Chronicle Crate */
   return (
     <div className="cosgroup">
       <div className="coshead">{title}</div>
@@ -745,15 +749,17 @@ function CosmeticGrid({ g, m, kind, list, title, send, lock }) {
           const key = item.id !== undefined ? item.id : idx;
           const owned = m.owned[kind].includes(key);
           const equipped = m.cos[kind] === key;
-          const afford = g.gold >= item.price;
+          const tier = tierOf(item.tier);
           return (
             <button key={key}
               className={"cositem" + (equipped ? " eq" : owned ? " own" : "")}
-              disabled={!!lock || (!owned && !afford)}
+              disabled={!!lock || !owned}
               onClick={() => send({ a: "cosmetic", memberId: m.id, kind, key })}>
               {item.c && <span className="swatch" style={{ background: item.c }} />}
               <span>{item.name}</span>
-              <span className="price">{equipped ? "✓" : owned ? "owned" : `${item.price}g`}</span>
+              <span className="price" style={!owned && tier ? { color: tier.color } : undefined}>
+                {equipped ? "✓" : owned ? "owned" : tier ? tier.name : "—"}
+              </span>
             </button>
           );
         })}
@@ -762,9 +768,35 @@ function CosmeticGrid({ g, m, kind, list, title, send, lock }) {
   );
 }
 
+function Trove({ g, m, send, lock }) {
+  const price = keyPrice(g.keysCut || 0);
+  const crates = m.crates || 0, enc = m.encores || 0, pity = m.pity || 0;
+  return (
+    <div className="cosgroup">
+      <div className="coshead">📦 Chronicle Trove <span className="dim small">{crates}/{CRATE_CAP} crates · ♪ {fmt(enc)} Encores</span></div>
+      <div className="dim small">Kings drop crates; a Gold Key ({fmt(price)}g from the guild coffers, dearer with every cut) or your own Encores open them. Retell your tale to earn Encores.</div>
+      <div className="drow" style={{ marginTop: 6 }}>
+        <button className="mini" disabled={!!lock || crates < 1 || g.gold < price}
+          onClick={() => send({ a: "openCrate", memberId: m.id, pay: "key" })}>🔑 Open ({fmt(price)}g)</button>
+        <button className="mini" disabled={!!lock || crates < 1 || enc < OPEN_ENC}
+          onClick={() => send({ a: "openCrate", memberId: m.id, pay: "enc" })}>♪ Open ({OPEN_ENC})</button>
+        <button className="mini" disabled={!!lock || enc < COMMISSION_ENC}
+          onClick={() => send({ a: "commissionCrate", memberId: m.id })}>♪ Commission ({COMMISSION_ENC})</button>
+      </div>
+      <div className="dim small" style={{ marginTop: 6 }}>
+        {COS_TIERS.map((t) => (
+          <span key={t.id} style={{ color: t.color, marginRight: 8 }}>{t.name} {t.w}%</span>
+        ))}
+      </div>
+      <div className="dim small">Myth pity: {pity}/{PITY_AT}{pity >= PITY_AT ? " — the next crate is a sure Myth!" : ""}</div>
+    </div>
+  );
+}
+
 function Wardrobe({ g, m, send, lock }) {
   return (
     <div className="ward">
+      <Trove g={g} m={m} send={send} lock={lock} />
       <div className="cosgroup">
         <div className="coshead">Fighting Style <span className="dim small">(free to switch)</span></div>
         <div className="cosgrid">
@@ -978,7 +1010,7 @@ function GuildHall({ g, send, confirm, setConfirm, lock, lockOf }) {
                   <span style={{ color: CLASSES[m.cls].color }}>{m.name}</span>{" "}
                   <span className="dim small">Lv {m.level}{m.retellings ? ` · retold ×${m.retellings}` : ""}</span>
                 </div>
-                <div className="dim small">{ready ? `Worth ${earn}✨ now` : `Ready at level 21`}</div>
+                <div className="dim small">{ready ? `Worth ${earn}✨ to the guild + ${earn}♪ Encores to the teller` : `Ready at level 21`}</div>
               </div>
               {confirm === m.id
                 ? <div className="drow">
@@ -1010,6 +1042,19 @@ function GuildHall({ g, send, confirm, setConfirm, lock, lockOf }) {
           </div>
         );
       })}
+      {legaciesMaxed(g) && (() => {
+        const rank = g.ascension || 0, cost = ascendCost(rank);
+        return (
+          <div className="skrow">
+            <div>
+              <div>♾️ The Eternal Saga <span className="dim small">rank {rank}</span></div>
+              <div className="dim small">Every legacy is told; the Saga goes on. +{(ASC_PER_RANK * 100).toFixed(1)}% damage, healing, and HP per rank — forever{rank ? ` (now +${(rank * ASC_PER_RANK * 100).toFixed(1)}%)` : ""}.</div>
+            </div>
+            <button className="mini" disabled={!!lock || g.renown < cost}
+              onClick={() => send({ a: "ascend" })}>{cost}✨</button>
+          </div>
+        );
+      })()}
       {(g.hall || []).length > 0 && <>
         <div className="coshead pad">🏛️ Hall of Legends</div>
         {[...g.hall].reverse().map((r) => {

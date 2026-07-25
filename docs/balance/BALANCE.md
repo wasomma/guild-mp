@@ -125,7 +125,7 @@ hero level → personal retell → renown → legacy upgrades → everything ↑
 |---|---|---|
 | Party wipe | stage → just after the last defeated King (`max(chapterStart, floor((stage−1)/5)×5 + 1)`), momentum → 0, party revives at 60% HP | everything else (no gold loss) |
 | Chapter end (automatic at stage 20) | stage → 1 + 2×(Veteran Paths rank); potion charges **set** to base + 2×(Stipend rank) — leftovers don't bank, hoards convert down | **every character** (levels, gear, skills), gold, renown, legacy ranks, cosmetics, Hall of Legends, daily quests, `everBest` |
-| Personal retell (level 21+, per player) | that hero → level 1, no gear, no skills, no XP | everyone else entirely; the hero's cosmetics, style, autoSkill, and retelling count |
+| Personal retell (level 21+, per player) | that hero → level 1, no gear, no skills, no XP | everyone else entirely; the hero's cosmetics, style, autoSkill, retelling count, crates, Encores, and pity counter |
 | Server restart | nothing (SQLite) | everything |
 
 The practical consequence: **gold and characters now flow across chapters.** Nothing evaporates at a chapter end — the only reset a player ever loses progress to is the one they choose for their own hero, priced in renown.
@@ -141,17 +141,36 @@ The practical consequence: **gold and characters now flow across chapters.** Not
 
 ### Sinks
 
-- **Cosmetics** (the long-horizon sink, and as of v0.1.34 the only one): prices run from 60g accents to the 4,000g Golden Aura — hats to 1,600g, capes to 1,400g, pets to 2,000g, auras 1,800–4,000g, weapon skins to 680g, plus outfits, hairstyles, colors, and accessories. Purchases are per-character and permanent.
-- **Potions are no longer a gold sink** (v0.1.34, Phase 3): they are **per-chapter charges** — the feast sets stock to base + 2×(Alchemist Stipend rank) (heal base 3, others 1) and nothing refills it mid-chapter. The `buyPotion` intent is gone. Gold could always outbuy danger (the live guild's 62M made sustain infinite); scarcity is what makes a potion a decision. All still auto-consume (toggleable per type).
+- **Gold Keys** (v0.1.37, Phase 6 — the one gold sink, permanent and infinite): opening a Chronicle Crate takes a Key priced `round(250 × (n+1)^1.5 / 10) × 10` gold, where `n` = keys the world has EVER cut (`g.keysCut`, persisted, never resets). Key #1 = 250g, #10 ≈ 9.1k, #50 ≈ 91k, #100 ≈ 254k. Polynomial (not exponential) so income growth — kill gold rides plain threat — keeps late keys attainable forever: the sink throttles but never walls off. Measured (economy-model, fresh trinity, seed 20260725): chapter 1 pays ~11k gold and a greedy guild cuts ~6 keys; by chapter 8 income is ~94k/chapter against a 35k next-key — the sink absorbs essentially all surplus while crates (4 Kings/chapter) stay the real rate limiter. Run `node scripts/balance/economy-model.mjs` to re-measure.
+- **The cosmetics shop is CLOSED** (v0.1.37): the `cosmetic` intent equips owned pieces only. Item `price` fields remain in the catalogs as historical reference; acquisition is crates-only (see the Chronicle Crates section).
+- **Potions are not a gold sink** (v0.1.34, Phase 3): they are **per-chapter charges** — the feast sets stock to base + 2×(Alchemist Stipend rank) (heal base 3, others 1) and nothing refills it mid-chapter. The `buyPotion` intent is gone. Gold could always outbuy danger (the pre-reset live guild's 88M made sustain infinite); scarcity is what makes a potion a decision. All still auto-consume (toggleable per type).
 
-There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys looks only. Skill points auto-assign by default along the style's scripted recommended-path build (idle-first; see the talent trees under Outgoing damage); resetting reclaims every rank and the path choice and switches that character to manual assignment until auto is turned back on. A style change refunds path points but keeps the trunk.
+There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys keys only. Skill points auto-assign by default along the style's scripted recommended-path build (idle-first; see the talent trees under Outgoing damage); resetting reclaims every rank and the path choice and switches that character to manual assignment until auto is turned back on. A style change refunds path points but keeps the trunk.
+
+## Chronicle Crates, Gold Keys, and Encores (Phase 6, v0.1.37)
+
+Three currencies, three jobs: **gold** (shared) buys Keys, **renown** (shared) buys legacies then ascension, **Encores** (per-player) commission crates and reward personal milestones.
+
+- **Crate drops**: every King kill grants one crate per party member (`m.crates`, cap 12 — overflow converts to 3 Encores). The day's first King pays each player +3 Encores (`m.kingDay` UTC-day stamp).
+- **Opening** (`doOpenCrate`, the single path both codebases share; all RNG at intent time, never in `tick`, so seeded sweeps stay comparable): pay a Gold Key (shared gold, escalating — see Sinks), 30 Encores for a held crate, or 40 Encores to **commission** one outright (no held crate needed).
+- **The rarity ladder** (`COS_TIERS`): Folk 50% / Ballad 26% / Saga 15% / Legend 7% / Myth 2%. Every priced cosmetic carries a `tier`; spawn stock (free identity picks, class outfits you start with) is tierless and never drops. Tier populations at launch: Folk 18, Ballad 18, Saga 8, Legend 9, Myth 9 (the kitsune set, Foxfire hair, Nine-Tails, Golden + Starfire auras, plus the three v0.1.37 pieces: Aurora Veil aura, Emberling pet, Starweave Mantle cape).
+- **Dupe protection**: the roll picks an unowned item within the rolled tier; a fully-collected tier converts to Encores instead (Folk 2 / Ballad 4 / Saga 8 / Legend 15 / Myth 30).
+- **Pity** (`m.pity`, persisted per character): 35 opens without a Myth make the next open a guaranteed Myth; any Myth resets the counter.
+- **Encore income**: a retell pays the teller `renownEarn(level) × mutator` Encores — the exact figure the guild pool receives (one curve, maximum legibility; this is the retell loop's personal incentive, closing the old hole where the cost was personal but the reward purely communal). Each completed daily contract pays +2 to every member in voice; the day's first King +3.
+
+## The Eternal Saga (renown ascension, v0.1.37)
+
+Once every legacy is maxed (144 renown lifetime), the `ascend` intent opens an infinite track: rank `n+1` costs `ceil(2 × (n+1)^1.9)` renown (2, 8, 16, 28... rank 10 ≈ 159, rank 30 ≈ 1,273) and every rank multiplies the whole guild's damage, healing, and max HP by +0.5% (`ASC_PER_RANK`, applied in `stats()` beside the legacy multipliers). Steeply superlinear on purpose: the drip (9–13/chapter) buys early ranks, high-level retells (level 60 → 32, level 200 → ~440) buy the deep ones. Ascension touches combat power, so any retune here re-runs the multi-seed sweep; the sanctioned lever if group TTK slips out of band is another `bossTier` cap bump (the v0.1.36 precedent).
+
+**The v0.1.37 alpha reset**: deployed with `scripts/reset-alpha.mjs` (owner decision 2026-07-25) — every hero to level 1 with spawn wardrobe, gold 150, renown 0, legacies zeroed, everBest 1. Kept: the Hall of Legends, the chapter count (1,888), retelling counts, and all identity picks. The pre-reset live figures quoted in older docs (62–88M gold, 36.6k renown, levels 73–601) are historical.
 
 ## Renown
 
 - **Earned at each chapter end**: `floor((stage − 1)^1.12 / 3)` at the fixed finale stage 20 = **9 renown**, multiplied by the chapter mutator's bonus (×1.25 or ×1.5; chapter 1 has no mutator) — a steady drip per 20-stage cycle.
 - **Earned at a personal retell**: the same curve on the hero's level — `floor((level − 1)^1.12 / 3)`, mutator-multiplied (level 21 → 9, level 40 → 20, level 60 → 32). The superlinear exponent rewards leveling higher before cashing in; since heroes persist across chapters, level — not stage — is now the unbounded axis.
 - **Earned from quests**: +2 (kill/gold/level-up), +3 (elite), +4 (boss) per completed contract — a slow drip that matters early.
-- **Spent on legacy upgrades**, costing `(rank + 1) × 2` renown per rank (2, 4, 6, 8, 10 — 30 total to max a 5-rank track):
+- **Spent on legacy upgrades** (below), and past them on **Eternal Saga ranks** (see the Phase 6 section) — renown never saturates.
+- Legacy ranks cost `(rank + 1) × 2` renown per rank (2, 4, 6, 8, 10 — 30 total to max a 5-rank track):
 
 | Upgrade | Effect per rank | Max |
 |---|---|---|
@@ -314,7 +333,7 @@ Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes
 
 ## Tuning knobs, by location
 
-All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`, and the Phase 5 `TALENTS` trees: node `fx` values, keystone `cd`s, and the keystone coefficients in `castKeystone`; the auto-assign order lives in `talentPlan`); potion charge baselines in `endChapter`'s refill (and `newWorld`'s starting stock); cosmetics prices in their lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`, and the Phase 5 `TALENTS` trees: node `fx` values, keystone `cd`s, and the keystone coefficients in `castKeystone`; the auto-assign order lives in `talentPlan`); potion charge baselines in `endChapter`'s refill (and `newWorld`'s starting stock); cosmetic tiers in their lists and the crate economy in `COS_TIERS`/`keyPrice`/`PITY_AT`/`doOpenCrate` (Encore rates: `OPEN_ENC`/`COMMISSION_ENC`/`DAILY_ENC`/`KING_DAY_ENC`); the ascension track in `ascendCost`/`ASC_PER_RANK`; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
 
 To re-measure after any of these, drive the sim headlessly: build a world,
 `joinVoice` N members, `tick` at 1/20s, and record per cleared stage the combat

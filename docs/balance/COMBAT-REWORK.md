@@ -1,9 +1,9 @@
 # Combat & Damage Rework — Design Plan
 
-Status: **Phases 0–5 SHIPPED** (all 2026-07-25, v0.1.31–v0.1.36); Phase 6
-(economy endgame) designed in outline, not started. This document is
-the source of truth for the rework's goals, decisions, and phase plan. When a phase
-ships, update this file and BALANCE.md together.
+Status: **ALL PHASES SHIPPED** — Phases 0–5 (2026-07-25, v0.1.31–v0.1.36)
+and Phase 6, the economy endgame (2026-07-25, v0.1.37). The rework is
+complete. This document is the source of truth for the rework's goals,
+decisions, and phase plan; numbers live in BALANCE.md.
 
 ## Goal
 
@@ -249,37 +249,58 @@ codebases.
   IDENTICAL, trinity 79s vs 76s, solo DPS 431s/17 vs 423s/16 (noise), solo
   healer improved 1441s → 327s to the first King. Keystones arrive at level
   ~17, so hour one is untouched by design.
-- **Phase 6 — Economy endgame (owner-proposed 2026-07-25; design agreed in
-  outline, not yet started).** Fixes long-horizon currency saturation: the
-  live guild maxed every legacy ages ago (renown is a dead drip) and gold's
-  only sink is a finite cosmetics catalog (62M banked).
-  - **Boss crates + gold keys**: Kings drop cosmetic crates; opening one
-    takes a key bought with gold at escalating prices — the permanent
-    veteran gold sink. Crate contents roll a cosmetic/pet rarity ladder:
-    the existing catalog becomes the lower tiers, with new higher tiers
-    (names TBD) added as chase items. CS-style odds, but with a **pity
-    system** for the top tier — everything is play-earned, so there is no
-    reason to import real-money misery mechanics.
-  - **A NEW per-player premium currency** (name TBD) buys crates directly
-    (second acquisition path) and funds pity. Earned through personal
-    milestones — above all **retells** (scaled by the level sacrificed),
-    plus dailies/boss firsts. This deliberately fixes the retell loop's
-    personal-incentive hole (cost is personal, renown reward was communal)
-    and keeps the crate economy off the shared pools. **Decision recorded:
-    renown was considered and rejected as the premium currency** — it is a
-    shared pool (gambling it is a social incident), it buys guild power
-    (progression trap for young guilds), and loop legibility wins with
-    three currencies / three jobs.
-  - **Renown endgame**: an infinite **ascension track** past the maxed
-    legacies with steeply superlinear costs — the same trick that keeps
-    level meaningful forever keeps renown meaningful forever.
-  - **Open owner decisions**: tier names; whether launch seeds the top
-    tiers by reclassifying current showpieces (auras, Nine-Tails, the
-    Kitsune set) versus classifying everything current as common/uncommon
-    and authoring all higher tiers new (note: every cosmetic is hand-drawn
-    canvas code in BOTH renderers — new tiers are primarily an art
-    project); premium-currency name and exact earn rates; crate/key
-    pricing curves and odds tables.
+- **Phase 6 — Economy endgame. ✅ DONE (v0.1.37, 2026-07-25).** Fixes
+  long-horizon currency saturation: the live guild had maxed every legacy
+  (renown a dead drip) and gold's only sink was a finite cosmetics catalog
+  (87.9M banked at design time — read live off the DB, ahead of the 62M
+  the docs recorded).
+  **Owner decisions (2026-07-25, one-at-a-time sign-off):**
+  1. **Rarity tiers: Folk / Ballad / Saga / Legend / Myth** — story-form
+     names over reusing the gear ladder, keeping the two ladders visually
+     and verbally distinct.
+  2. **Full alpha fresh start at deploy** (`scripts/reset-alpha.mjs`):
+     heroes to level 1, gear/currencies/wardrobes cleared; the Hall of
+     Legends, chapter count, retelling counts, and identity picks kept.
+     Chosen over currency-only resets so drop-rate experimentation runs
+     against an empty catalog (the live DB showed the three most active
+     vets already owned essentially every showpiece). Seeding: existing
+     catalog reclassified across all five tiers (showpieces — the kitsune
+     set, Nine-Tails, Golden/Starfire auras — to Myth) PLUS three new
+     hand-drawn Myth pieces in both renderers (Aurora Veil aura, Emberling
+     pet, Starweave Mantle cape).
+  3. **Premium currency: "Encores"**, per-player. A retell pays the teller
+     `renownEarn(level) × mutator` — the exact figure the guild pool gets
+     (one curve, legible). Dailies +2 per player in voice; the day's first
+     King +3. Spends: open a held crate 30, commission a crate 40.
+     (Renown as the premium currency was considered and REJECTED — shared
+     pool, buys guild power, three-currencies legibility wins.)
+  4. **Key curve `250 × (n+1)^1.5`** (world-lifetime counter, polynomial so
+     income growth keeps late keys attainable); **odds 50/26/15/7/2** with
+     **Myth pity at 35** (per-player, persisted).
+  **Shipped in both sims**: `COS_TIERS` + per-item `tier` fields;
+  `doOpenCrate` (the single roll path — pity, weighted tier roll, unowned-
+  first grant, full-tier Encore conversion; ALL rolls at intent time, never
+  in tick, so seeded sweeps stay comparable); King kills drop a crate per
+  member (cap 12, overflow → Encores); the cosmetics shop CLOSED (the
+  `cosmetic` intent equips only); the Eternal Saga ascension track
+  (`ascend` intent, gated on maxed legacies, `ceil(2×(n+1)^1.9)` renown,
+  +0.5% dmg/heal/HP per rank in `stats()`); Trove UI in both wardrobes
+  (crates, key price, odds table, pity meter) and the Saga row in both
+  guild halls; `openCrate`/`commissionCrate` (member) + `ascend` (guild)
+  gated in auth.js; persistence via guarded ALTERs (characters: crates,
+  encores, pity, king_day; worlds: keys_cut, ascension) + snapshot fields
+  `keysCut`/`ascension` on the App.jsx copy list. The parked **mastery
+  talent sink stays deferred** (owner-ratified): three new infinite sinks
+  are enough for one release, and mastery would perturb the fresh Phase 5
+  combat tuning.
+  **Measured v0.1.37**: the sweep is numerically IDENTICAL to v0.1.36
+  (same seed, both fixtures — combat provably untouched at ascension 0);
+  13 new economy tests (55 total); `scripts/balance/economy-model.mjs`
+  models the key drain — fresh trinity: ~11k gold/chapter 1 (first key
+  250g inside the first session) growing to ~94k/chapter by chapter 8
+  against a 35k next-key, the sink absorbing all surplus while crates
+  (4 Kings/chapter) stay the true rate limiter. Neither an afternoon nor
+  a no-op.
 
 Every phase honors the cardinal rule (identical diffs into
 `prototype/guild-idle.jsx`), re-runs the sweep, gets a doc sweep
