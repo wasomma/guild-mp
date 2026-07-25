@@ -141,7 +141,7 @@ The practical consequence: **gold and characters now flow across chapters.** Not
 
 ### Sinks
 
-- **Gold Keys** (v0.1.37, Phase 6 — the one gold sink, permanent and infinite): opening a Chronicle Crate takes a Key priced `round(250 × (n+1)^1.5 / 10) × 10` gold, where `n` = keys the world has EVER cut (`g.keysCut`, persisted, never resets). Key #1 = 250g, #10 ≈ 9.1k, #50 ≈ 91k, #100 ≈ 254k. Polynomial (not exponential) so income growth — kill gold rides plain threat — keeps late keys attainable forever: the sink throttles but never walls off. Measured (economy-model, fresh trinity, seed 20260725): chapter 1 pays ~11k gold and a greedy guild cuts ~6 keys; by chapter 8 income is ~94k/chapter against a 35k next-key — the sink absorbs essentially all surplus while crates (4 Kings/chapter) stay the real rate limiter. Run `node scripts/balance/economy-model.mjs` to re-measure.
+- **Gold Keys** (v0.1.37, Phase 6 — the one gold sink, permanent and infinite): opening a Chronicle Crate takes a Key priced `round(250 × (n+1)^1.5 / 10) × 10` gold, where `n` = keys the world has EVER cut (`g.keysCut`, persisted, never resets). Key #1 = 250g, #10 = 7,910g, #50 = 88,390g, #100 = 250,000g. Polynomial (not exponential) so income growth — kill gold rides plain threat — keeps late keys attainable forever: the sink throttles but never walls off. Measured (economy-model, fresh trinity, seed 20260725): chapter 1 pays ~11k gold and a greedy guild cuts ~6 keys; by chapter 8 income is ~94k/chapter against a 35k next-key — the sink absorbs essentially all surplus while crates (4 Kings/chapter) stay the real rate limiter. Run `node scripts/balance/economy-model.mjs` to re-measure.
 - **The cosmetics shop is CLOSED** (v0.1.37): the `cosmetic` intent equips owned pieces only. Item `price` fields remain in the catalogs as historical reference; acquisition is crates-only (see the Chronicle Crates section).
 - **Potions are not a gold sink** (v0.1.34, Phase 3): they are **per-chapter charges** — the feast sets stock to base + 2×(Alchemist Stipend rank) (heal base 3, others 1) and nothing refills it mid-chapter. The `buyPotion` intent is gone. Gold could always outbuy danger (the pre-reset live guild's 88M made sustain infinite); scarcity is what makes a potion a decision. All still auto-consume (toggleable per type).
 
@@ -149,7 +149,7 @@ There is no gold cost on respec, skill points, or style changes — builds are f
 
 ## Chronicle Crates, Gold Keys, and Encores (Phase 6, v0.1.37)
 
-Three currencies, three jobs: **gold** (shared) buys Keys, **renown** (shared) buys legacies then ascension, **Encores** (per-player) commission crates and reward personal milestones.
+Three currencies, three jobs: **gold** (shared) buys Keys, **renown** (shared) buys legacies then ascension, **Encores** (per-player) commission crates and reward personal milestones. The player-facing reference — full odds table, pity math, per-tier item lists, key price ladder — is `ODDS-TABLE.md` (this folder).
 
 - **Crate drops**: every King kill grants one crate per party member (`m.crates`, cap 12 — overflow converts to 3 Encores). The day's first King pays each player +3 Encores (`m.kingDay` UTC-day stamp).
 - **Opening** (`doOpenCrate`, the single path both codebases share; all RNG at intent time, never in `tick`, so seeded sweeps stay comparable): pay a Gold Key (shared gold, escalating — see Sinks), 30 Encores for a held crate, or 40 Encores to **commission** one outright (no held crate needed).
