@@ -1,11 +1,14 @@
 // Nearest-neighbour zoom of a region, for eyeballing surgery targets.
-//   node scripts/art/zoom.mjs <in> <out> <x> <y> <w> <h> [scale]
+//   node scripts/art/zoom.mjs <in> <out> <x> <y> <w> <h> [scale] [nogrid]
+// The 10px red grid is a working aid — pass "nogrid" for a clean crop to
+// show the owner.
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 const require = createRequire(process.cwd() + "/package.json");
 const { PNG } = require("pngjs");
 
-const [inF, outF, x0, y0, w, h, s] = process.argv.slice(2);
+const [inF, outF, x0, y0, w, h, s, gridArg] = process.argv.slice(2);
+const GRID = gridArg !== "nogrid";
 const S = Number(s) || 8;
 const src = PNG.sync.read(readFileSync(inF));
 const X = +x0, Y = +y0, W = +w, H = +h;
@@ -20,7 +23,7 @@ for (let y = 0; y < dst.height; y++)
     dst.data[di + 2] = inside ? src.data[si + 2] : 0;
     dst.data[di + 3] = inside ? src.data[si + 3] : 0;
     /* 10px grid: tint the first row/col of every tenth source pixel */
-    if (inside && ((sx % 10 === 0 && x % S === 0) || (sy % 10 === 0 && y % S === 0))) {
+    if (GRID && inside && ((sx % 10 === 0 && x % S === 0) || (sy % 10 === 0 && y % S === 0))) {
       dst.data[di] = 255; dst.data[di + 1] = 0; dst.data[di + 2] = 0; dst.data[di + 3] = 255;
     }
   }
