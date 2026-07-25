@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.41 — 2026-07-25
+
+The overlay menu is now **vertically centered** over the game view instead of hugging the top — same three-quarter height, with the world showing above and below. Client-only.
+
 ## v0.1.40 — 2026-07-25
 
 **A shorter menu and a politer crypt.** Two owner-requested touches from live testing.

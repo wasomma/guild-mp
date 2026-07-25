@@ -1158,7 +1158,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .creator .confirm { border-color: #7fd069; color: #b9e8a8; }
 canvas { width: 100%; display: block; image-rendering: pixelated; background: #000; }
 .menubtn { padding: 2px 10px; }
-.menuwin { position: absolute; inset: 10px 10px auto 10px; height: 75%; z-index: 5; display: flex; flex-direction: column; overflow: hidden;
+.menuwin { position: absolute; inset: 0 10px; height: 75%; margin: auto 0; z-index: 5; display: flex; flex-direction: column; overflow: hidden;
   background: rgba(13,11,22,0.95); border: 1px solid #3a3550; border-radius: 10px; }
 .menutabs { display: flex; gap: 4px; padding: 8px 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #2b2740; background: #131022; }
 .menutabs .spacer { flex: 1; }
