@@ -13,7 +13,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 ## Reading the screen
 
 - **Left sidebar** — the party: a card for each person currently in voice, with class, level, HP, and XP. Click a card to open their character sheet.
-- **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, zone, the active mutator, guild gold 🪙, and renown ✨. Below that, three tabs that open as right-side panels: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
+- **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, ⚔️ threat (how hard the foes ahead are — see below), zone, the active mutator, guild gold 🪙, and renown ✨. Below that, three tabs that open as right-side panels: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
 - **Right edge** — the **boss timeline**: the next ten Kings and how many waves remain before each.
 - **Character column** — clicking a party card opens it on the far right, with four tabs: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe** — plus the **🪞 Appearance** button that reopens the character creator.
 - **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵), this guide (❓ How to play), and the Discord login.
@@ -34,11 +34,15 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 Combat is fully automatic: the party attacks, heals, dodges, crits, and casts ultimates on its own. Waves of enemies come in a rhythm:
 
-- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone). Kings telegraph big special attacks with a wind-up — a Tank's stun can **interrupt** them — and grow more dangerous as their health drops. A King always rises to meet the party: he fights at least at the strength of your highest-level hero, however early the wave.
+- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone). Kings telegraph big special attacks with a wind-up — a Tank's stun can **interrupt** them — and grow more dangerous as their health drops.
 - **Two waves before each boss** an **elite** appears: tougher, meaner, better loot.
 - The world cycles through four zones — Verdant Fields, Gloomwood, Forgotten Crypt, Emberdeep — every five waves.
 
 If a hero falls, they lie there until the fight ends (or a Phoenix Draught revives them). If the whole party wipes, the survivors regroup a wave back — no permanent loss, ever.
+
+**The world rises to meet you.** Enemies aren't built from the wave number alone — they're built from **Threat**, shown next to the wave. Threat counts how deep the guild has pushed across *every* chapter it has told, and never drops below your heroes' own level. That's why a fresh chapter doesn't hand you twenty easy waves: your heroes kept everything they earned, so the world keeps pace.
+
+**It also counts heads.** A full guild draws a bigger warband — more foes, sturdier ones — while a lone hero meets a pair rather than a mob, and faces a King cut down to something one sword can actually fell. If nobody in the party can heal, the world hits softer to compensate. Bringing a Healer is still far and away the better answer.
 
 **Chorus of Courage.** Every voice in the channel past the first empowers the whole party: +4% damage and healing, +3% max HP, stacking up to 9 times. Being together literally makes everyone stronger.
 
@@ -61,7 +65,7 @@ The Guild Hall board posts **three contracts each day** — slay foes, defeat el
 
 The campaign runs in **Chapters**, and a chapter ends itself: when the party fells the **wave 20 King** — the fourth King, closing the full tour of all four zones — the guild hall doors swing wide, a **feast** breaks out (mugs clink, a jig plays, and every equipped pet piles onto the corner rug to play — cats groom, pups roll, drakes puff embers, slimelets bounce, moon owls hoot with a full head-turn, wisps shine), the guild earns **✨ renown**, and a new chapter begins from wave 1. No votes, no buttons — just fight your way to the finale.
 
-- **Heroes keep their levels, gear, and skills** across chapters. Only the world resets; you march into the new chapter as strong as you left the old one.
+- **Heroes keep their levels, gear, and skills** across chapters. Only the wave counter resets; you march into the new chapter as strong as you left the old one — and the world is correspondingly deeper, so each tale you tell begins harder than the last. Watch the Threat number: it never goes back to the beginning.
 - The feast also **restocks the pantry** — potion stocks are topped up to the guild's baseline.
 - From Chapter 2 on, each chapter carries a **mutator** — a twist like tougher bosses or faster ultimates — shown as a pill in the header, and worth bonus renown at the chapter's end.
 - Every finished chapter is enshrined as a plaque in the **Hall of Legends**: its mutator, MVP, heroes, and uniques, forever.
@@ -85,6 +89,8 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Enter/leave the world | Join/leave the Discord voice channel |
 | Control your hero | Log in with Discord |
 | Boss waves | Every 5th wave (elite on the 3rd) |
+| Difficulty | ⚔️ Threat, not the wave number: how deep the guild has ever pushed, never below your heroes' level |
+| Party size | More heroes draws a bigger, sturdier warband; a lone hero meets fewer and lighter foes |
 | Skill points | +1 per level, auto-assigned (reset for manual) |
 | Respec class/style | Free, in the Skills tab |
 | Loot | Auto-equips upgrades, salvages the rest |

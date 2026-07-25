@@ -383,6 +383,9 @@ function hpBar(ctx, x, y, w, ratio, color) {
   ctx.fillStyle = color; ctx.fillRect(x - w / 2, y, Math.max(0, w * ratio), 4);
 }
 
+/* four-way stamp that outlines the big damage callouts */
+const FLOAT_OUTLINE = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
 /* ===== high-detail character rendering on a 2px texel grid ===== */
 const P2 = 2;
 function px2(ctx, ox, oy, x, y, w, h, c) {
@@ -3173,10 +3176,19 @@ export function draw(ctx, g, dt) {
     f.life -= dt; f.y -= 42 * dt; f.x += (f.vx || 0) * 60 * dt;
     if (f.life <= 0) { g.floaters.splice(i, 1); continue; }
     ctx.globalAlpha = Math.min(1, f.life * 1.6);
-    const pop = 1 + Math.max(0, f.life - 0.95) * 5;
+    /* Punch in over the first 0.2s, then settle. The window is measured from
+       each floater's own starting life — big ones live 1.6s and normal ones
+       1.15s, and the old fixed 0.95 threshold meant a crit spawned mid-pop at
+       roughly 55px of text sprawled across the stage. */
+    const pop = 1 + Math.max(0, f.life - (f.big ? 1.4 : 0.95)) * (f.big ? 4 : 5);
     ctx.font = `${Math.round((f.big ? 13 : 9) * pop)}px 'Press Start 2P', monospace`;
     ctx.textAlign = "center";
-    ctx.fillStyle = "#14122188"; ctx.fillText(f.text, f.x + 1, f.y + 1);
+    if (f.big) {
+      ctx.fillStyle = "#141221cc";
+      for (const [ox, oy] of FLOAT_OUTLINE) ctx.fillText(f.text, f.x + ox, f.y + oy);
+    } else {
+      ctx.fillStyle = "#14122188"; ctx.fillText(f.text, f.x + 1, f.y + 1);
+    }
     ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
     ctx.globalAlpha = 1;
   }

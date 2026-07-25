@@ -349,7 +349,10 @@ export function stats(m, g) {
     const it = m.gear[s]; if (!it) continue;
     if (s === "weapon") { dmg += it.power; heal += it.power * 0.8; }
     if (s === "armor") { hp += it.power * 4; armor += it.power * 0.25; }
-    if (s === "trinket") { dmg += it.power * 0.5; crit += it.power * 0.35; hp += it.power * 2; }
+    /* trinket crit is capped: at power*0.35 uncapped a single trinket pinned
+       the 60% ceiling on its own, which quietly made Precision, the Rogue's
+       +10 and the Archer/Warrior +5 worth exactly nothing */
+    if (s === "trinket") { dmg += it.power * 0.5; crit += Math.min(25, it.power * 0.35); hp += it.power * 2; }
     if (it.affixes) for (const a of it.affixes) {
       if (a.id === "ls") ls += a.v / 100;
       else if (a.id === "thorns") thorns += a.v / 100;
@@ -536,7 +539,9 @@ function rollAffixes(rarIdx) {
   return out;
 }
 function genLoot(g, uniqueChance) {
-  const stage = g.stage;
+  /* loot rides threat, not stage: gear that reset to chapter-1 power every
+     twenty stages was why progression flatlined after the first tale */
+  const stage = threatOf(g);
   if (uniqueChance && Math.random() < uniqueChance) {
     const u = pick(UNIQUES);
     return {
@@ -585,24 +590,70 @@ function dropLoot(g, uniqueChance) {
   return { item, m, kept };
 }
 
+/* ---------------- threat: the real difficulty axis ----------------
+   `stage` restarts at 1 with every chapter while heroes keep their levels,
+   gear, and legacy ranks, so after the first tale it stops describing how
+   hard anything is. Threat is the number enemies are actually built from:
+   how deep the guild has pushed across all its tales, floored by the party's
+   own level so a chapter reset can never hand out free stages. The old
+   boss-only level floor was the stopgap version of this. */
+export const CHAPTER_DEPTH = 8;
+export const FLOOR_SLACK = 10;
+export function threatOf(g) {
+  const told = g.stage + (g.prestiges || 0) * CHAPTER_DEPTH;
+  let top = 0;
+  for (const m of g.members) if (m.level > top) top = m.level;
+  /* The level floor keeps a chapter reset from handing out free stages, but
+     it is deliberately capped. Uncapped it feeds back on itself: a party that
+     wipes still earns XP from what it did kill, levels up, and so raises the
+     very threat that just beat it — measured as a solo hero spiralling to
+     level 211 and 1,154 wipes in a single chapter. With the cap, losing a
+     stage genuinely lowers the pressure again. */
+  return Math.max(1, told, Math.min(top, told + FLOOR_SLACK));
+}
+/* Heroes gain level growth AND gear power at once, so their damage climbs
+   faster than any straight line. Enemy bulk and bite follow the same gentle
+   curve, which is what keeps a King a King forty stages deep. */
+const DIFF_EXP = 1.18;
+export const threatCurve = (t) => Math.pow(Math.max(1, t), DIFF_EXP);
+/* A warband, not a wall: every extra voice adds bodies to the far side
+   (see spawnEncounter) plus this sublinear bulk bump. Per-enemy bite rises
+   far more gently than bulk, because a bigger guild brings more tanks to
+   spread the autos across and more healers to mend them. */
+export const crowdMul = (g) => {
+  /* a lone hero brings one sword to a pack the curve assumes two will meet,
+     so foes come lighter as well as fewer (see the ceiling in spawnEncounter) */
+  if (g.members.length <= 1) return 0.7;
+  return 1 + 0.22 * (g.members.length - 1);
+};
+export const crowdBite = (g) => 1 + 0.05 * Math.max(0, g.members.length - 1);
+/* A King is a single body: the whole party focuses it and no amount of extra
+   heroes splits its attention the way a pack does, so the flat x9 that suited
+   a trio made Kings unkillable for one or two heroes — the measured cause of
+   a lone hero wiping on every boss stage for a whole chapter. */
+export const bossTier = (g) => 9 * clamp(0.58 + 0.14 * g.members.length, 0.58, 1);
+/* Enemies pull their punches against a party with nobody to mend it. A lone
+   hero has no healer, no Sanctuary, and soaks every auto personally; without
+   this a solo tale was 90 wipes long while a full guild never wiped at all. */
+export const mercyMul = (g) => {
+  if (g.members.some((m) => m.cls === "healer")) return 1;
+  return g.members.length >= 3 ? 0.85 : 0.6;
+};
+
 function makeEnemy(g, tier) {
   const zone = zoneOf(g);
-  const s = g.stage;
+  const T = threatOf(g), curve = threatCurve(T);
   const boss = tier === "boss", elite = tier === "elite";
-  /* stopgap until the formal balance pass: the party outlevels the stage
-     after chapter resets, so Kings stat HP/damage against the highest level
-     in the party when it exceeds the stage; rewards stay on the real stage */
-  const sB = boss ? Math.max(s, ...g.members.map((m) => m.level)) : s;
-  const hp = Math.round((28 + sB * 15) * (boss ? 9 : elite ? 3.6 : 1) * rand(0.9, 1.1));
+  const hp = Math.round((28 + curve * 15) * (boss ? bossTier(g) : elite ? 3.6 : 1) * crowdMul(g) * rand(0.9, 1.1));
   const e = {
     id: g.uid++, kind: zone.enemy, boss, elite,
     scale: boss ? 1.8 : elite ? 1.35 : 1,
     name: boss ? `${zone.label} King` : elite ? zone.eliteLabel : zone.label,
     hp, maxHp: hp,
-    dmg: (4 + sB * 1.5) * (boss ? 1.9 : elite ? 1.4 : 1),
+    dmg: (4 + curve * 2.2) * (boss ? 1.9 : elite ? 1.4 : 1) * crowdBite(g) * mercyMul(g),
     spd: boss ? 2.0 : elite ? 1.8 : rand(1.5, 2.1),
-    xp: Math.round((9 + s * 3.2) * (boss ? 6 : elite ? 2.5 : 1)),
-    gold: Math.round((10 + s * 4) * (boss ? 8 : elite ? 3.5 : 1)),
+    xp: Math.round((9 + curve * 3.2) * (boss ? 6 : elite ? 2.5 : 1)),
+    gold: Math.round((10 + T * 4) * (boss ? 8 : elite ? 3.5 : 1)),
     x: 0, y: 0, atkT: rand(0.8, 1.8), lunge: 0, stunT: 0, hitT: 0,
     poison: 0, poisonT: 0, seed: Math.random() * 10,
   };
@@ -614,16 +665,27 @@ function makeEnemy(g, tier) {
   return e;
 }
 
+export const PACK_CAP = 8;
 function spawnEncounter(g) {
   g.enemies = [];
   const boss = g.stage % 5 === 0;
   const elite = !boss && g.stage % 5 === 3;
-  const tiers = boss ? ["boss"] : elite ? ["elite", "normal"] : Array(2 + Math.floor(Math.random() * 3)).fill("normal");
-  if (g.mutator === "horde" && !boss) tiers.push("normal");
+  /* Extra voices bring extra bodies: the party's tanks scale with headcount
+     too, so a bigger warband keeps the autos-per-tank ratio honest. */
+  const extra = Math.floor(Math.max(0, g.members.length - 1) / 2);
+  /* never field more foes than the party could plausibly face — a lone hero
+     meets a pair, not a mob */
+  const ceiling = clamp(Math.ceil(g.members.length * 1.5), 2, PACK_CAP);
+  const pack = clamp(2 + Math.floor(Math.random() * 3) + extra, 2, ceiling);
+  const tiers = boss ? ["boss"] : elite ? ["elite", ...Array(clamp(1 + extra, 1, ceiling - 1)).fill("normal")] : Array(pack).fill("normal");
+  if (g.mutator === "horde" && !boss && tiers.length < PACK_CAP) tiers.push("normal");
+  /* The enemy side of the stage is ~180px wide; spread the line to fit it
+     however many turn up, rather than marching the tail off-screen. */
+  const span = tiers.length > 1 ? Math.min(56, 180 / (tiers.length - 1)) : 0;
   tiers.forEach((tier, i) => {
     const e = makeEnemy(g, tier);
-    e.x = 440 + i * 56;
-    e.y = GROUND - (i % 2) * 10;
+    e.x = 440 + i * span;
+    e.y = GROUND - (i % 3) * 8;
     g.enemies.push(e);
   });
   g.phase = "combat";
@@ -643,7 +705,7 @@ function spawnEncounter(g) {
   }
   if (g.auto.poison && g.stock.poison > 0) {
     g.stock.poison--;
-    for (const e of g.enemies) { e.poison = 2 + g.stage * 0.7; e.poisonT = 8; }
+    for (const e of g.enemies) { e.poison = 2 + threatCurve(threatOf(g)) * 0.7; e.poisonT = 8; }
     addLog(g, "Poison Vial hisses across the enemy line.", "#7fd069");
     sfxEv(g, "potion");
   }
@@ -740,11 +802,16 @@ function hitEnemy(g, m, tgt, dmg, crit) {
     m.hp = Math.min(m._st.hp, m.hp + dmg * m._st.ls);
     if (Math.random() < 0.15) sparkle(g, m.x, m.y - 20, "#9fe88c", 2);
   }
-  tgt.hitT = 0.15;
+  /* How much of this foe the blow actually took. A chip and a third of a
+     King's health used to print the same size number, throw the same sparks
+     and kick the camera exactly as hard; now the spectacle tracks the hit. */
+  const share = Math.min(1, dmg / Math.max(1, tgt.maxHp));
+  const heavy = crit || share > 0.18;
+  tgt.hitT = heavy ? 0.22 : 0.15;
   sfxEv(g, crit ? "crit" : "hit");
-  burst(g, tgt.x - 6, tgt.y - 28 * (tgt.scale || 1), crit ? "#f2a94e" : "#ffffff", crit ? 10 : 5, crit ? 2 : 1.2);
-  if (crit) shakeFx(g, 3.5);
-  addFloat(g, tgt.x, tgt.y - 66 * (tgt.scale || 1), fmt(dmg) + (crit ? "!" : ""), crit ? "#f2a94e" : "#fff", crit);
+  burst(g, tgt.x - 6, tgt.y - 28 * (tgt.scale || 1), crit ? "#f2a94e" : "#ffffff", Math.round((crit ? 8 : 4) + 12 * share), crit ? 2 : 1.2);
+  if (heavy) shakeFx(g, 2.2 + 4 * share);
+  addFloat(g, tgt.x, tgt.y - 66 * (tgt.scale || 1), fmt(dmg) + (crit ? "!" : ""), crit ? "#f2a94e" : "#fff", heavy);
   if (m && m._st.stun > 0 && Math.random() < m._st.stun) { tgt.stunT = 1.1; addFloat(g, tgt.x, tgt.y - 84, "STUNNED", "#5aa9e6"); sfxEv(g, "stun"); }
   if (tgt.hp <= 0) killEnemy(g, m, tgt);
 }
@@ -796,7 +863,7 @@ export function endChapter(g) {
   sfxEv(g, "prestige");
   if (g.session) g.session.chapters++;
   if (g.session) g.session.best = Math.max(g.session.best, g.stage);
-  g.everBest = Math.max(g.everBest, g.stage);
+  g.everBest = Math.max(g.everBest, threatOf(g));
   /* enshrine the finished chapter in the Hall of Legends */
   const mvp = [...g.members].sort((a, b) => (b.dmgDone + b.healDone) - (a.dmgDone + a.healDone))[0] || null;
   g.hall = g.hall || [];
@@ -829,10 +896,20 @@ export function endChapter(g) {
 }
 
 
-/* ---------------- boss kings: specials and phases ---------------- */
+/* ---------------- taking a hit ---------------- */
+/* Armor soaks a share of the blow instead of subtracting a flat amount.
+   The old `raw - armor*0.6` turned into outright immunity the moment gear
+   power outran the stage's damage — a geared party measured zero damage
+   taken for whole chapters. The soak constant climbs with threat, so armor
+   holds its worth at every depth and can never reach a wall. */
+export function mitigate(g, m, raw) {
+  const armor = Math.max(0, m._st.armor + (g.buffT > 0 ? 6 : 0));
+  const soak = 30 + 4.5 * threatOf(g);
+  const cut = Math.min(0.75, armor / (armor + soak));
+  return Math.max(1, raw * (1 - cut) * (1 - m._st.dr));
+}
 function hurtMember(g, m, rawDmg, src) {
-  const armor = m._st.armor + (g.buffT > 0 ? 6 : 0);
-  const dmg = Math.max(1, rawDmg - armor * 0.6) * (1 - m._st.dr);
+  const dmg = mitigate(g, m, rawDmg);
   m.hp -= dmg;
   addFloat(g, m.x, m.y - 70, "-" + fmt(dmg), "#ef6461");
   if (src && src.hp > 0 && m._st.thorns > 0) {
@@ -850,7 +927,10 @@ function hurtMember(g, m, rawDmg, src) {
     sfxEv(g, "fall");
     if (g.session) g.session.deaths++;
   }
+  return dmg;
 }
+
+/* ---------------- boss kings: specials and phases ---------------- */
 function bossSpecial(g, e, alive) {
   const s = e.scale || 1;
   if (e.kind === "slime") {
@@ -990,6 +1070,10 @@ function questProg(g, kind, amt) {
 /* ---------------- fighting-style ultimates ---------------- */
 const ULT_CD = { paladin: 26, warrior: 24, archer: 25, rogue: 22, chain: 24, mystic: 26 };
 function castUlt(g, m, foes, alive) {
+  /* Re-filter: a teammate earlier in this same tick may already have felled
+     the foe this list was built from, and binding foes[0] blind spent a
+     26-second Judgment on a corpse for zero damage. */
+  foes = foes.filter((e) => e.hp > 0);
   if (!foes.length && m.style !== "mystic") return false;
   const st = m._st;
   const big = (txt, col) => addFloat(g, m.x, m.y - 92, txt, col, true);
@@ -1159,7 +1243,7 @@ export function tick(g, dt) {
   if (!foes.length) {
     if (g.stage % 20 === 0) { endChapter(g); return; }
     g.stage++; g.best = Math.max(g.best, g.stage);
-    g.everBest = Math.max(g.everBest, g.stage);
+    g.everBest = Math.max(g.everBest, threatOf(g));
     if (g.session) g.session.best = Math.max(g.session.best, g.stage);
     g.phase = "advance"; g.advanceT = 2.4; g.enemies = [];
     g.projectiles = []; g.pending = [];
@@ -1343,13 +1427,18 @@ export function tick(g, dt) {
     if (e.stunT > 0) { e.stunT -= dt; continue; }
     if (!e.boss) {
       const party = alive.filter((m) => m.alive);
+      /* Cleaves are per-enemy, so a big warband would otherwise carpet the
+         party non-stop. Stretch each mob's own cooldown by the size of the
+         pack it stands in: the party-wide cleave rate stays roughly fixed
+         however many bodies turn up. */
+      const packT = 1 + 0.5 * Math.max(0, foes.length - 2);
       if (e.cleaveWind > 0) {
         e.cleaveWind -= dt;
         e.atkT = Math.max(e.atkT, 0.4);
         if (Math.random() < dt * 30) sparkle(g, e.x, e.y - 24 * (e.scale || 1), "#ffb24a", 2);
-        if (e.cleaveWind <= 0) { enemyCleave(g, e, party); e.cleaveT = rand(6, 9); }
+        if (e.cleaveWind <= 0) { enemyCleave(g, e, party); e.cleaveT = rand(6, 9) * packT; }
       } else if (party.length >= 2) {
-        e.cleaveT = (e.cleaveT == null ? rand(4, 7) : e.cleaveT) - dt;
+        e.cleaveT = (e.cleaveT == null ? rand(4, 7) * packT : e.cleaveT) - dt;
         if (e.cleaveT <= 0) {
           e.cleaveWind = e.elite ? 0.5 : 0.4;
           sfxEv(g, "warn");
@@ -1363,11 +1452,12 @@ export function tick(g, dt) {
     const tanks = alive.filter((m) => m.cls === "tank" && m.alive);
     const tgt = tanks.length ? pick(tanks) : pick(alive.filter((m) => m.alive));
     if (!tgt) continue;
-    const armor = tgt._st.armor + (g.buffT > 0 ? 6 : 0);
-    let dmg = Math.max(1, e.dmg * rand(0.85, 1.15) - armor * 0.6) * (1 - tgt._st.dr);
-    tgt.hp -= dmg;
+    /* one incoming-damage path for autos, cleaves, and boss specials alike:
+       hurtMember owns mitigation, thorns, the death rites, and returns what
+       actually landed so the drinkers below know how much to drink */
+    const dmg = hurtMember(g, tgt, e.dmg * rand(0.85, 1.15), e);
     burst(g, tgt.x + 4, tgt.y - 30, "#ef6461", 4, 1.1);
-    if ((e.elite || e.frenzy) && e.kind === "bat") {
+    if ((e.elite || e.frenzy) && e.kind === "bat" && e.hp > 0) {
       const drain = dmg * (e.frenzy ? 0.4 : 0.6);
       e.hp = Math.min(e.maxHp, e.hp + drain);
       addFloat(g, e.x, e.y - 66 * (e.scale || 1), "+" + fmt(drain), "#c9506d");
@@ -1375,22 +1465,6 @@ export function tick(g, dt) {
       if (!e.drained) { e.drained = true; addLog(g, "The Dire Bat drinks deep of the party's blood!", "#c9506d"); }
     }
     if (e.boss) shakeFx(g, 3);
-    addFloat(g, tgt.x, tgt.y - 70, "-" + fmt(dmg), "#ef6461");
-    sfxEv(g, "hurt");
-    if (tgt.hp <= 0) {
-      tgt.alive = false; tgt.hp = 0; tgt.deadT = g.time;
-      burst(g, tgt.x, tgt.y - 24, "#7a7490", 14, 1.6);
-      shakeFx(g, 4);
-      addLog(g, `${tgt.name} has fallen!`, "#ef6461");
-      sfxEv(g, "fall");
-    if (g.session) g.session.deaths++;
-    }
-    if (tgt._st.thorns > 0 && e.hp > 0) {
-      const ref = dmg * tgt._st.thorns;
-      e.hp -= ref;
-      if (Math.random() < 0.3) addFloat(g, e.x, e.y - 60 * (e.scale || 1), "-" + fmt(ref), "#e77463");
-      if (e.hp <= 0) killEnemy(g, tgt, e);
-    }
   }
 }
 
@@ -1521,7 +1595,7 @@ export function snapshot(g, events) {
   return {
     type: "state",
     now: g.time,
-    stage: g.stage, best: g.best, everBest: g.everBest,
+    stage: g.stage, best: g.best, everBest: g.everBest, threat: threatOf(g),
     gold: g.gold, renown: g.renown, prestiges: g.prestiges,
     legacy: g.legacy, stock: g.stock, auto: g.auto,
     phase: g.phase, scroll: g.scroll, advanceT: g.advanceT, mutator: g.mutator,

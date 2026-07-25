@@ -2,6 +2,19 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.27 — 2026-07-24
+
+**The damage pass.** The formal balance pass BALANCE.md kept deferring. Fights had quietly stopped being fights: past the first chapter a party took *zero* damage for entire tales, Kings fell in under two seconds, and nine heroes had an easier time than one. All of it is measured, and all of it is fixed.
+
+- **Threat replaces stage as the difficulty axis.** Stage restarts at 1 every chapter while your heroes keep their levels, gear, and legacy ranks — so enemies are now built from how deep the guild has pushed across *every* tale, floored by the party's own level. Each 20-stage chapter starts deeper than the last: the loop is a ladder now, not a victory lap. Loot power and XP ride the same number, so gear no longer resets to chapter-one strength every twenty stages.
+- **A warband, not a wall.** Encounters scale to how many of you turn up — more foes for a full guild (up to eight, spread across the line instead of marching off the edge of the screen), fewer and lighter for a lone hero. Kings size themselves to the party too, because a King is one body that everyone focuses; the old flat health pool made them literally unkillable alone.
+- **Armor soaks, it no longer nullifies.** Armor used to subtract a flat amount, which turned into total immunity the moment your gear outgrew the stage — the direct cause of those zero-damage chapters. It now reduces a share of each blow, and that share holds its value at any depth.
+- **No healer, gentler foes.** A party with nobody to mend it takes noticeably softer hits. Soloing is still the hardest way to play, but it is no longer a wall of wipes.
+- **Fixed: a Paladin's Judgment could be spent on a corpse** — if an ally felled the target in the same instant, the ultimate vanished for zero damage after twenty-six seconds of charging.
+- **Fixed: crit chance was a dead stat.** A single trinket quietly pinned the 60% ceiling by itself, which made Precision, the Rogue's edge, and the Archer's and Warrior's crit bonuses worth nothing. The trinket's contribution is now capped.
+- **Damage reads better.** Numbers scale to how big the hit actually was — sparks, screen kick, and text size all follow the damage rather than looking identical for a scratch and a third of a King's health. Floaters no longer stack on top of each other in a crowded fight, and the big callouts carry a proper outline so they stay legible over a lit background. (Crit text was also rendering at roughly four times its intended size in the multiplayer client; the prototype was right.)
+- A **Threat** readout sits beside Stage in both builds.
+
 ## v0.1.26 — 2026-07-24
 
 **The feast turns to face you.** A polish release for the character creator and the mead hall:

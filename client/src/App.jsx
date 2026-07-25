@@ -107,6 +107,20 @@ function lerpEnts(prev, cur, a, keys) {
   });
 }
 
+/* Floaters used to land squarely on top of each other: a warband of eight
+   taking simultaneous hits stacked three numbers in one spot and none of them
+   read. Jitter sideways, then lift clear of any live floater already sitting
+   near that point, and keep the total bounded so a big fight stays a scene
+   rather than a wall of text. Mirrors addFloat in prototype/guild-idle.jsx. */
+const FLOAT_CAP = 42;
+function pushFloat(v, x, y, text, color, big) {
+  const fx = x + (Math.random() * 16 - 8);
+  let fy = y;
+  for (const o of v.floaters) if (o.life > 0.5 && Math.abs(o.x - fx) < 26 && Math.abs(o.y - fy) < 11) fy = o.y - 11;
+  v.floaters.push({ x: fx, y: fy, text, color, life: big ? 1.6 : 1.15, big: !!big, vx: (Math.random() - 0.5) * 0.3 });
+  if (v.floaters.length > FLOAT_CAP) v.floaters.splice(0, v.floaters.length - FLOAT_CAP);
+}
+
 export default function App() {
   const canvasRef = useRef(null);
   const sockRef = useRef(null);
@@ -115,7 +129,7 @@ export default function App() {
   const viewRef = useRef({
     members: [], enemies: [], projectiles: [], users: [], log: [],
     floaters: [], particles: [], shake: 0, time: 0, scroll: 0,
-    stage: 1, best: 1, everBest: 1, gold: 0, renown: 0, prestiges: 0,
+    stage: 1, best: 1, everBest: 1, threat: 1, gold: 0, renown: 0, prestiges: 0,
     legacy: { hymn: 0, banner: 0, merchant: 0, scholar: 0, head: 0, stipend: 0 },
     stock: {}, auto: {}, phase: "advance", bossT: 0, prestigeT: 0, buffT: 0,
     autoSim: false, connected: false,
@@ -161,7 +175,7 @@ export default function App() {
     const v = viewRef.current;
     for (const e of events) {
       if (e.t === "float") {
-        v.floaters.push({ x: e.x + (Math.random() * 16 - 8), y: e.y, text: e.text, color: e.color, life: e.big ? 1.6 : 1.15, big: e.big, vx: (Math.random() - 0.5) * 0.3 });
+        pushFloat(v, e.x, e.y, e.text, e.color, e.big);
       } else if (e.t === "burst") {
         for (let i = 0; i < e.n; i++) {
           const a = Math.random() * Math.PI * 2, sp = (e.spd || 1.2) * (0.4 + Math.random());
@@ -250,7 +264,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "threat", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -280,7 +294,10 @@ export default function App() {
           v.particles.push({ x: e.x + (Math.random() * 20 - 10), y: e.y - Math.random() * 10, vx: (Math.random() - 0.5) * 0.3, vy: -0.8 - Math.random() * 0.7, life: 0.4 + Math.random() * 0.4, color: Math.random() < 0.5 ? "#ff6a3a" : "#f2a94e", size: 2, grav: 0 });
         }
       }
-      v.shake = Math.max(0, v.shake - dt * 14);
+      /* 22/s in both builds: the client was decaying at 14 and the prototype
+         at 26, so the same fight felt mushy here and snappy there. A party
+         landing crits several times a second needs the kick to clear fast. */
+      v.shake = Math.max(0, v.shake - dt * 22);
       draw(ctx, v, dt);
     };
     raf = requestAnimationFrame(loop);
@@ -364,6 +381,7 @@ export default function App() {
                 <div className="wgroup">
                   <span>📖 Chapter {g.prestiges + 1}</span>
                   <span>🏰 Stage {g.stage}{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""}</span>
+                  <span title="How hard the foes ahead are built: how deep the guild has pushed across every tale, floored by the party's own level. Stage restarts each chapter; threat does not.">⚔️ Threat {g.threat}</span>
                   <span>🗺️ {zone.name}</span>
                   {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
                     <span key={mu.id} style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>

@@ -2,6 +2,46 @@
 
 This document explains the current state of the two coupled gameplay loops — **the economy** (gold, renown, XP) and **damage** (outgoing, incoming, and recovery) — with every number as it exists in the code today. The source of truth is `shared/sim.js`; the prototype (`prototype/guild-idle.jsx`) carries identical values per the cardinal rule in CLAUDE.md. If a number here disagrees with the sim, the sim wins and this file needs updating.
 
+## Threat: the axis everything hangs from
+
+`stage` restarts at 1 with every chapter while heroes keep their levels, gear,
+and legacy ranks, so on its own it stops describing how hard anything is. Every
+enemy is therefore built from **threat**, not stage:
+
+```
+threat = max( stage + chaptersCompleted × 8 ,  min(topPartyLevel, that + 10) )
+```
+
+Two terms, both deliberate. The first makes each 20-stage tale start deeper
+than the last, so the chapter loop is a ladder rather than a victory lap. The
+second is the old boss-only level floor, generalised to every enemy — but
+**capped ten above the tale depth**, because uncapped it feeds back on itself:
+a party that wipes still earns XP from what it did kill, levels up, and so
+raises the very threat that just beat it. (Measured: a solo hero spiralling to
+level 211 and 1,154 wipes inside one chapter.) With the cap, losing a stage
+genuinely lowers the pressure again.
+
+Bulk and bite both follow `threat^1.18` rather than a straight line, because
+heroes gain level growth *and* gear power at once. Rewards ride threat too —
+loot power, XP, and `everBest` — so progression can't flatline the way it did
+when gear reset to chapter-1 power every twenty stages.
+
+The party's size is the other input. Enemies arrive in bigger packs
+(`ceiling = ceil(members × 1.5)`, hard cap 8, so a lone hero meets a pair and
+never a mob) and carry `1 + 0.22 × (members − 1)` bulk, while per-enemy bite
+rises only `1 + 0.05 × (members − 1)` — a bigger guild brings more tanks to
+spread the autos over and more healers to mend them. Two adjustments keep the
+extremes honest: a party with **no healer** faces enemies that hit for ×0.6
+(×0.85 at three or more), and a **King's ×9 HP** scales down for small parties
+(`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
+the whole party focuses — no amount of extra heroes splits its attention the
+way a pack does, and a flat ×9 made Kings simply unkillable solo.
+
+Measured result, party sizes 1–9 across five chapters: normal fights run 3–12s,
+Kings 5–29s, a stage costs 7–30% of the party's health, and wipes are rare and
+concentrated in the first chapter. None of those numbers decay as chapters go
+by, which was the whole problem before.
+
 ## The shape of the loop
 
 Damage throughput drives everything downstream: kills pay gold and XP, gold buys potions (survival) and cosmetics (vanity), XP buys levels and skill points (more damage), and loot drops raise gear power (more damage again). That inner loop runs inside a chapter, and the chapter ends itself: felling the stage-20 King (the fourth King, one full tour of the four zones) triggers the feast, pays a fixed chapter renown, and restarts the world — heroes keep everything. The outer loop is personal prestige: a hero at level 21+ may "Retell their Tale," converting their level into **renown** for the guild pool, the only permanent currency, which buys **legacy upgrades** that multiply gold, XP, damage, and HP for every hero forever.
@@ -27,9 +67,9 @@ The practical consequence: **gold and characters now flow across chapters.** Not
 
 ### Sources
 
-- **Kills** — every enemy carries `(10 + stage×4) × tier` gold, tier being **×8 boss / ×3.5 elite / ×1 normal**. On the kill it is further multiplied by `(1 + 0.15 × Merchant Contacts rank)` and the killer's **gold find** affix total. The Gilded Road mutator multiplies base enemy gold by 1.4.
+- **Kills** — every enemy carries `(10 + threat×4) × tier` gold, tier being **×8 boss / ×3.5 elite / ×1 normal**. Gold is the one reward left on plain threat rather than the `threat^1.18` curve, so late chapters pay better without drowning the cosmetics sink. On the kill it is further multiplied by `(1 + 0.15 × Merchant Contacts rank)` and the killer's **gold find** affix total. The Gilded Road mutator multiplies base enemy gold by 1.4.
 - **Salvage** — a drop that doesn't beat the receiver's equipped power converts to `power × 2.5` gold.
-- **Quests** — each completed daily contract pays `(120 + everBest×22) × kind multiplier` (kill ×1, gold ×1.2, level-up ×1.3, elite ×1.6, boss ×2.2). Because it scales on `everBest` (best stage ever, across all chapters), quest income grows permanently as the guild's record improves.
+- **Quests** — each completed daily contract pays `(120 + everBest×22) × kind multiplier` (kill ×1, gold ×1.2, level-up ×1.3, elite ×1.6, boss ×2.2). Because it scales on `everBest` — now the deepest **threat** the guild has ever faced, not the stage number, which saturated at 20 the moment any chapter was cleared — quest income grows permanently as the guild pushes deeper.
 - **World start** — a brand-new world opens with 150g; chapter ends no longer touch gold.
 
 ### Sinks
@@ -57,7 +97,7 @@ There is no gold cost on respec, skill points, or style changes — builds are f
 
 ## XP and levels
 
-- Enemy XP: `(9 + stage×3.2) × tier` (×6 boss / ×2.5 elite / ×1 normal).
+- Enemy XP: `(9 + threat^1.18 × 3.2) × tier` (×6 boss / ×2.5 elite / ×1 normal). Riding the same curve as enemy bulk keeps kills-per-level roughly flat against the `level^1.35` cost.
 - On a kill, **every living member** receives `(XP ÷ aliveCount + XP × 0.4) × (1 + 0.15 × Scholars' Guild rank)`. Note the split: 40% of the enemy's XP is granted flat per member, so total XP awarded grows with party size while the per-head share shrinks only partially — big parties level everyone faster in aggregate.
 - Level cost: `xpNeed(level) = 26 × level^1.35`.
 - A level-up grants +1 skill point and heals 30% of max HP mid-fight.
@@ -87,7 +127,7 @@ A member's damage starts from class base + per-level growth, then multiplies thr
 
 Skills (5 ranks each): tanks take +8% HP / +4% damage reduction / +6% stun-on-hit per rank; DPS take +8% damage / +6% attack speed / +5% crit per rank; healers take +10% healing / 15% heal splash to party / +4% party max-HP aura per rank (aura uses the highest rank among living healers).
 
-Gear feeds in by slot: **weapon** adds its full power to damage (and ×0.8 to healing), **armor** adds power×4 to HP and power×0.25 to armor, **trinket** adds power×0.5 damage, power×0.35 crit, power×2 HP.
+Gear feeds in by slot: **weapon** adds its full power to damage (and ×0.8 to healing), **armor** adds power×4 to HP and power×0.25 to armor, **trinket** adds power×0.5 damage, power×2 HP, and crit **capped at +25**. That cap matters: uncapped at power×0.35 a single trinket pinned the 60% crit ceiling on its own, which quietly made Precision, the Rogue's +10 and the Archer/Warrior +5 worth exactly nothing.
 
 World-level multipliers stack on top: Battle Hymns (+10%/rank), the **Chorus of Courage** presence buff (+4% damage/healing and +3% HP per voice in the party beyond the first, capped at 9 stacks), and mutators (Chapter of Glass: ×1.35 damage / ×0.75 HP for both sides; Racing Moon: everyone attacks 20% faster).
 
@@ -110,14 +150,15 @@ Ults charge passively while alive over `ULT_CD` seconds (Rogue 22, Warrior/Chain
 
 Random affixes (value scales up with rarity): Vampiric 3–8% lifesteal, Bristling reflects 8–22%, Savage +15–45% crit damage, Gilded +8–28% gold find. Six teal **Uniques** carry fixed oversized affixes (e.g. Sunsplitter +90% crit damage, Midas Coil +50% gold find, Bristleking's Bulwark 45% thorns) at a 3.4× power multiplier.
 
-The Poison Vial adds `2 + stage×0.7` damage per second for 8s to the whole enemy pack at combat start.
+The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the whole enemy pack at combat start.
 
 ## Incoming damage
 
-- Enemy damage: `(4 + stage×1.5) × tier` (×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1). For **Kings only**, `stage` in this formula is `max(stage, highest level in the party)` — see the boss level floor below.
-- **Targeting is tank-focused**: autos pick a random living tank, falling back to anyone only when no tank stands. Tanks are the aggro system.
-- Mitigation: `max(1, raw − armor×0.6) × (1 − damage reduction)`. The Armor Elixir adds +6 armor for 12s at combat start.
-- **Cleaves** are the healer check: any non-boss enemy, when 2+ members are alive, winds up (0.4s, 0.5s elite — a visible telegraph) every ~4–9s and hits the *entire party* for ×0.5 of its damage (×0.7 elite). Tank-focus keeps autos survivable; cleaves force party-wide healing.
+- Enemy damage: `(4 + threat^1.18 × 2.2) × tier × crowdBite × mercy` (tier ×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1). See the threat section for `crowdBite` and the no-healer `mercy` multiplier.
+- **Targeting is tank-focused**: autos pick a random living tank, falling back to anyone only when no tank stands. Tanks are the aggro system — which is also why pack size can scale with party size, since tank count scales alongside it.
+- Mitigation: `raw × (1 − armor/(armor + 30 + 4.5×threat)) × (1 − damage reduction)`, the share capped at 75% and the result floored at 1. Armor **soaks a share**; it does not subtract a flat amount. The old `max(1, raw − armor×0.6)` became outright immunity the moment gear power outran the stage's damage — at gear power ~104 a party took literally nothing from a stage-10 normal, and measured runs showed whole chapters at 0.0% health lost. The soak constant rises with threat so armor keeps its worth at every depth without ever reaching a wall. The Armor Elixir still adds +6 armor for 12s at combat start.
+- **One incoming-damage path.** Autos, cleaves, and boss specials all run through `hurtMember`, which owns mitigation, thorns, and the death rites and returns what actually landed. The enemy auto-attack used to inline its own copy of that logic, which is exactly the kind of duplication that drifts.
+- **Cleaves** are the healer check: any non-boss enemy, when 2+ members are alive, winds up (0.4s, 0.5s elite — a visible telegraph) and hits the *entire party* for ×0.5 of its damage (×0.7 elite). The per-enemy cooldown (~4–9s) is stretched by `1 + 0.5 × (packSize − 2)` so a large warband doesn't carpet the party; the party-wide cleave rate stays roughly fixed however many bodies turn up.
 - **Boss Kings** telegraph a special every ~4.5–10s with a 1.4–1.8s windup that a tank stun **interrupts** (delaying it 6s): Royal Slam ×1.5 to all, Screech ×0.9 to all + attack delay, Grave Call summons 2 skeletons at 60% HP, meteor fire ×1.1 to all. Each King also has HP-threshold phases (Slime splits off spawn, Bat frenzies, Skeleton gains 8-charge bone armor halving hits, Imp ignites for ×1.25 damage and faster swings).
 - Elites have their own turns: the Elder Slime death-splits into two 65%-HP slimes, the Bone Captain raises an ally at 60% HP, the Imp Warlord enrages at 50% (×1.5 damage, much faster), and Dire Bats drain 60% of damage dealt as self-healing.
 
@@ -132,11 +173,10 @@ The Poison Vial adds `2 + stage×0.7` damage per second for 8s to the whole enem
 
 ## The difficulty and reward curve
 
-- Enemy HP: `(28 + stage×15) × tier × rand(0.9–1.1)` (×9 boss / ×3.6 elite / ×1 normal). Packs are 2–4 normals, or elite + 1 normal at stage %5==3, or a lone King at stage %5==0 (+1 extra normal per pack under Endless Horde, at 80% HP each).
-- **Boss level floor** (stopgap pending the formal balance pass): Kings stat their HP and damage using `max(stage, highest level in the party)` instead of the raw stage, so a party that has outleveled the stage (typically right after a chapter reset) still gets a real boss fight. Rewards (XP, gold, loot) stay on the real stage, and elites/normals are unaffected. Note for mixed parties: boss damage tracks the *top* level, so a much lower-level member can be hit hard by party-wide specials.
-- Loot power: `(4 + stage×1.25) × rarity multiplier × rand(0.9–1.12)`, rarity multipliers 1.0 / 1.35 / 1.75 / 2.35 / 3.2 (unique 3.4). Drop odds: bosses always drop (plus a 60% second drop) at 10% unique chance each; elites always drop at 5% unique; normals drop 13% of the time at 1% unique.
-- Rarity weights start at 54/26/12/6/2 (common→legendary) and shift with stage: common loses `stage×0.4` weight (the shift caps at 20, i.e. stage 50, leaving common at weight 34) while each higher tier gains a quarter of the shift — deep stages steadily favor rare+ gear.
-- Because member damage grows multiplicatively (level × style × skills × gear power that itself scales with stage × legacy × chorus) while enemy HP grows linearly in stage with fixed tier multipliers, a well-geared party accelerates until the next King's special-phase check, which is the intended wall. The boss level floor keeps that wall standing across chapter resets; gear/legacy growth still outpaces it over time, which the formal balance pass will address.
+- Enemy HP: `(28 + threat^1.18 × 15) × tier × crowdMul × rand(0.9–1.1)` — tier ×3.6 elite / ×1 normal, and bosses `×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`. Packs run 2–4 normals plus one per two extra members, capped at 8 and additionally ceilinged at `ceil(members × 1.5)`; elite stages field the elite plus that many normals; stage %5==0 is a lone King. Endless Horde still adds one more (at 80% HP each) while the pack is under the cap. The line is spread across the enemy band's ~180px however many turn up, rather than marching the tail off a 640px stage.
+- Loot power: `(4 + threat×1.25) × rarity multiplier × rand(0.9–1.12)`, rarity multipliers 1.0 / 1.35 / 1.75 / 2.35 / 3.2 (unique 3.4). Drop odds: bosses always drop (plus a 60% second drop) at 10% unique chance each; elites always drop at 5% unique; normals drop 13% of the time at 1% unique.
+- Rarity weights start at 54/26/12/6/2 (common→legendary) and shift with threat: common loses `threat×0.4` weight (the shift caps at 20, leaving common at weight 34) while each higher tier gains a quarter of the shift — deep tales steadily favor rare+ gear.
+- Member damage still grows multiplicatively (level × style × skills × gear power × legacy × chorus), which is why enemy bulk grows on `threat^1.18` instead of a straight line, and why threat — not stage — is what enemies are built from. The intended wall is still the King's special-phase check; it now stands at every depth instead of dissolving after the first tale.
 
 ## Daily quests
 
@@ -144,4 +184,9 @@ Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes
 
 ## Tuning knobs, by location
 
-All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): class/style tables at the top (`CLASSES`, `STYLES`, `SKILLS`); prices in `POTIONS` and the cosmetics lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `mercyMul`, `bossTier`; class/style tables at the top (`CLASSES`, `STYLES`, `SKILLS`); prices in `POTIONS` and the cosmetics lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+
+To re-measure after any of these, drive the sim headlessly: build a world,
+`joinVoice` N members, `tick` at 1/20s, and record per cleared stage the combat
+seconds, the share of party HP lost, and wipes — the sweep that produced the
+numbers above ran party sizes 1/2/3/5/9 across five chapters each.
