@@ -35,7 +35,8 @@ for (const fixture of fixtures) {
   console.log(`\n=== ${fixture.toUpperCase()} fixture — ${chapters} chapters per comp, seed ${seed} ===`);
   console.log(
     pad("comp", 12) + num("ch", 3) + num("king TTK", 10) + num("king rng", 14) + num("king tries", 11) +
-    num("norm TTK", 9) + num("%HP/stg", 8) + num("wipes", 6) + num("deaths", 7) + num("threat", 7) + "  note"
+    num("norm TTK", 9) + num("%HP/stg", 8) + num("wipes", 6) + num("deaths", 7) + num("threat", 7) +
+    num("1stKing", 9) + num("wipes<K1", 9) + "  note"
   );
   for (const comp of compNames) {
     const r = measure(comp, { live, chapters, seed });
@@ -52,6 +53,8 @@ for (const fixture of fixtures) {
       num(r.wipes, 6) +
       num(r.deaths, 7) +
       num(r.finalThreat, 7) +
+      num(r.firstHour ? Math.round(r.firstHour.firstKingClearSec) + "s" : "—", 9) +
+      num(r.firstHour ? r.firstHour.wipesBeforeFirstKing : "—", 9) +
       (r.timedOut ? "  TIMED OUT" : "")
     );
   }

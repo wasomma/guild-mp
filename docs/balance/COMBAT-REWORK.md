@@ -188,7 +188,45 @@ codebases.
 - **Phase 4 — Bosses + encounters.** Tri-fold King checks; honor-guard gauntlet
   at every stage % 5 == 4 with herald elites; advance-phase ambushes; camp rest
   nodes; party-voted retreat intent (and optional manual-ult toggle).
-- **Phase 5 — Talent trees.** The largest single work item; deliberately last.
+  **Exit criterion — the first hour (added 2026-07-25):** the rework made a
+  fresh world's chapter 1 sharp (24 wipes, solo tank), and Phase 4 adds
+  gauntlets and ambushes on top. The sweep now reports `firstHour` (sim-time
+  to the first King clear + wipes before it, fresh fixture); Phase 4 must not
+  regress a fresh solo party's first King materially, and should improve it —
+  a brand-new player's first session decides whether they reach month two.
+- **Phase 5 — Talent trees.** The largest single work item; deliberately last
+  among the combat phases.
+- **Phase 6 — Economy endgame (owner-proposed 2026-07-25; design agreed in
+  outline, not yet started).** Fixes long-horizon currency saturation: the
+  live guild maxed every legacy ages ago (renown is a dead drip) and gold's
+  only sink is a finite cosmetics catalog (62M banked).
+  - **Boss crates + gold keys**: Kings drop cosmetic crates; opening one
+    takes a key bought with gold at escalating prices — the permanent
+    veteran gold sink. Crate contents roll a cosmetic/pet rarity ladder:
+    the existing catalog becomes the lower tiers, with new higher tiers
+    (names TBD) added as chase items. CS-style odds, but with a **pity
+    system** for the top tier — everything is play-earned, so there is no
+    reason to import real-money misery mechanics.
+  - **A NEW per-player premium currency** (name TBD) buys crates directly
+    (second acquisition path) and funds pity. Earned through personal
+    milestones — above all **retells** (scaled by the level sacrificed),
+    plus dailies/boss firsts. This deliberately fixes the retell loop's
+    personal-incentive hole (cost is personal, renown reward was communal)
+    and keeps the crate economy off the shared pools. **Decision recorded:
+    renown was considered and rejected as the premium currency** — it is a
+    shared pool (gambling it is a social incident), it buys guild power
+    (progression trap for young guilds), and loop legibility wins with
+    three currencies / three jobs.
+  - **Renown endgame**: an infinite **ascension track** past the maxed
+    legacies with steeply superlinear costs — the same trick that keeps
+    level meaningful forever keeps renown meaningful forever.
+  - **Open owner decisions**: tier names; whether launch seeds the top
+    tiers by reclassifying current showpieces (auras, Nine-Tails, the
+    Kitsune set) versus classifying everything current as common/uncommon
+    and authoring all higher tiers new (note: every cosmetic is hand-drawn
+    canvas code in BOTH renderers — new tiers are primarily an art
+    project); premium-currency name and exact earn rates; crate/key
+    pricing curves and odds tables.
 
 Every phase honors the cardinal rule (identical diffs into
 `prototype/guild-idle.jsx`), re-runs the sweep, gets a doc sweep

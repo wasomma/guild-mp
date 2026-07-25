@@ -50,6 +50,8 @@ describe("measured runs", () => {
     expect(r.chaptersCompleted).toBe(1);
     expect(r.kings.cleared).toBe(4);
     expect(r.kings.ttkAvg).toBeGreaterThan(0);
+    expect(r.firstHour.firstKingClearSec).toBeGreaterThan(0);
+    expect(r.firstHour.wipesBeforeFirstKing).toBeGreaterThanOrEqual(0);
     expect(Number.isFinite(r.hpLostPctPerStage)).toBe(true);
     for (const s of r.stages) if (s.dur != null) expect(s.dur).toBeGreaterThan(0);
   });

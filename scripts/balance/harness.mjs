@@ -139,9 +139,10 @@ export function runMeasured(g, opts = {}) {
     }
     if (prevPhase === "combat" && g.phase !== "combat" && cur) {
       if (g.phase === "wipe") {
-        cur.wiped = true; // stage will be re-entered (one stage lower)
+        cur.wiped = true; // stage will be re-entered (set back to the last King)
       } else {
         cur.dur = round2(g.time - cur._t0);
+        cur.at = round2(g.time - t0); // sim-time of the clear, for first-hour metrics
         cur.hpLostPct = round2(Math.max(0, ((cur._hp0 - partyHp()) / (cur._max0 || 1)) * 100));
       }
       delete cur._t0; delete cur._hp0; delete cur._max0;
@@ -154,7 +155,16 @@ export function runMeasured(g, opts = {}) {
   const cleared = stages.filter((s) => s.dur != null);
   const byTier = (tier) => summarize(cleared.filter((s) => s.tier === tier));
   const attempts = (tier) => stages.filter((s) => s.tier === tier).length;
+  /* The first-hour metric (Phase 4 exit criterion): how long a party takes
+     to fell its FIRST King, and how many wipes it eats on the way. On the
+     fresh fixture this is the new-player first session. */
+  const fkIdx = stages.findIndex((s) => s.tier === "king" && s.dur != null);
+  const firstHour = fkIdx < 0 ? null : {
+    firstKingClearSec: stages[fkIdx].at,
+    wipesBeforeFirstKing: stages.slice(0, fkIdx).filter((s) => s.wiped).length,
+  };
   return {
+    firstHour,
     chaptersCompleted: g.prestiges - p0,
     simSeconds: round2(g.time - t0),
     simSteps,
