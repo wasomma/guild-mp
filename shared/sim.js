@@ -634,8 +634,15 @@ export const threatCurve = (t) => Math.pow(Math.max(1, t), DIFF_EXP);
 export const crowdMul = (g) => {
   /* a lone hero brings one sword to a pack the curve assumes two will meet,
      so foes come lighter as well as fewer (see the ceiling in spawnEncounter) */
-  if (g.members.length <= 1) return 0.7;
-  return 1 + 0.22 * (g.members.length - 1);
+  const n = g.members.length;
+  if (n <= 1) return 0.7;
+  /* The squared term is small but it earns its place at the top end. A guild's
+     throughput rises about linearly with headcount AND carries the Chorus
+     multiplier on top, so a purely linear bulk bump slowly loses the race:
+     measured to level 146, a nine-strong guild had settled into 3-second King
+     fights for 6% of its health while a trio was still spending 12-17%. This
+     barely moves a duo or a trio and firms the full guild back up. */
+  return 1 + 0.22 * (n - 1) + 0.025 * (n - 1) ** 2;
 };
 export const crowdBite = (g) => 1 + 0.05 * Math.max(0, g.members.length - 1);
 /* A King is a single body: the whole party focuses it and no amount of extra

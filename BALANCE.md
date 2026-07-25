@@ -40,19 +40,32 @@ when gear reset to chapter-1 power every twenty stages.
 
 The party's size is the other input. Enemies arrive in bigger packs
 (`ceiling = ceil(members × 1.5)`, hard cap 8, so a lone hero meets a pair and
-never a mob) and carry `1 + 0.22 × (members − 1)` bulk, while per-enemy bite
-rises only `1 + 0.05 × (members − 1)` — a bigger guild brings more tanks to
-spread the autos over and more healers to mend them. Two adjustments keep the
+never a mob) and carry `1 + 0.22 × (members − 1) + 0.025 × (members − 1)²` bulk,
+while per-enemy bite rises only `1 + 0.05 × (members − 1)` — a bigger guild
+brings more tanks to spread the autos over and more healers to mend them. The
+squared term is small and exists for the top end: guild throughput climbs about
+linearly with headcount *and* carries the Chorus multiplier, so a purely linear
+bulk bump loses the race at depth. Measured to level 146, nine heroes had
+settled into 3-second King fights for 6% of their health while a trio still
+spent 12–17%; the term barely moves a duo and firms the full guild back up. Two adjustments keep the
 extremes honest: a party with **no healer** faces enemies that hit for ×0.6
 (×0.85 at three or more), and a **King's ×9 HP** scales down for small parties
 (`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
 the whole party focuses — no amount of extra heroes splits its attention the
 way a pack does, and a flat ×9 made Kings simply unkillable solo.
 
-Measured result, party sizes 1–9 across five chapters: normal fights run 3–12s,
-Kings 5–29s, a stage costs 7–30% of the party's health, and wipes are rare and
-concentrated in the first chapter. None of those numbers decay as chapters go
-by, which was the whole problem before.
+Measured over **24 chapters**, to heroes at level 156 — the live guild's own
+scale, not just the first few tales. Normal fights run 3–10s, Kings 4–25s, a
+stage costs 5–28% of the party's health, and after the first chapter wipes are
+rare. None of it decays with depth, which was the whole problem before.
+
+Two honest caveats on that band. Chapter 1 is the sharp end everywhere (a solo
+hero still spends it wiping and relearning — 14 wipes, then essentially none
+for the next twenty-three chapters). And **five-hero parties sit softest**, at
+5–9% per stage against a trio's 10–17%: with the round-robin class assignment
+a party of five lands two DPS out of five, the game's most damage-dense
+composition. That is a composition artefact rather than a scaling failure, and
+it is stable with depth.
 
 ## The shape of the loop
 
