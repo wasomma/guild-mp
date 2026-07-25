@@ -140,7 +140,7 @@ codebases.
   fixture), `qa-balance-sweep.mjs` (`npm run sweep`), vitest at the repo root
   (`npm test`, `test/balance-harness.test.mjs`), baselines in
   `docs/balance/baselines/`. See "Baseline findings" below.
-- **Phase 1 — Class triangle + aggro. ⚙ CORE DONE (v0.1.31, 2026-07-25); creator class pick outstanding.**
+- **Phase 1 — Class triangle + aggro. ✅ DONE (core v0.1.31, creator class pick v0.1.32 — both 2026-07-25).**
   Shipped in both sims: `CLASSES` triangle (final-stat `mul` per class so
   identity survives gear: tank ×1.30 hp / ×0.75 dmg + 20% innate DR, dps
   ×0.80 / ×1.15, healer ×1.00 / ×0.55 + radiant bolt `dmg += heal×0.35`);
@@ -152,9 +152,10 @@ codebases.
   dies on a fresh world (4 wipes; still untouched at live scale — closes in
   Phases 2–4), solo tank at 3.7–5.6× solo-DPS King time (target band),
   every comp now loses 1.9–10.9% HP per stage (was 0.2–1.4% for groups).
-  Still open in this phase: the character-creator class pick (decision 1 —
-  note a free class *respec* already exists in the Skills tab, so this is
-  UX at creation, not new capability).
+  The creator class pick (decision 1) shipped in v0.1.32: a "Calling" row in
+  both creators, free while `cos.fresh`, party-need hint via `classNeed`,
+  starter outfit re-dressed on pick; validated in `applyAppearance`
+  (browser-verified end-to-end + qa-creator regressions).
 - **Phase 2 — Role coverage.** Vanguard/Lifeward/Warpath + trinity momentum in
   `stats()`; remove Chorus; retune `crowdMul`/`crowdBite` for the post-Chorus
   world.

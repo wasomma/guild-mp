@@ -323,8 +323,12 @@ export function newWorld() {
   };
 }
 
+/* each class's starter outfit index in OUTFITS — used at spawn and when the
+   creator's class pick re-dresses a fresh hero for their calling */
+export const CLASS_OUTFIT = { tank: 3, dps: 2, healer: 1 };
+
 export function makeMember(g, key, name, cls) {
-  const defaults = { tank: 3, dps: 2, healer: 1 };
+  const defaults = CLASS_OUTFIT;
   const fem = Math.random() < 0.5;
   const startHair = fem ? pick(["pony", "long", "bob"]) : pick(["short", "short", "pixie"]);
   /* spawn identity is a random starting point — the creator (fresh flag)
@@ -442,11 +446,26 @@ export function applyAppearance(g, m, p) {
   const underCOk = Number.isInteger(p.underC) && p.underC >= 0 && p.underC < UNDER_COLORS.length;
   const hairOk = Number.isInteger(p.hair) && (m.owned.hair || []).includes(p.hair);
   const styleOk = FREE_HAIRSTYLES.includes(p.hairstyle) || (m.owned.hairstyle || []).includes(p.hairstyle);
-  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk) return false;
+  /* class is a first-commit pick: choose freely while the hero is fresh
+     (COMBAT-REWORK decision 1); after stepping through the doors, class
+     changes go through the Skills tab's respec instead. Re-sending the
+     current class is always fine (idempotent commits from the mirror). */
+  const clsOk = p.cls === undefined || p.cls === m.cls || (!!CLASSES[p.cls] && !!m.cos.fresh);
+  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk || !clsOk) return false;
   const wasFresh = m.cos.fresh;
   Object.assign(m.cos, { race: race.id, body: body.id, skin: p.skin, under: under.id, underC: p.underC, hair: p.hair, hairstyle: p.hairstyle });
   delete m.cos.fresh;
   if (!(m.owned.hairstyle || []).includes(p.hairstyle)) m.owned.hairstyle.push(p.hairstyle);
+  if (wasFresh && p.cls && p.cls !== m.cls) {
+    m.cls = p.cls;
+    m.style = STYLES[p.cls][0].id;
+    m.skills = {}; m.sp = m.level - 1;
+    const fit = CLASS_OUTFIT[p.cls];
+    if (!m.owned.outfit.includes(fit)) m.owned.outfit.push(fit);
+    m.cos.outfit = fit;
+    m._st = stats(m, g); m.hp = m._st.hp;
+    addLog(g, `${m.name} takes up the ${CLASSES[p.cls].name}'s calling!`, CLASSES[p.cls].color);
+  }
   addLog(g, wasFresh
     ? `${m.name} the ${race.name} steps through the guild doors for the first time!`
     : `${m.name} returns from the outfitter's mirror with a new look.`, "#f2c14e");
@@ -469,7 +488,7 @@ export function applyAppearance(g, m, p) {
    and a healer and no damage at all, which measured at 32.6% of the party's
    health per stage because the pair simply cannot finish a fight. */
 export const CLASS_NEED = ["tank", "dps", "healer"];
-const nextClass = (g) => {
+export const classNeed = (g) => {
   const have = { tank: 0, dps: 0, healer: 0 };
   for (const m of g.members) have[m.cls]++;
   for (const c of CLASS_NEED) if (!have[c]) return c;
@@ -499,7 +518,7 @@ export function joinVoice(g, key, name, discord) {
     g.members.push(m);
     addLog(g, `${name} returns to the fray as a ${styleOf(m).name} (level ${m.level})!`, CLASSES[m.cls].color);
   } else {
-    m = makeMember(g, key, name, nextClass(g));
+    m = makeMember(g, key, name, classNeed(g));
     g.joinCount++;
     g.members.push(m);
     addLog(g, `${name} joined voice and enters as a ${styleOf(m).name} (${CLASSES[m.cls].name})!`, CLASSES[m.cls].color);

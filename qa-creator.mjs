@@ -3,6 +3,7 @@ import {
   newWorld, joinVoice, tick, applyIntent, applyAppearance,
   dehydrateMember, rehydrateMember,
   RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, raceOf,
+  STYLES, CLASS_OUTFIT,
 } from "./shared/sim.js";
 
 let fails = 0;
@@ -39,6 +40,22 @@ applyIntent(g, { a: "appearance", memberId: m.id, race: "tiefling", body: "f", s
 ok(m.cos.race === "tiefling", "free re-edit applies");
 ok(g.log.some((l) => l.text.includes("outfitter")), "re-edit log line used");
 
+// class pick at the first commit (COMBAT-REWORK decision 1)
+joinVoice(g, "u2", "Testb", null);
+const mc = g.members.find((x) => x.key === "u2");
+ok(mc.cos.fresh === true, "second hero arrives fresh");
+ok(applyAppearance(g, mc, { race: "elf", body: "f", skin: 1, under: "wrap", underC: 0, hair: 0, hairstyle: "short", cls: "wizard" }) === false, "unknown class rejected");
+ok(mc.cos.fresh === true, "fresh flag survives rejected class");
+applyIntent(g, { a: "appearance", memberId: mc.id, race: "elf", body: "f", skin: 1, under: "wrap", underC: 0, hair: 0, hairstyle: "short", cls: "healer" });
+ok(mc.cls === "healer", "class pick applies on the first commit");
+ok(STYLES.healer.some((s) => s.id === mc.style), "style re-rooted to the new class");
+ok(mc.cos.outfit === CLASS_OUTFIT.healer && mc.owned.outfit.includes(CLASS_OUTFIT.healer), "class starter outfit granted and equipped");
+ok(mc._st.heal > 0 && mc.hp === mc._st.hp, "stats recomputed for the new class");
+ok(applyAppearance(g, mc, { race: "elf", body: "f", skin: 1, under: "wrap", underC: 0, hair: 0, hairstyle: "short", cls: "tank" }) === false, "class change rejected once through the doors");
+ok(mc.cls === "healer", "class untouched by the rejected commit");
+ok(applyAppearance(g, mc, { race: "elf", body: "f", skin: 1, under: "wrap", underC: 0, hair: 0, hairstyle: "short", cls: "healer" }) === true, "re-sending the current class is fine");
+ok(applyAppearance(g, mc, { race: "elf", body: "m", skin: 2, under: "vest", underC: 1, hair: 1, hairstyle: "bob" }) === true, "cls-less mirror commit still works");
+
 // persistence round-trip
 const d = JSON.parse(JSON.stringify(dehydrateMember(m)));
 const g2 = newWorld();
@@ -58,7 +75,7 @@ ok(FREE_HAIRSTYLES.every((h) => m3.owned.hairstyle.includes(h)), "legacy charact
 
 // world still ticks with the new fields
 for (let i = 0; i < 200; i++) tick(g, 0.05);
-ok(g.members.length === 1 && g.members[0].alive !== undefined, "world ticks cleanly");
+ok(g.members.length === 2 && g.members.every((x) => x.alive !== undefined), "world ticks cleanly");
 
 console.log(fails === 0 ? "ALL CREATOR TESTS PASS" : fails + " FAILURES");
 process.exit(fails === 0 ? 0 : 1);

@@ -318,19 +318,38 @@ function applyAppearance(g, m, p) {
   const underCOk = Number.isInteger(p.underC) && p.underC >= 0 && p.underC < UNDER_COLORS.length;
   const hairOk = Number.isInteger(p.hair) && (m.owned.hair || []).includes(p.hair);
   const styleOk = FREE_HAIRSTYLES.includes(p.hairstyle) || (m.owned.hairstyle || []).includes(p.hairstyle);
-  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk) return false;
+  /* class is a first-commit pick: choose freely while the hero is fresh
+     (COMBAT-REWORK decision 1); after stepping through the doors, class
+     changes go through the Skills tab's respec instead. Re-sending the
+     current class is always fine (idempotent commits from the mirror). */
+  const clsOk = p.cls === undefined || p.cls === m.cls || (!!CLASSES[p.cls] && !!m.cos.fresh);
+  if (!race || !body || !skinOk || !under || !underCOk || !hairOk || !styleOk || !clsOk) return false;
   const wasFresh = m.cos.fresh;
   Object.assign(m.cos, { race: race.id, body: body.id, skin: p.skin, under: under.id, underC: p.underC, hair: p.hair, hairstyle: p.hairstyle });
   delete m.cos.fresh;
   if (!(m.owned.hairstyle || []).includes(p.hairstyle)) m.owned.hairstyle.push(p.hairstyle);
+  if (wasFresh && p.cls && p.cls !== m.cls) {
+    m.cls = p.cls;
+    m.style = STYLES[p.cls][0].id;
+    m.skills = {}; m.sp = m.level - 1;
+    const fit = CLASS_OUTFIT[p.cls];
+    if (!m.owned.outfit.includes(fit)) m.owned.outfit.push(fit);
+    m.cos.outfit = fit;
+    m._st = stats(m, g); m.hp = m._st.hp;
+    addLog(g, `${m.name} takes up the ${CLASSES[p.cls].name}'s calling!`, CLASSES[p.cls].color);
+  }
   addLog(g, wasFresh
     ? `${m.name} the ${race.name} steps through the guild doors for the first time!`
     : `${m.name} returns from the outfitter's mirror with a new look.`, "#f2c14e");
   return true;
 }
 
+/* each class's starter outfit index in OUTFITS — used at spawn and when the
+   creator's class pick re-dresses a fresh hero for their calling */
+const CLASS_OUTFIT = { tank: 3, dps: 2, healer: 1 };
+
 function makeMember(name, cls) {
-  const defaults = { tank: 3, dps: 2, healer: 1 };
+  const defaults = CLASS_OUTFIT;
   const fem = Math.random() < 0.5;
   const startHair = fem ? pick(["pony", "long", "bob"]) : pick(["short", "short", "pixie"]);
   /* spawn identity is a random starting point — the creator (fresh flag)
@@ -4882,7 +4901,7 @@ const CSS = `
    and a healer and no damage at all, which measured at 32.6% of the party's
    health per stage because the pair simply cannot finish a fight. */
 const CLASS_NEED = ["tank", "dps", "healer"];
-const nextClass = (g) => {
+const classNeed = (g) => {
   const have = { tank: 0, dps: 0, healer: 0 };
   for (const m of g.members) have[m.cls]++;
   for (const c of CLASS_NEED) if (!have[c]) return c;
@@ -4967,7 +4986,7 @@ function CreatorPreview({ m, draft, dressed }) {
       ctx.imageSmoothingEnabled = false;
       ctx.setTransform(4, 0, 0, 4, Math.round(cv.width * 0.5), cv.height - 24);
       const mp = {
-        ...src, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
+        ...src, cls: d.cls || src.cls, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
         x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
         chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999,
       };
@@ -4980,11 +4999,12 @@ function CreatorPreview({ m, draft, dressed }) {
     style={{ width: 190, height: "auto", imageRendering: "pixelated", border: "1px solid #2e2947", borderRadius: 10 }} />;
 }
 
-function CharacterCreator({ m, onCommit, onClose }) {
+function CharacterCreator({ m, need, onCommit, onClose }) {
   const [draft, setDraft] = useState({
     race: m.cos.race || "human", body: m.cos.body || "m", skin: m.cos.skin ?? 0,
     hairstyle: m.cos.hairstyle, hair: m.cos.hair,
     under: m.cos.under || "wrap", underC: m.cos.underC ?? 0,
+    cls: m.cls,
   });
   const [dressed, setDressed] = useState(false);
   const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
@@ -5009,6 +5029,12 @@ function CharacterCreator({ m, onCommit, onClose }) {
         </div>
       </div>
       <div className="gi-scroll" style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+        {m.cos.fresh && (<>
+          {label("CALLING" + (need && need !== draft.cls ? ` — THE GUILD COULD USE A ${CLASSES[need].name.toUpperCase()} ★` : ""))}
+          <div style={row}>{Object.entries(CLASSES).map(([id, c]) => (
+            <button key={id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.cls === id ? "#f2c14e" : "#2e2947" }} onClick={() => set("cls", id)}>{c.icon} {c.name}{need === id ? " ★" : ""}</button>
+          ))}</div>
+        </>)}
         {label("RACE")}
         <div style={row}>{RACES.map((r) => (
           <button key={r.id} className="gi-btn" style={{ fontSize: 16, borderColor: draft.race === r.id ? "#f2c14e" : "#2e2947" }} onClick={() => set("race", r.id)}>{r.name}</button>
@@ -5099,7 +5125,7 @@ export default function GuildIdle() {
   function joinVoice(game, u) {
     if (u.inVoice) return;
     u.inVoice = true;
-    const m = makeMember(u.name, nextClass(game));
+    const m = makeMember(u.name, classNeed(game));
     game.joinCount++;
     game.members.push(m);
     addLog(game, `${u.name} joined voice and enters as a ${styleOf(m).name} (${CLASSES[m.cls].name})!`, CLASSES[m.cls].color);
@@ -5363,7 +5389,7 @@ export default function GuildIdle() {
               style={{ width: "100%", maxWidth: 900, display: "block", margin: "0 auto", imageRendering: "pixelated", border: "2px solid #2e2947", background: "#141221" }} />
             {creatorFor != null && (() => {
               const cm = g.members.find((x) => x.id === creatorFor);
-              return cm ? <CharacterCreator m={cm}
+              return cm ? <CharacterCreator m={cm} need={classNeed(g)}
                 onCommit={(draft) => { applyAppearance(g, cm, draft); setCreatorFor(null); force((v) => v + 1); }}
                 onClose={() => setCreatorFor(null)} /> : null;
             })()}

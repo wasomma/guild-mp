@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.32 — 2026-07-25
+
+**Choose your calling.** The character creator now opens with a class pick — Tank 🛡️, DPS ⚔️, or Healer 💚 — free before your hero first steps through the doors, with the guild's current need marked ★ as a hint. Picking a class re-roots your fighting style, banks your skill points for the new path, and dresses you in that calling's starter outfit. Solo adventurers can finally *be* a lone healer or a glass-cannon DPS from their very first stage; changing your mind later still goes through the free respec in the Skills tab. (Completes Phase 1 of the combat rework.)
+
 ## v0.1.31 — 2026-07-25
 
 **The world stops pulling its punches.** First phase of the combat rework (`docs/balance/COMBAT-REWORK.md`): fighting alone is now genuinely dangerous, and each class survives it its own way.

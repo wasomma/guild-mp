@@ -4,7 +4,7 @@ import {
   BODIES, HATS, HAIRS, HAIRSTYLES, OUTFITS, WEAPON_SKINS, ACCESSORIES, CAPES, PETS, AURAS,
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
-  RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES,
+  RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, classNeed,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
@@ -372,7 +372,7 @@ export default function App() {
               {g && creatorFor != null && (() => {
                 const cm = g.members.find((x) => x.id === creatorFor);
                 return cm && !lockOf(cm)
-                  ? <CharacterCreator m={cm} send={send} onClose={() => setCreatorFor(null)} />
+                  ? <CharacterCreator m={cm} send={send} need={classNeed(g)} onClose={() => setCreatorFor(null)} />
                   : null;
               })()}
             </div>
@@ -525,7 +525,7 @@ function CreatorPreview({ m, draft, dressed }) {
       ctx.imageSmoothingEnabled = false;
       ctx.setTransform(4, 0, 0, 4, Math.round(cv.width * 0.5), cv.height - 24);
       const mp = {
-        ...src, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
+        ...src, cls: d.cls || src.cls, cos: { ...src.cos, ...d }, noOutfit: !dr, noBars: true,
         x: 0, y: 0, walking: false, lunge: 0, hop: 0, shootT: 0, castT: 0,
         chainT: 0, ultT: 0, ult: null, feast: 0, bubble: 0, alive: true, atkT: 999,
       };
@@ -537,11 +537,12 @@ function CreatorPreview({ m, draft, dressed }) {
   return <canvas ref={cvRef} width={300} height={400} className="portrait" />;
 }
 
-function CharacterCreator({ m, send, onClose }) {
+function CharacterCreator({ m, send, need, onClose }) {
   const [draft, setDraft] = useState({
     race: m.cos.race || "human", body: m.cos.body || "m", skin: m.cos.skin ?? 0,
     hairstyle: m.cos.hairstyle, hair: m.cos.hair,
     under: m.cos.under || "wrap", underC: m.cos.underC ?? 0,
+    cls: m.cls,
   });
   const [dressed, setDressed] = useState(false);
   const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
@@ -560,6 +561,18 @@ function CharacterCreator({ m, send, onClose }) {
         </div>
       </div>
       <div className="copts">
+        {m.cos.fresh && (
+          <div className="cgroup">
+            <div className="clabel">Calling{need && need !== draft.cls ? ` — the guild could use a ${CLASSES[need].name} ★` : ""}</div>
+            <div className="crow">
+              {Object.entries(CLASSES).map(([id, c]) => (
+                <button key={id} className={"copt" + (draft.cls === id ? " on" : "")} onClick={() => set("cls", id)}>
+                  {c.icon} {c.name}{need === id ? " ★" : ""}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="cgroup">
           <div className="clabel">Race</div>
           <div className="crow">
