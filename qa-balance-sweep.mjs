@@ -68,7 +68,15 @@ for (const fixture of fixtures) {
       "kings.attempts counts combat entries at king stages; attempts > cleared means wipes forced re-fights.",
     ],
   };
+  /* A version's baseline is written once, at release. Mid-tuning sweeps run
+     BEFORE the version bump and would silently overwrite the previous
+     release's numbers (this happened twice) — so an existing file is
+     protected unless --force is passed. */
   const file = path.join(outDir, `v${VERSION}-${fixture}.json`);
-  fs.writeFileSync(file, JSON.stringify({ meta, runs }, null, 1));
-  console.log(`baseline written: ${path.relative(root, file)}`);
+  if (fs.existsSync(file) && !args.force) {
+    console.log(`baseline EXISTS, not overwritten (tuning sweep? bump VERSION first, or pass --force): ${path.relative(root, file)}`);
+  } else {
+    fs.writeFileSync(file, JSON.stringify({ meta, runs }, null, 1));
+    console.log(`baseline written: ${path.relative(root, file)}`);
+  }
 }
