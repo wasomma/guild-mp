@@ -20,8 +20,9 @@ const BF_SIZE = { width: 200, height: 200 }; /* bitforge hard cap */
 const PAL = ["#e8b98a", "#c99465", "#f6d4a6", "#a87952", "#d9cbb0", "#aea28c", "#ece2cd"];
 
 const PAINT = "soft painterly anime-influenced style, soft cel shading with warm light, gentle rounded facial features, calm neutral expression, smooth soft skin";
-const NEG_BASE = "hair, beard, helmet, hat, weapon, clothing, armor, shoes, boots, photorealistic, gaunt face, hollow cheeks, harsh shadows, muddy, blurry, deformed hands, extra fingers, extra limbs, three views, side view";
+const NEG_BASE = "hair, beard, helmet, hat, weapon, clothing, armor, shoes, boots, photorealistic, gaunt face, hollow cheeks, harsh shadows, muddy, blurry, deformed hands, extra fingers, extra limbs, three views, side view, earrings, jewelry, necklace, signature, watermark, text, chibi, child";
 const NEG = NEG_BASE; /* soft-* subjects get SOFT_NEG appended at call time */
+const FEM_NEG = ", nudity"; /* NO chest/top tokens: negatives are non-compositional and "bare chest" deleted the chest WRAP */
 
 /* the "soft" variants push harder toward the kitsune's painterly softness
    and away from the anatomical-illustration read of the base lane */
@@ -29,7 +30,7 @@ const SOFT = "in the style of a warm storybook illustration, soft rounded gentle
 const SOFT_NEG = ", six-pack abs, defined muscles, muscular definition, anatomical detail, veins, ribs";
 const SUBJECTS = {
   "human-m": `pixel art character reference sheet of one young athletic man shown twice side by side, LEFT figure is the front view and RIGHT figure is the back view of the same character, both standing in a T-pose with arms stretched straight out horizontally and legs together, completely bald head, no hair, wearing only simple plain linen #d9cbb0 fitted underwear shorts, bare chest, barefoot, ${PAINT}, detailed shading`,
-  "human-f": `pixel art character reference sheet of one young athletic woman shown twice side by side, LEFT figure is the front view and RIGHT figure is the back view of the same character, both standing in a T-pose with arms stretched straight out horizontally and legs together, completely bald head, no hair, wearing only a simple plain linen #d9cbb0 chest wrap and fitted linen briefs, barefoot, ${PAINT}, detailed shading`,
+  "human-f": `pixel art character reference sheet of one young athletic woman shown twice side by side, LEFT figure is the front view and RIGHT figure is the back view of the same character, both standing in a T-pose with arms stretched straight out horizontally and legs together, completely bald head, no hair, wearing a plain linen #d9cbb0 bandeau wrap top and fitted linen briefs, barefoot, ${PAINT}, detailed shading`,
 };
 SUBJECTS["soft-m"] = SUBJECTS["human-m"].replace(PAINT, PAINT + ", " + SOFT);
 SUBJECTS["soft-f"] = SUBJECTS["human-f"].replace(PAINT, PAINT + ", " + SOFT);
@@ -39,9 +40,9 @@ SUBJECTS["soft-f"] = SUBJECTS["human-f"].replace(PAINT, PAINT + ", " + SOFT);
    explicit warm-skin clause or they drift gray-green; dwarves beardless
    (beards are tintable hair overlays). */
 const RACE_FLAVOR = {
-  elf: ["elf man with long elegant pointed ears extending out to the sides", "elf woman with long elegant pointed ears extending out to the sides"],
-  kitsunekin: ["man with a completely human face and two upright silver-gray furred fox ears on top of his head", "woman with a completely human face and two upright silver-gray furred fox ears on top of her head"],
-  dwarf: ["short stocky powerfully built dwarf man with broad shoulders", "short stocky sturdily built dwarf woman with broad shoulders"],
+  elf: ["handsome graceful young elf man with a slender elegant athletic build and small subtle pointed ears", "elf woman with long elegant pointed ears extending out to the sides"],
+  kitsunekin: ["tall adult man with mature adult proportions and a completely human face with clear eyes, a completely bald head with no hair at all, only two upright gray furred fox ears growing from the top of the bare scalp", "woman with a completely human face with clear eyes, a completely bald head with no hair at all, only two upright gray furred fox ears growing from the top of the bare scalp"],
+  dwarf: ["short stocky powerfully built dwarf man with broad shoulders", "short stocky sturdily built dwarf woman with broad shoulders, wide hips, and a strong heavy build"],
   orc: ["orc man with two small ivory tusks rising from his lower jaw and the same warm golden human skin tone", "orc woman with two small ivory tusks rising from her lower jaw and the same warm golden human skin tone"],
   tiefling: ["tiefling man with two dark burgundy curved horns sweeping back from his temples", "tiefling woman with two dark burgundy curved horns sweeping back from his temples"],
 };
@@ -94,7 +95,8 @@ async function rollOne(lane, sub, seed) {
   if (!desc) throw new Error("subject must be: " + Object.keys(SUBJECTS).join(" | "));
   let res;
   if (lane === "px") {
-    const neg = sub.startsWith("soft") ? NEG_BASE + SOFT_NEG : NEG_BASE;
+    let neg = sub.startsWith("soft") || !sub.startsWith("human") ? NEG_BASE + SOFT_NEG : NEG_BASE;
+    if (sub.endsWith("-f")) neg += FEM_NEG;
     res = await call("/generate-image-pixflux", {
       description: desc, negative_description: neg,
       image_size: PX_SIZE, no_background: true,
