@@ -42,6 +42,18 @@ console.log(`Backup written: ${backup}`);
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 
+/* The Phase 6 columns normally arrive via db.js's guarded ALTERs at server
+   boot — but this script runs with the service STOPPED, before the new
+   code has ever booted, so it must carry the same migrations itself. */
+for (const ddl of [
+  "ALTER TABLE worlds ADD COLUMN keys_cut INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE worlds ADD COLUMN ascension INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN crates INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN encores INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN pity INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN king_day INTEGER NOT NULL DEFAULT 0",
+]) { try { db.exec(ddl); } catch { /* column already exists */ } }
+
 /* spawn-default wardrobe (mirrors makeMember in shared/sim.js) */
 const CLASS_OUTFIT = { tank: 3, dps: 2, healer: 1 };
 const FREE_HAIRSTYLES = ["short", "pixie", "bob", "pony", "long"];
