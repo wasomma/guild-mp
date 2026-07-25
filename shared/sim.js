@@ -60,6 +60,220 @@ export const SKILLS = {
 };
 export const MAX_RANK = 5;
 
+/* ---------------- talent trees (COMBAT-REWORK Phase 5) ----------------
+   Every fighting style carries its own tree, all sharing one shape: the
+   TRUNK is the class's three fundamentals above (same ids — a pre-tree
+   hero's spent points simply already live in the trunk), six points of
+   trunk investment open the style's two PATHS, and a path runs three
+   pre-keystone passives (3 ranks each) into its KEYSTONE — an auto-cast
+   cooldown ability — then three deeper post-keystone passives. Paths are
+   mutually exclusive: picking one locks the other until a (free) respec.
+   Fastest keystone lands at 16 points (level 17), before the level-21
+   retell gate; a full build (trunk + one whole path) is 36 (level ~37).
+
+   fx vocabulary, per rank: hp/dmg/heal multiply the FINAL stats (post-
+   gear, like the class triangle, so talent identity survives gear
+   dominance at live scale); spd divides attack period like Swiftness;
+   crit/critDmg/dr/stun/splash/ls/thorns add to those pools; grit adds
+   combat regen; exec adds damage vs foes below 35% HP; soothe deepens a
+   bolt's calming of a King's fury; ult charges ultimates faster; cd
+   shaves seconds off the path's keystone cooldown; amp deepens the
+   keystone's own effect (each keystone reads it its own way). */
+export const GATE_PTS = 6;
+export const TALENTS = {
+  paladin: { paths: [
+    { id: "sentinel", name: "Sentinel", rec: true, blurb: "The wall that does not break",
+      pre: [
+        { id: "pal_aegis", name: "Aegis", desc: "+4% max HP per rank", ranks: 3, fx: { hp: 0.04 } },
+        { id: "pal_stand", name: "Stand Fast", desc: "+0.5%/s Grit combat regen per rank", ranks: 3, fx: { grit: 0.005 } },
+        { id: "pal_ward", name: "Warding Light", desc: "+2% damage reduction per rank", ranks: 3, fx: { dr: 0.02 } },
+      ],
+      key: { id: "pal_wall", name: "Shield Wall", cd: 30, desc: "The party takes half damage for 6s. Rises to meet a King's Crushing Blow, or a line about to fold." },
+      post: [
+        { id: "pal_bulwark", name: "Bulwark Unbroken", desc: "+5% max HP per rank", ranks: 4, fx: { hp: 0.05 } },
+        { id: "pal_oath", name: "Sentinel's Oath", desc: "Shield Wall recovers 3s sooner per rank", ranks: 4, fx: { cd: 3 } },
+        { id: "pal_rampart", name: "Living Rampart", desc: "+2% damage reduction per rank", ranks: 3, fx: { dr: 0.02 } },
+      ] },
+    { id: "crusader", name: "Crusader", blurb: "The line advances",
+      pre: [
+        { id: "pal_zeal", name: "Zeal", desc: "+5% damage per rank", ranks: 3, fx: { dmg: 0.05 } },
+        { id: "pal_smite", name: "Smite", desc: "+3% stun chance per rank", ranks: 3, fx: { stun: 0.03 } },
+        { id: "pal_retrib", name: "Retribution", desc: "+8% thorns per rank", ranks: 3, fx: { thorns: 0.08 } },
+      ],
+      key: { id: "pal_call", name: "Challenger's Call", cd: 20, desc: "Every foe is forced onto the paladin for 8s, who stands 15% harder while they answer." },
+      post: [
+        { id: "pal_crusade", name: "Crusade", desc: "+4% damage per rank", ranks: 4, fx: { dmg: 0.04 } },
+        { id: "pal_clarion", name: "Clarion", desc: "Challenger's Call recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "pal_aftershock", name: "Aftershock", desc: "+6% thorns per rank", ranks: 3, fx: { thorns: 0.06 } },
+      ] },
+  ] },
+  warrior: { paths: [
+    { id: "juggernaut", name: "Juggernaut", rec: true, blurb: "Too angry to die",
+      pre: [
+        { id: "war_hide", name: "Iron Hide", desc: "+4% max HP per rank", ranks: 3, fx: { hp: 0.04 } },
+        { id: "war_wind", name: "Second Wind", desc: "+0.5%/s Grit combat regen per rank", ranks: 3, fx: { grit: 0.005 } },
+        { id: "war_shrug", name: "Shrug It Off", desc: "+2% damage reduction per rank", ranks: 3, fx: { dr: 0.02 } },
+      ],
+      key: { id: "war_unbrk", name: "Unbreakable", cd: 30, desc: "At death's door the warrior refuses: 60% less damage taken and triple Grit for 8s." },
+      post: [
+        { id: "war_colossus", name: "Colossus", desc: "+5% max HP per rank", ranks: 4, fx: { hp: 0.05 } },
+        { id: "war_relent", name: "Relentless", desc: "Unbreakable recovers 3s sooner per rank", ranks: 4, fx: { cd: 3 } },
+        { id: "war_stone", name: "Heart of Stone", desc: "+2% damage reduction per rank", ranks: 3, fx: { dr: 0.02 } },
+      ] },
+    { id: "warlord", name: "Warlord", blurb: "The war follows the voice",
+      pre: [
+        { id: "war_fury", name: "Fury", desc: "+5% damage per rank", ranks: 3, fx: { dmg: 0.05 } },
+        { id: "war_over", name: "Overwhelm", desc: "+3% stun chance per rank", ranks: 3, fx: { stun: 0.03 } },
+        { id: "war_blood", name: "Bloodlust", desc: "+1.5% lifesteal per rank", ranks: 3, fx: { ls: 0.015 } },
+      ],
+      key: { id: "war_roar", name: "Battle Roar", cd: 25, desc: "A roar drags every foe onto the warrior for 6s and stirs the party to +20% damage." },
+      post: [
+        { id: "war_conq", name: "Conqueror", desc: "+4% damage per rank", ranks: 4, fx: { dmg: 0.04 } },
+        { id: "war_horn", name: "Horn of War", desc: "Battle Roar recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "war_thirst", name: "Blood Thirst", desc: "+1% lifesteal per rank", ranks: 3, fx: { ls: 0.01 } },
+      ] },
+  ] },
+  archer: { paths: [
+    { id: "sharpshooter", name: "Sharpshooter", rec: true, blurb: "One arrow, one answer",
+      pre: [
+        { id: "arc_eye", name: "Deadeye", desc: "+6% crit damage per rank", ranks: 3, fx: { critDmg: 0.06 } },
+        { id: "arc_pierce", name: "Piercing Shots", desc: "+4% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.04 } },
+        { id: "arc_focus", name: "Focus", desc: "+2% crit chance per rank", ranks: 3, fx: { crit: 2 } },
+      ],
+      key: { id: "arc_mark", name: "Deathmark", cd: 25, desc: "Marks the mightiest foe: the whole party deals +15% to it for 8s." },
+      post: [
+        { id: "arc_lethal", name: "Lethal Draw", desc: "+4% crit damage per rank", ranks: 4, fx: { critDmg: 0.04 } },
+        { id: "arc_hunter", name: "Hunter's Rhythm", desc: "Deathmark recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "arc_cull", name: "The Cull", desc: "+3% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.03 } },
+      ] },
+    { id: "skirmisher", name: "Skirmisher", blurb: "Never where the blow lands",
+      pre: [
+        { id: "arc_quick", name: "Quickdraw", desc: "+4% attack speed per rank", ranks: 3, fx: { spd: 0.04 } },
+        { id: "arc_barb", name: "Barbed Tips", desc: "+4% damage per rank", ranks: 3, fx: { dmg: 0.04 } },
+        { id: "arc_fleet", name: "Fleet", desc: "Ultimate charges 5% faster per rank", ranks: 3, fx: { ult: 0.05 } },
+      ],
+      key: { id: "arc_rain", name: "Rain of Barbs", cd: 22, desc: "A whistling volley rakes every foe for 120% damage and staggers their attacks." },
+      post: [
+        { id: "arc_tempo", name: "Tempo", desc: "+3% attack speed per rank", ranks: 4, fx: { spd: 0.03 } },
+        { id: "arc_quiver", name: "Endless Quiver", desc: "Rain of Barbs recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "arc_keen", name: "Keen Edge", desc: "+3% damage per rank", ranks: 3, fx: { dmg: 0.03 } },
+      ] },
+  ] },
+  rogue: { paths: [
+    { id: "assassin", name: "Assassin", rec: true, blurb: "The wound that was always fatal",
+      pre: [
+        { id: "rog_opp", name: "Opportunist", desc: "+4% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.04 } },
+        { id: "rog_cut", name: "Cutthroat", desc: "+6% crit damage per rank", ranks: 3, fx: { critDmg: 0.06 } },
+        { id: "rog_grim", name: "Grim Focus", desc: "+2% crit chance per rank", ranks: 3, fx: { crit: 2 } },
+      ],
+      key: { id: "rog_assn", name: "Assassinate", cd: 18, desc: "A single perfect strike for 400% damage against a foe below 30% HP." },
+      post: [
+        { id: "rog_venom", name: "Envenomed Steel", desc: "+4% crit damage per rank", ranks: 4, fx: { critDmg: 0.04 } },
+        { id: "rog_shadow", name: "Shadowstep", desc: "Assassinate recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "rog_reaper", name: "Reaper's Due", desc: "+3% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.03 } },
+      ] },
+    { id: "tempest", name: "Tempest", blurb: "Steel in every direction at once",
+      pre: [
+        { id: "rog_flow", name: "Flow", desc: "+4% attack speed per rank", ranks: 3, fx: { spd: 0.04 } },
+        { id: "rog_fang", name: "Twin Fangs", desc: "+4% damage per rank", ranks: 3, fx: { dmg: 0.04 } },
+        { id: "rog_wind", name: "Wind at the Back", desc: "Ultimate charges 5% faster per rank", ranks: 3, fx: { ult: 0.05 } },
+      ],
+      key: { id: "rog_dance", name: "Blade Dance", cd: 22, desc: "Eight strikes at 60% damage scattered across the enemy line." },
+      post: [
+        { id: "rog_gale", name: "Gale Step", desc: "+3% attack speed per rank", ranks: 4, fx: { spd: 0.03 } },
+        { id: "rog_edge", name: "Dancing Edge", desc: "Blade Dance recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "rog_keen", name: "Whetted Fangs", desc: "+3% damage per rank", ranks: 3, fx: { dmg: 0.03 } },
+      ] },
+  ] },
+  chain: { paths: [
+    { id: "impaler", name: "Impaler", rec: true, blurb: "The hook finds the heart",
+      pre: [
+        { id: "chn_barb", name: "Hooked Barbs", desc: "+4% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.04 } },
+        { id: "chn_crush", name: "Crushing Links", desc: "+6% crit damage per rank", ranks: 3, fx: { critDmg: 0.06 } },
+        { id: "chn_grip", name: "Iron Grip", desc: "+2% stun chance per rank", ranks: 3, fx: { stun: 0.02 } },
+      ],
+      key: { id: "chn_impale", name: "Impale", cd: 20, desc: "Drives the hook through a foe below 30% HP: 300% damage and a 1s stun." },
+      post: [
+        { id: "chn_spike", name: "Spiked Terminus", desc: "+4% crit damage per rank", ranks: 4, fx: { critDmg: 0.04 } },
+        { id: "chn_windlass", name: "Windlass", desc: "Impale recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "chn_gut", name: "Gutting Stroke", desc: "+3% damage to foes below 35% HP per rank", ranks: 3, fx: { exec: 0.03 } },
+      ] },
+    { id: "cyclone", name: "Cyclone", blurb: "A storm with edges",
+      pre: [
+        { id: "chn_mom", name: "Momentum", desc: "+4% attack speed per rank", ranks: 3, fx: { spd: 0.04 } },
+        { id: "chn_reach", name: "Long Reach", desc: "+4% damage per rank", ranks: 3, fx: { dmg: 0.04 } },
+        { id: "chn_whirl", name: "Whirl", desc: "Ultimate charges 5% faster per rank", ranks: 3, fx: { ult: 0.05 } },
+      ],
+      key: { id: "chn_cyc", name: "Hook Cyclone", cd: 24, desc: "The chains sweep every foe for 130% damage and hurl them back." },
+      post: [
+        { id: "chn_gale", name: "Gathering Gale", desc: "+3% attack speed per rank", ranks: 4, fx: { spd: 0.03 } },
+        { id: "chn_chains", name: "Singing Chains", desc: "Hook Cyclone recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "chn_keen", name: "Honed Hooks", desc: "+3% damage per rank", ranks: 3, fx: { dmg: 0.03 } },
+      ] },
+  ] },
+  mystic: { paths: [
+    { id: "renewal", name: "Renewal", rec: true, blurb: "Life answers every wound",
+      pre: [
+        { id: "mys_blossom", name: "Blossom", desc: "+6% healing per rank", ranks: 3, fx: { heal: 0.06 } },
+        { id: "mys_over", name: "Overgrowth", desc: "Heals splash +5% to the party per rank", ranks: 3, fx: { splash: 0.05 } },
+        { id: "mys_roots", name: "Deep Roots", desc: "+4% max HP per rank", ranks: 3, fx: { hp: 0.04 } },
+      ],
+      key: { id: "mys_bloom", name: "Verdant Bloom", cd: 25, desc: "Life floods the party: 4% max HP per second for 8s, and bleeds close twice as fast beneath it." },
+      post: [
+        { id: "mys_garden", name: "Garden of Light", desc: "+5% healing per rank", ranks: 4, fx: { heal: 0.05 } },
+        { id: "mys_evergreen", name: "Evergreen", desc: "Verdant Bloom recovers 2.5s sooner per rank", ranks: 4, fx: { cd: 2.5 } },
+        { id: "mys_canopy", name: "Canopy", desc: "Heals splash +4% to the party per rank", ranks: 3, fx: { splash: 0.04 } },
+      ] },
+    { id: "purity", name: "Purity", blurb: "The light that burns clean",
+      pre: [
+        { id: "mys_clarity", name: "Clarity", desc: "+6% bolt damage per rank", ranks: 3, fx: { dmg: 0.06 } },
+        { id: "mys_calm", name: "Lasting Calm", desc: "Soothe calms 1s more fury per bolt per rank", ranks: 3, fx: { soothe: 1 } },
+        { id: "mys_mirror", name: "Mirror Ward", desc: "+2% damage reduction per rank", ranks: 3, fx: { dr: 0.02 } },
+      ],
+      key: { id: "mys_cleanse", name: "Cleanse", cd: 20, desc: "Strips every bleed from the party and mends each cleansed ally for 150% heal power." },
+      post: [
+        { id: "mys_radiant", name: "Radiant Wrath", desc: "+5% bolt damage per rank", ranks: 4, fx: { dmg: 0.05 } },
+        { id: "mys_still", name: "Stillwater", desc: "Cleanse recovers 2s sooner per rank", ranks: 4, fx: { cd: 2 } },
+        { id: "mys_purge", name: "Purity's Reach", desc: "Soothe calms 0.5s more fury per bolt per rank", ranks: 3, fx: { soothe: 0.5 } },
+      ] },
+  ] },
+};
+
+/* tree bookkeeping shared by the intent layer, the auto-assign script,
+   stats(), and both Skills UIs */
+export const pathOf = (m) => {
+  const tree = TALENTS[m.style];
+  return tree ? tree.paths.find((p) => p.id === m.path) || null : null;
+};
+export const spentPts = (m) => Object.values(m.skills).reduce((a, b) => a + b, 0);
+export const pathPreDone = (m, p) => p.pre.every((n) => (m.skills[n.id] || 0) >= n.ranks);
+export const hasKeystone = (m) => { const p = pathOf(m); return !!(p && (m.skills[p.key.id] || 0) > 0); };
+export function findTalent(m, id) {
+  for (const s of SKILLS[m.cls]) if (s.id === id) return { node: s, kind: "trunk" };
+  const tree = TALENTS[m.style];
+  if (tree) for (const p of tree.paths) {
+    for (const n of p.pre) if (n.id === id) return { node: n, kind: "pre", path: p };
+    if (p.key.id === id) return { node: p.key, kind: "key", path: p };
+    for (const n of p.post) if (n.id === id) return { node: n, kind: "post", path: p };
+  }
+  return null;
+}
+/* One gatekeeper for every way a point can be spent (the skillUp intent and
+   the auto-assign script both come through here): trunk is always open under
+   MAX_RANK; path nodes demand the gate met AND that path chosen (the hard
+   lock); the keystone demands its three forerunners maxed; the deep passives
+   demand the keystone itself. */
+export function canBuyTalent(m, id) {
+  const t = findTalent(m, id);
+  if (!t) return false;
+  const r = m.skills[id] || 0;
+  if (t.kind === "trunk") return r < MAX_RANK;
+  if (spentPts(m) < GATE_PTS || m.path !== t.path.id) return false;
+  if (t.kind === "pre") return r < t.node.ranks;
+  if (t.kind === "key") return r < 1 && pathPreDone(m, t.path);
+  return r < t.node.ranks && (m.skills[t.path.key.id] || 0) > 0;
+}
+
 export const HATS = [
   { id: "none", name: "Bare Head", price: 0 },
   { id: "hood", name: "Rogue Hood", price: 200 },
@@ -344,7 +558,7 @@ export function makeMember(g, key, name, cls) {
   const m = {
     id: g.uid++, key, name, cls, level: 1, xp: 0, sp: 0,
     style: pick(STYLES[cls]).id, swing: 0, shootT: 0, castT: 0, chainT: 0, chainTgt: null,
-    skills: {}, autoSkill: true, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
+    skills: {}, autoSkill: true, path: null, ultMode: "auto", ultFire: false, ksCd: 0, retellings: 0, gear: { weapon: null, armor: null, trinket: null },
     cos: { body: fem ? "f" : "m", race, skin: startSkin, under: pick(UNDERGARMENTS).id, underC: Math.floor(Math.random() * UNDER_COLORS.length), fresh: true, hat: "none", hair: Math.floor(Math.random() * 4) % 4, hairstyle: startHair, outfit: defaults[cls], weapon: "steel", accessory: "none", cape: "none", pet: "none", aura: "none" },
     owned: { hat: ["none"], hair: [0, 1, 2, 3], hairstyle: [...FREE_HAIRSTYLES], outfit: [0, defaults[cls]], weapon: ["steel"], accessory: ["none"], cape: ["none"], pet: ["none"], aura: ["none"] },
     hp: 1, alive: true, atkT: rand(0.3, 1.2), lunge: 0, deadT: 0, hop: 0,
@@ -360,6 +574,7 @@ export function stats(m, g) {
   let hp = b.hp + b.hpL * L, dmg = b.dmg + b.dmgL * L, spd = b.spd;
   let armor = b.armor, crit = b.crit, heal = (b.heal || 0) + (b.healL || 0) * L;
   let dr = 0, stun = 0, splash = 0, ls = 0, thorns = 0, critDmg = 0, goldF = 0;
+  let grit = 0, exec = 0, sootheAdd = 0, ultHaste = 0, cdCut = 0;
   const sm = styleOf(m);
   dmg *= sm.dmgMul; spd *= sm.spdMul; crit += sm.critAdd; armor += sm.armorAdd || 0;
   if (m.cls === "tank") { hp *= 1 + 0.08 * (sk.fort || 0); dr = 0.04 * (sk.bulw || 0); stun = 0.06 * (sk.bash || 0); }
@@ -397,6 +612,32 @@ export function stats(m, g) {
        wounded foes, hitEnemy), Lifeward (a mender keeps the road's recovery,
        the advance phase in tick), and trinity momentum (killEnemy). */
   }
+  /* talent-tree passives (Phase 5) ride the FINAL numbers, like the class
+     triangle below: the trunk fundamentals multiply base stats and wash out
+     under gear within a few chapters, but a chosen path is the build's
+     identity and has to matter as much at live scale as on day one. Paths
+     are exclusive, so iterating both is harmless — only bought nodes score. */
+  const tree = TALENTS[m.style];
+  if (tree) for (const p of tree.paths) for (const n of [...p.pre, ...p.post]) {
+    const r = sk[n.id] || 0; if (!r) continue;
+    const f = n.fx;
+    if (f.hp) hp *= 1 + f.hp * r;
+    if (f.dmg) dmg *= 1 + f.dmg * r;
+    if (f.heal) heal *= 1 + f.heal * r;
+    if (f.spd) spd /= 1 + f.spd * r;
+    if (f.crit) crit += f.crit * r;
+    if (f.critDmg) critDmg += f.critDmg * r;
+    if (f.dr) dr += f.dr * r;
+    if (f.stun) stun += f.stun * r;
+    if (f.splash) splash += f.splash * r;
+    if (f.ls) ls += f.ls * r;
+    if (f.thorns) thorns += f.thorns * r;
+    if (f.grit) grit += f.grit * r;
+    if (f.exec) exec += f.exec * r;
+    if (f.soothe) sootheAdd += f.soothe * r;
+    if (f.ult) ultHaste += f.ult * r;
+    if (f.cd) cdCut += f.cd * r;
+  }
   /* the class triangle: applied to the FINAL numbers so gear power can't
      wash class identity out (see the CLASSES comment) */
   const cm = CLASSES[m.cls].mul;
@@ -407,7 +648,8 @@ export function stats(m, g) {
      (measured: a live-scale solo healer stuck in one elite fight for six
      sim-hours against the Dire Bat's drain) */
   if (CLASSES[m.cls].healBolt) dmg += heal * CLASSES[m.cls].healBolt;
-  return { hp: Math.round(hp), dmg, spd, armor, crit: clamp(crit, 0, 60), heal, dr, stun, splash, ls, thorns, critDmg, goldF };
+  return { hp: Math.round(hp), dmg, spd, armor, crit: clamp(crit, 0, 60), heal, dr, stun, splash, ls, thorns, critDmg, goldF,
+    regen: (CLASSES[m.cls].regen || 0) + grit, exec, sootheAdd, ultHaste, cdCut };
 }
 
 /* Persistence helpers: a character's durable identity, without transient
@@ -416,6 +658,7 @@ export function dehydrateMember(m) {
   return {
     key: m.key, name: m.name, cls: m.cls, style: m.style,
     level: m.level, xp: m.xp, sp: m.sp, autoSkill: m.autoSkill,
+    path: m.path || null, ultMode: m.ultMode || "auto",
     skills: m.skills, gear: m.gear, cos: m.cos, owned: m.owned,
     kills: m.kills, dmgDone: m.dmgDone, healDone: m.healDone,
     retellings: m.retellings || 0,
@@ -426,6 +669,7 @@ export function rehydrateMember(g, d) {
   const m = makeMember(g, d.key || d.name, d.name, d.cls);
   Object.assign(m, {
     style: d.style, level: d.level, xp: d.xp, sp: d.sp, autoSkill: d.autoSkill !== false,
+    path: d.path || null, ultMode: d.ultMode || "auto",
     skills: d.skills || {}, gear: d.gear, cos: d.cos, owned: d.owned,
     kills: d.kills || 0, dmgDone: d.dmgDone || 0, healDone: d.healDone || 0,
     retellings: d.retellings || 0,
@@ -464,7 +708,7 @@ export function applyAppearance(g, m, p) {
   if (wasFresh && p.cls && p.cls !== m.cls) {
     m.cls = p.cls;
     m.style = STYLES[p.cls][0].id;
-    m.skills = {}; m.sp = m.level - 1;
+    m.skills = {}; m.path = null; m.sp = m.level - 1;
     const fit = CLASS_OUTFIT[p.cls];
     if (!m.owned.outfit.includes(fit)) m.owned.outfit.push(fit);
     m.cos.outfit = fit;
@@ -740,7 +984,12 @@ export const bossTier = (g) => {
      parties — enough that a solo tank's siege stays mathematically winnable
      against its own sustain, never enough to hand back the deleted King */
   const relief = clamp(0.75 + 0.125 * (g.members.length - 1), 0.75, 1);
-  return Math.min(30, 5 + threatOf(g) * 0.5) * relief;
+  /* cap 30 -> 36 with Phase 5: a finished talent path is a permanent
+     power step for a capped veteran world, and the wall must grow with
+     the ceiling or the trinity band collapses (measured 27.4s -> 23.2s
+     mean live King TTK). Fresh worlds sit far below the cap (threat 35
+     -> tier 22.5) and never feel this. */
+  return Math.min(36, 5 + threatOf(g) * 0.5) * relief;
 };
 /* The enrage clock: seconds a King tolerates being fought before its fury
    mounts, and how long the mounting takes to reach the ×2 cap. Deliberately
@@ -952,7 +1201,9 @@ function killEnemy(g, killer, e) {
 
 function rollDmg(m) {
   const crit = Math.random() * 100 < m._st.crit;
-  return { dmg: m._st.dmg * rand(0.85, 1.15) * (crit ? 2 + (m._st.critDmg || 0) : 1), crit };
+  /* Battle Roar (Phase 5): the Warlord's voice carries the whole party */
+  const roar = (m.roarT || 0) > 0 ? 1.2 : 1;
+  return { dmg: m._st.dmg * rand(0.85, 1.15) * roar * (crit ? 2 + (m._st.critDmg || 0) : 1), crit };
 }
 
 function hitEnemy(g, m, tgt, dmg, crit) {
@@ -960,11 +1211,16 @@ function hitEnemy(g, m, tgt, dmg, crit) {
   /* Warpath: a killer's presence teaches the whole party to finish what it
      starts — everyone's blows land half again as hard on wounded foes. */
   if (tgt.hp / tgt.maxHp < 0.2 && rolesAlive(g).dps) dmg *= 1.5;
+  /* execute talents (Phase 5): the killer paths widen the kill window */
+  if (m && m._st && m._st.exec > 0 && tgt.hp / tgt.maxHp < 0.35) dmg *= 1 + m._st.exec;
+  /* Deathmark (Phase 5): a marked foe is everyone's quarry */
+  if ((tgt.markT || 0) > 0) dmg *= 1 + (tgt.markAmp || 0.15);
   /* Soothe (Phase 4): a mender's bolt is a balm even to its target — each
      one calms a King's mounting fury by a few seconds. The healer's answer
-     to the enrage clock, and why their weave holds long sieges together. */
+     to the enrage clock, and why their weave holds long sieges together.
+     Purity talents (Phase 5) deepen the calm. */
   if (m && CLASSES[m.cls].soothe && tgt.boss) {
-    tgt.fightT = Math.max(0, (tgt.fightT || 0) - CLASSES[m.cls].soothe);
+    tgt.fightT = Math.max(0, (tgt.fightT || 0) - CLASSES[m.cls].soothe - ((m._st && m._st.sootheAdd) || 0));
     if ((tgt.rage || 0) > 0 && Math.random() < 0.4) addFloat(g, tgt.x, tgt.y - 66 * (tgt.scale || 1) - 14, "SOOTHED", "#7fd069");
   }
   if (tgt.shell > 0) {
@@ -1054,10 +1310,11 @@ export function doRetreat(g) {
 }
 
 export function resetChar(g, m) {
-  m.level = 1; m.xp = 0; m.sp = 0; m.skills = {};
+  m.level = 1; m.xp = 0; m.sp = 0; m.skills = {}; m.path = null;
   m.gear = { weapon: null, armor: null, trinket: null };
   m.kills = 0; m.dmgDone = 0; m.healDone = 0;
-  m.ult = 0; m.ultT = 0;
+  m.ult = 0; m.ultT = 0; m.ultFire = false;
+  m.ksCd = 0; m.wallT = 0; m.unbrkT = 0; m.callT = 0; m.roarT = 0; m.hotT = 0;
   m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
 }
 
@@ -1121,6 +1378,13 @@ function hurtMember(g, m, rawDmg, src) {
      less of the enemy's fury — cleaves and boss specials included. This is
      the mechanical reason damage wants a shield to stand behind. */
   if (m.cls !== "tank" && rolesAlive(g).tank) rawDmg *= 0.55;
+  /* keystone guards (Phase 5): the Shield Wall covers everyone beneath it,
+     Unbreakable is the warrior's own refusal, the Challenger stands harder
+     while the foes they called answer. All BEFORE mitigation, like Vanguard,
+     so they stack with armor instead of fighting it. */
+  if ((m.wallT || 0) > 0) rawDmg *= 0.5;
+  if ((m.unbrkT || 0) > 0) rawDmg *= 0.4;
+  if ((m.callT || 0) > 0) rawDmg *= 0.85;
   const dmg = mitigate(g, m, rawDmg);
   m.hp -= dmg;
   addFloat(g, m.x, m.y - 70, "-" + fmt(dmg), "#ef6461");
@@ -1379,16 +1643,174 @@ function castUlt(g, m, foes, alive) {
   return true;
 }
 
+/* ---------------- talent keystones (Phase 5) ----------------
+   Auto-cast cooldown abilities, one per completed path. Like ultimates they
+   fire themselves — idle purity holds — but where an ult is a metronome, a
+   keystone is an ANSWER: each one watches for the moment its path exists
+   for (the Crusher windup, the bleeding line, the wounded quarry) and holds
+   its fire otherwise. Returns false when the moment hasn't come, so the
+   cooldown is only spent on a cast that mattered. */
+function ksCooldown(m, p) { return Math.max(8, p.key.cd - (m._st.cdCut || 0)); }
+function castKeystone(g, m, foes, alive) {
+  const p = pathOf(m);
+  if (!p || !(m.skills[p.key.id] > 0)) return false;
+  foes = foes.filter((e) => e.hp > 0);
+  const st = m._st;
+  const big = (txt, col) => addFloat(g, m.x, m.y - 104, txt, col, true);
+  const id = p.key.id;
+  const hpFrac = (x) => x.hp / x._st.hp;
+  if (id === "pal_wall") {
+    /* the Sentinel raises the wall for the Crusher, or for a folding line */
+    const crusher = foes.some((e) => e.boss && e.windup > 0 && e.nextSpec === "crusher");
+    const avg = alive.reduce((a, x) => a + hpFrac(x), 0) / Math.max(1, alive.length);
+    if (!crusher && avg > 0.55) return false;
+    for (const a of alive) a.wallT = 6;
+    big("SHIELD WALL!", "#5aa9e6");
+    addLog(g, `${m.name} plants their shield — SHIELD WALL! The party stands behind it.`, "#5aa9e6");
+    sfxEv(g, "ult"); shakeFx(g, 4);
+    for (const a of alive) sparkle(g, a.x, a.y - 20, "#9cc9f2", 6);
+  } else if (id === "pal_call" || id === "war_roar") {
+    const boss = foes.some((e) => e.boss);
+    const exposed = alive.some((a) => a.cls !== "tank" && hpFrac(a) < 0.6);
+    if (id === "pal_call" ? !(boss || exposed) : !(boss || foes.length >= 2)) return false;
+    const dur = id === "pal_call" ? 8 : 6;
+    for (const e of foes) { e.tauntId = m.id; e.tauntT = dur; }
+    m.callT = dur;
+    if (id === "war_roar") { for (const a of alive) a.roarT = 6; }
+    big(id === "pal_call" ? "CHALLENGER'S CALL!" : "BATTLE ROAR!", "#f2c14e");
+    addLog(g, id === "pal_call"
+      ? `${m.name} strikes shield with blade — every foe answers the CHALLENGER'S CALL!`
+      : `${m.name} lets loose a BATTLE ROAR — the foes turn, and the party surges!`, "#f2c14e");
+    sfxEv(g, "ult"); shakeFx(g, 4);
+  } else if (id === "war_unbrk") {
+    if (hpFrac(m) > 0.4) return false;
+    m.unbrkT = 8;
+    big("UNBREAKABLE!", "#e77463");
+    addLog(g, `${m.name} plants their feet at death's door — UNBREAKABLE!`, "#e77463");
+    sfxEv(g, "ult"); shakeFx(g, 5);
+    sparkle(g, m.x, m.y - 24, "#f2a94e", 10);
+  } else if (id === "arc_mark") {
+    if (!(foes.some((e) => e.boss || e.elite) || foes.length >= 3)) return false;
+    const tgt = foes.reduce((a, e) => (e.maxHp > a.maxHp ? e : a), foes[0]);
+    if (!tgt) return false;
+    tgt.markT = 8; tgt.markAmp = 0.15;
+    big("DEATHMARK!", "#ef6461");
+    addFloat(g, tgt.x, tgt.y - 66 * (tgt.scale || 1) - 18, "MARKED", "#ef6461", true);
+    addLog(g, `${m.name} looses the black arrow — the ${tgt.name} is MARKED for death!`, "#ef6461");
+    sfxEv(g, "ult");
+  } else if (id === "arc_rain") {
+    if (foes.length < 2) return false;
+    big("RAIN OF BARBS!", "#7fd069");
+    addLog(g, `${m.name} darkens the sky — a RAIN OF BARBS!`, "#7fd069");
+    sfxEv(g, "ult");
+    const tint = WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c;
+    for (const e of [...foes]) if (e.hp > 0) {
+      g.projectiles.push({ kind: "arrow", x: e.x + rand(-24, 24), y: -10, tgtKind: "enemy", tgtId: e.id, spd: 500, dmg: st.dmg * 1.2 * rand(0.85, 1.15), crit: Math.random() * 100 < st.crit, srcId: m.id, tint });
+      e.atkT = (e.atkT || 0) + 0.8;
+    }
+  } else if (id === "rog_assn" || id === "chn_impale") {
+    const prey = foes.filter((e) => e.hp / e.maxHp < 0.3).sort((a, b) => (b.boss ? 1 : 0) - (a.boss ? 1 : 0) || b.maxHp - a.maxHp)[0];
+    if (!prey) return false;
+    m.lunge = 0.3;
+    big(id === "rog_assn" ? "ASSASSINATE!" : "IMPALE!", "#b07fe0");
+    addLog(g, id === "rog_assn"
+      ? `${m.name} finds the opening — ASSASSINATE!`
+      : `${m.name} drives the hook home — IMPALE!`, "#b07fe0");
+    sfxEv(g, "ult"); shakeFx(g, 3);
+    hitEnemy(g, m, prey, st.dmg * (id === "rog_assn" ? 4 : 3) * rand(0.9, 1.1), Math.random() * 100 < st.crit);
+    if (id === "chn_impale" && prey.hp > 0) prey.stunT = Math.max(prey.stunT, 1);
+  } else if (id === "rog_dance") {
+    if (!(foes.length >= 2 || foes.some((e) => e.boss))) return false;
+    big("BLADE DANCE!", "#b07fe0");
+    addLog(g, `${m.name} becomes a BLADE DANCE — steel in every direction!`, "#b07fe0");
+    sfxEv(g, "ult");
+    for (let k = 0; k < 8; k++) {
+      const tgt = pick(foes);
+      g.pending.push({ t: 0.05 + k * 0.06, srcId: m.id, tgtId: tgt.id, dmg: st.dmg * 0.6 * rand(0.9, 1.1), crit: Math.random() * 100 < st.crit });
+    }
+  } else if (id === "chn_cyc") {
+    if (foes.length < 2) return false;
+    big("HOOK CYCLONE!", "#9aa3b5");
+    addLog(g, `${m.name} whirls the chains into a HOOK CYCLONE!`, "#9aa3b5");
+    sfxEv(g, "ult"); shakeFx(g, 4);
+    for (const e of [...foes]) if (e.hp > 0) {
+      hitEnemy(g, m, e, st.dmg * 1.3 * rand(0.9, 1.1), Math.random() * 100 < st.crit);
+      if (e.hp > 0) e.x = Math.min(620, e.x + 38);
+    }
+  } else if (id === "mys_bloom") {
+    const low = alive.filter((a) => hpFrac(a) < 0.65).length;
+    const bleeding = alive.filter((a) => (a.bleedT || 0) > 0).length;
+    if (!(low >= 2 || bleeding >= 2 || (alive.length === 1 && hpFrac(m) < 0.5))) return false;
+    for (const a of alive) { a.hotT = 8; a.hotAmp = 0.04; }
+    big("VERDANT BLOOM!", "#7fd069");
+    addLog(g, `${m.name} calls life itself up through the ground — VERDANT BLOOM!`, "#7fd069");
+    sfxEv(g, "ult");
+    for (const a of alive) sparkle(g, a.x, a.y - 16, "#9fe88c", 8);
+  } else if (id === "mys_cleanse") {
+    const bleeders = alive.filter((a) => (a.bleedT || 0) > 1);
+    if (!(bleeders.length >= 2 || alive.some((a) => (a.bleedT || 0) > 4))) return false;
+    big("CLEANSE!", "#fff1c9");
+    addLog(g, `${m.name} burns the wounds clean — CLEANSE!`, "#7fd069");
+    sfxEv(g, "ult");
+    for (const a of alive) if ((a.bleedT || 0) > 0) {
+      a.bleedT = 0; a.bleedDps = 0;
+      applyHeal(g, m, a, st.heal * 1.5);
+      sparkle(g, a.x, a.y - 22, "#fff1c9", 8);
+    }
+  } else return false;
+  m.ksCd = ksCooldown(m, p);
+  return true;
+}
+
 /* ---------------- the tick ---------------- */
-function autoSpendSkills(g, m) {
-  let spent = 0, last = null;
-  while (m.sp > 0) {
-    const open = SKILLS[m.cls].filter((s) => (m.skills[s.id] || 0) < MAX_RANK);
-    if (!open.length) break;
-    last = pick(open);
-    m.skills[last.id] = (m.skills[last.id] || 0) + 1; m.sp--; spent++;
+/* The auto-assign build script (Phase 5): random spending dies with the
+   trees — a point wandering into prerequisites it can't meet would strand
+   an idle player short of their keystone forever. Each style instead walks
+   a deterministic order: two ranks into each fundamental (the six-point
+   gate), straight down the recommended path to the keystone, the deep
+   passives, then the trunk finished. Points past a full build bank. */
+export function talentPlan(m) {
+  const order = [];
+  const trunk = SKILLS[m.cls];
+  for (let r = 0; r < 2; r++) for (const s of trunk) order.push(s.id);
+  const tree = TALENTS[m.style];
+  if (tree) {
+    const p = tree.paths.find((x) => x.id === m.path) || tree.paths.find((x) => x.rec) || tree.paths[0];
+    order.push({ pick: p.id });
+    for (let r = 0; r < 3; r++) for (const n of p.pre) if (r < n.ranks) order.push(n.id);
+    order.push(p.key.id);
+    for (let r = 0; r < 4; r++) for (const n of p.post) if (r < n.ranks) order.push(n.id);
   }
-  if (spent === 1) addLog(g, `${m.name} instinctively hones ${last.name} (rank ${m.skills[last.id]})`, "#8b84ad");
+  for (let r = 2; r < MAX_RANK; r++) for (const s of trunk) order.push(s.id);
+  return order;
+}
+function autoSpendSkills(g, m) {
+  let spent = 0, last = null, guard = 200;
+  while (m.sp > 0 && guard-- > 0) {
+    const plan = talentPlan(m);
+    const want = {};
+    let step = null;
+    for (const s of plan) {
+      if (typeof s === "object") {
+        if (!m.path && spentPts(m) >= GATE_PTS) { step = s; break; }
+        continue;
+      }
+      want[s] = (want[s] || 0) + 1;
+      if ((m.skills[s] || 0) < want[s]) { step = s; break; }
+    }
+    if (!step) break; /* the build is complete — further points bank */
+    if (typeof step === "object") {
+      m.path = step.pick;
+      const p = pathOf(m);
+      addLog(g, `${m.name} walks the path of the ${p.name}: ${p.blurb}.`, "#c9a24b");
+      continue;
+    }
+    if (!canBuyTalent(m, step)) break; /* never burn points against a wall */
+    m.skills[step] = (m.skills[step] || 0) + 1; m.sp--; spent++;
+    last = findTalent(m, step).node;
+    if (last.cd) addLog(g, `⭐ ${m.name} masters ${last.name}!`, "#f2c14e");
+  }
+  if (spent === 1 && last && !last.cd) addLog(g, `${m.name} instinctively hones ${last.name} (rank ${m.skills[last.id]})`, "#8b84ad");
   else if (spent > 1) addLog(g, `${m.name} instinctively spends ${spent} skill points`, "#8b84ad");
 }
 
@@ -1450,15 +1872,30 @@ export function tick(g, dt) {
     m.hop = Math.max(0, m.hop - dt);
     m.shootT = Math.max(0, m.shootT - dt);
     m.ultT = Math.max(0, (m.ultT || 0) - dt);
-    if (m.alive) m.ult = Math.min(1, (m.ult || 0) + dt / ((ULT_CD[m.style] || 24) * (g.mutator === "storm" ? 0.7 : 1)));
+    if (m.alive) m.ult = Math.min(1, (m.ult || 0) + dt * (1 + ((m._st && m._st.ultHaste) || 0)) / ((ULT_CD[m.style] || 24) * (g.mutator === "storm" ? 0.7 : 1)));
     m.castT = Math.max(0, m.castT - dt);
     m.chainT = Math.max(0, m.chainT - dt);
+    /* keystone clocks (Phase 5) */
+    m.ksCd = Math.max(0, (m.ksCd || 0) - dt);
+    m.wallT = Math.max(0, (m.wallT || 0) - dt);
+    m.unbrkT = Math.max(0, (m.unbrkT || 0) - dt);
+    m.callT = Math.max(0, (m.callT || 0) - dt);
+    m.roarT = Math.max(0, (m.roarT || 0) - dt);
+    if (m.wallT > 0 && Math.random() < dt * 5) sparkle(g, m.x, m.y - 18, "#9cc9f2", 1);
     if (m.alive && Math.random() < dt * 0.03) m.bubble = 1.6;
     /* Grit (Phase 4): a tank's wounds close even mid-battle — the sustain
        that makes a solo tank's long King sieges winnable at all, and the
-       last leg of the class identity (soak, hold, endure). */
-    if (g.phase === "combat" && m.alive && CLASSES[m.cls].regen) {
-      m.hp = Math.min(m._st.hp, m.hp + m._st.hp * CLASSES[m.cls].regen * dt);
+       last leg of the class identity (soak, hold, endure). Talent grit
+       deepens it, and Unbreakable (Phase 5) triples it while it holds. */
+    if (g.phase === "combat" && m.alive && m._st.regen > 0) {
+      m.hp = Math.min(m._st.hp, m.hp + m._st.hp * m._st.regen * (m.unbrkT > 0 ? 3 : 1) * dt);
+    }
+    /* Verdant Bloom (Phase 5): the HoT beneath which bleeds close double */
+    if (m.alive && (m.hotT || 0) > 0) {
+      m.hotT -= dt;
+      m.hp = Math.min(m._st.hp, m.hp + m._st.hp * (m.hotAmp || 0.04) * dt);
+      if ((m.bleedT || 0) > 0) m.bleedT = Math.max(0, m.bleedT - dt);
+      if (Math.random() < dt * 3) sparkle(g, m.x, m.y - 16, "#9fe88c", 1);
     }
     /* Rend (Phase 4, the healer check): the bleed a King's blows leave
        behind ignores armor — only healing, potions, or time answer it. */
@@ -1594,7 +2031,12 @@ export function tick(g, dt) {
 
   /* member actions */
   for (const m of alive) {
-    if ((m.ult || 0) >= 1 && castUlt(g, m, foes, alive)) { m.ult = 0; m.atkT = Math.max(m.atkT, 0.35); continue; }
+    /* keystones fire ahead of ultimates: an answer beats a metronome */
+    if ((m.ksCd || 0) <= 0 && castKeystone(g, m, foes, alive)) { m.atkT = Math.max(m.atkT, 0.3); continue; }
+    /* ults auto-cast unless the player asked to call them (Phase 5): in
+       manual mode the charge holds at full until the fireUlt intent latches
+       ultFire, then the next combat beat looses it */
+    if ((m.ult || 0) >= 1 && (m.ultMode !== "manual" || m.ultFire) && castUlt(g, m, foes, alive)) { m.ult = 0; m.ultFire = false; m.atkT = Math.max(m.atkT, 0.35); continue; }
     m.atkT -= dt;
     if (m.atkT > 0) continue;
     m.atkT = m._st.spd;
@@ -1692,6 +2134,8 @@ export function tick(g, dt) {
     e.hitT = Math.max(0, (e.hitT || 0) - dt);
     e.slamT = Math.max(0, (e.slamT || 0) - dt);
     e.screechT = Math.max(0, (e.screechT || 0) - dt);
+    e.tauntT = Math.max(0, (e.tauntT || 0) - dt);
+    e.markT = Math.max(0, (e.markT || 0) - dt);
     if (e.hp <= 0) continue;
     e.lunge = Math.max(0, e.lunge - dt);
     if (e.elite && !e.herald && e.kind === "skeleton" && !e.raised && e.hp <= e.maxHp * 0.6) {
@@ -1810,10 +2254,13 @@ export function tick(g, dt) {
     /* threat targeting: tanks hold aggro; with no tank standing, foes turn
        on whoever threatens them most — the hardest hitter by stat sheet
        (damage per second, so a fast Rogue reads as the threat it is). An
-       unprotected DPS eats the autos their glass-cannon build invites. */
+       unprotected DPS eats the autos their glass-cannon build invites.
+       A taunt (Phase 5) overrides everything while its caller stands. */
+    const taunter = (e.tauntT || 0) > 0 ? alive.find((m) => m.id === e.tauntId && m.alive) : null;
     const tanks = alive.filter((m) => m.cls === "tank" && m.alive);
     let tgt;
-    if (tanks.length) tgt = pick(tanks);
+    if (taunter) tgt = taunter;
+    else if (tanks.length) tgt = pick(tanks);
     else {
       const standing = alive.filter((m) => m.alive);
       tgt = standing[0];
@@ -1884,15 +2331,26 @@ export function applyIntent(g, msg) {
     case "skillUp": {
       const m = byId(msg.memberId);
       if (!m) break;
-      const sk = SKILLS[m.cls].find((s) => s.id === msg.skillId);
-      if (sk && m.sp > 0 && (m.skills[sk.id] || 0) < MAX_RANK) { m.skills[sk.id] = (m.skills[sk.id] || 0) + 1; m.sp--; }
+      const id = String(msg.skillId || "");
+      if (m.sp > 0 && canBuyTalent(m, id)) { m.skills[id] = (m.skills[id] || 0) + 1; m.sp--; }
+      break;
+    }
+    case "choosePath": {
+      const m = byId(msg.memberId);
+      if (!m || m.path) break; /* the hard lock: only a respec walks it back */
+      const tree = TALENTS[m.style];
+      const p = tree && tree.paths.find((x) => x.id === msg.pathId);
+      if (p && spentPts(m) >= GATE_PTS) {
+        m.path = p.id;
+        addLog(g, `${m.name} walks the path of the ${p.name}: ${p.blurb}.`, "#c9a24b");
+      }
       break;
     }
     case "respecSkills": {
       const m = byId(msg.memberId);
       if (!m) break;
-      const spent = Object.values(m.skills).reduce((a, b) => a + b, 0);
-      m.sp += spent; m.skills = {}; m.autoSkill = false;
+      const spent = spentPts(m);
+      m.sp += spent; m.skills = {}; m.path = null; m.autoSkill = false;
       m._st = stats(m, g);
       addLog(g, `${m.name} meditates: ${spent} skill point${spent === 1 ? "" : "s"} reclaimed to spend freely.`, "#8fd069");
       break;
@@ -1902,10 +2360,22 @@ export function applyIntent(g, msg) {
       if (m) m.autoSkill = !!msg.on;
       break;
     }
+    case "setUltMode": {
+      const m = byId(msg.memberId);
+      if (m) { m.ultMode = msg.mode === "manual" ? "manual" : "auto"; m.ultFire = false; }
+      break;
+    }
+    case "fireUlt": {
+      /* "on my mark": latches the held charge; the next combat beat looses
+         it. Latching outside combat is fine — it fires when battle joins. */
+      const m = byId(msg.memberId);
+      if (m && m.ultMode === "manual" && (m.ult || 0) >= 1) m.ultFire = true;
+      break;
+    }
     case "setClass": {
       const m = byId(msg.memberId);
       if (m && CLASSES[msg.cls] && m.cls !== msg.cls) {
-        m.cls = msg.cls; m.skills = {}; m.sp = m.level - 1;
+        m.cls = msg.cls; m.skills = {}; m.path = null; m.sp = m.level - 1;
         m.style = pick(STYLES[msg.cls]).id;
         m._st = stats(m, g); m.hp = m._st.hp;
         addLog(g, `${m.name} respecs into ${CLASSES[msg.cls].name}!`, CLASSES[msg.cls].color);
@@ -1917,8 +2387,16 @@ export function applyIntent(g, msg) {
       if (!m) break;
       const s = STYLES[m.cls].find((x) => x.id === msg.styleId);
       if (s && m.style !== s.id) {
+        /* trees are per style: path points come home, the trunk stays */
+        let refund = 0;
+        const tree = TALENTS[m.style];
+        if (tree) for (const p of tree.paths) for (const n of [...p.pre, { ...p.key, ranks: 1 }, ...p.post]) {
+          if (m.skills[n.id]) { refund += m.skills[n.id]; delete m.skills[n.id]; }
+        }
+        m.sp += refund; m.path = null;
         m.style = s.id;
-        addLog(g, `${m.name} takes up the ways of the ${s.name}!`, CLASSES[m.cls].color);
+        m._st = stats(m, g); m.hp = Math.min(m.hp, m._st.hp);
+        addLog(g, `${m.name} takes up the ways of the ${s.name}!${refund ? ` (${refund} path point${refund === 1 ? "" : "s"} returned)` : ""}`, CLASSES[m.cls].color);
       }
       break;
     }

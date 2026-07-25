@@ -9,10 +9,10 @@ describe("bossTier", () => {
   it("scales with threat and no longer shrinks Kings away for soloists", () => {
     const fresh = buildWorld(COMPS["trinity"]);
     const live = buildWorld(COMPS["trinity"], { live: true });
-    expect(sim.bossTier(live)).toBe(30);              // capped wall at veteran scale
+    expect(sim.bossTier(live)).toBe(36);              // capped wall at veteran scale (30→36 with Phase 5's talent power)
     expect(sim.bossTier(fresh)).toBeLessThan(12);     // stern, not lethal, fresh
     const solo = buildWorld(COMPS["solo-dps"], { live: true });
-    expect(sim.bossTier(solo)).toBeCloseTo(22.5, 1);  // 25% relief, not the old 28% + crowd discount
+    expect(sim.bossTier(solo)).toBeCloseTo(27, 1);    // 25% relief, not the old 28% + crowd discount
   });
 });
 

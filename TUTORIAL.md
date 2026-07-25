@@ -24,11 +24,13 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 **Classes.** New heroes arrive as whichever of Tank 🛡️, DPS ⚔️, or Healer 💚 the guild is currently shortest of — but the choice is yours: the character creator's **Calling** row lets you pick any class before stepping through the doors, with the guild's current need marked ★ as a hint. Tanks stand in front, soak hits, and can stun; DPS melt enemies; Healers keep everyone standing. Changed your mind later? You can still **respec to any class for free** at the bottom of the Skills tab (it resets your skill ranks).
 
-**Fighting styles.** Each class has multiple styles (a Tank might be a Paladin, a DPS a Chainblade…) with different weapons, stats, and a unique **ultimate ability** that charges during combat and fires automatically in a burst of glory. Style changes are free too — experiment.
+**Fighting styles.** Each class has multiple styles (a Tank might be a Paladin, a DPS a Chainblade…) with different weapons, stats, and a unique **ultimate ability** that charges during combat and fires automatically in a burst of glory. Prefer to time it yourself? Flip **⚡ Ultimate** to *on my mark* in the Skills tab — the charge then holds at full until you press **FIRE**. Style changes are free too — experiment (points spent in a style's paths come back when you switch; your class fundamentals stay).
 
 **Levels.** Fighting earns XP. Each level-up grants **+1 skill point** and instantly heals 30% of your max HP.
 
-**Skill points spend themselves.** This is an idle game, so by default every point you earn is automatically invested in a random skill of your class until all are maxed (3 skills, 5 ranks each — spare points are banked). Prefer to build by hand? Open **📚 Skills** and hit **↺ Reset points**: every rank is refunded and auto-assign turns off for your character, leaving you to place points exactly where you want with the + buttons. You can switch auto back on anytime.
+**Talent trees.** Every fighting style has its own tree. It starts with your class's three **Fundamentals** (5 ranks each). Once you've spent six points, the style's two **Paths** open — pick one (the other locks until a reset) and climb it: three path talents, then its **⭐ Keystone** — a signature ability that casts itself at the right moment — then three deeper talents beyond it. A Sentinel paladin raises a **Shield Wall** against the King's Crushing Blow; an Assassin rogue looses a killing strike at wounded foes; a Renewal mystic floods the party with a healing bloom that closes bleeds. The fastest road to a keystone is 16 points (about level 17); a complete build lands around level 37, and spare points bank.
+
+**Skill points spend themselves.** This is an idle game, so by default every point you earn walks the style's recommended path automatically — fundamentals, the ★ path, its keystone, the deep talents. Prefer to build by hand? Open **📚 Skills** and hit **↺ Reset points**: every rank and the path choice are refunded and auto-assign turns off for your character, leaving you to place points exactly where you want with the + buttons (including the other path). You can switch auto back on anytime — it continues from whatever you've picked.
 
 ## The world fights for you
 
@@ -104,7 +106,8 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Boss waves | Every 5th wave (elite on the 3rd) |
 | Difficulty | ⚔️ Threat, not the wave number: how deep the guild has ever pushed, never below your heroes' level |
 | Party size | More heroes draws a bigger, sturdier warband; a lone hero meets fewer and lighter foes |
-| Skill points | +1 per level, auto-assigned (reset for manual) |
+| Skill points | +1 per level, auto-walks the recommended talent path (reset for manual) |
+| Talent paths | 2 per style, pick one at 6 points; keystone at 16; full build ~36 |
 | Respec class/style | Free, in the Skills tab |
 | Loot | Auto-equips upgrades, salvages the rest |
 | Potions | Per-chapter charges, restocked at the feast, used automatically |

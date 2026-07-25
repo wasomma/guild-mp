@@ -90,6 +90,8 @@ for (const ddl of [
   "ALTER TABLE worlds ADD COLUMN hall TEXT",
   "ALTER TABLE worlds ADD COLUMN chapter TEXT",
   "ALTER TABLE characters ADD COLUMN retellings INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN path TEXT",
+  "ALTER TABLE characters ADD COLUMN ult_mode TEXT",
 ]) { try { db.exec(ddl); } catch { /* column already exists */ } }
 
 const upsertWorld = db.prepare(`
@@ -105,12 +107,13 @@ const upsertWorld = db.prepare(`
 
 const upsertChar = db.prepare(`
   INSERT INTO characters (guild_id, user_key, name, class, style, level, xp, sp,
-                          kills, dmg_done, heal_done, retellings, skills, gear, cos, owned, updated_at)
+                          kills, dmg_done, heal_done, retellings, path, ult_mode, skills, gear, cos, owned, updated_at)
   VALUES (@guild_id, @user_key, @name, @class, @style, @level, @xp, @sp,
-          @kills, @dmg_done, @heal_done, @retellings, @skills, @gear, @cos, @owned, @updated_at)
+          @kills, @dmg_done, @heal_done, @retellings, @path, @ult_mode, @skills, @gear, @cos, @owned, @updated_at)
   ON CONFLICT(guild_id, user_key) DO UPDATE SET
     name=@name, class=@class, style=@style, level=@level, xp=@xp, sp=@sp,
     kills=@kills, dmg_done=@dmg_done, heal_done=@heal_done, retellings=@retellings,
+    path=@path, ult_mode=@ult_mode,
     skills=@skills, gear=@gear, cos=@cos, owned=@owned, updated_at=@updated_at
 `);
 
@@ -125,6 +128,7 @@ function charRow(guildId, key, d, now) {
     level: d.level, xp: d.xp, sp: d.sp,
     kills: d.kills, dmg_done: d.dmgDone, heal_done: d.healDone,
     retellings: d.retellings || 0,
+    path: d.path || null, ult_mode: d.ultMode || "auto",
     skills: JSON.stringify(d.skills), gear: JSON.stringify(d.gear),
     cos: JSON.stringify(d.cos), owned: JSON.stringify(d.owned),
     updated_at: now,
@@ -176,6 +180,7 @@ export function loadWorld(guildId) {
       level: c.level, xp: c.xp, sp: c.sp,
       kills: c.kills, dmgDone: c.dmg_done, healDone: c.heal_done,
       retellings: c.retellings || 0,
+      path: c.path || null, ultMode: c.ult_mode || "auto",
       skills: JSON.parse(c.skills), gear: JSON.parse(c.gear),
       cos: JSON.parse(c.cos), owned: JSON.parse(c.owned),
     });

@@ -2,6 +2,19 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.36 — 2026-07-25
+
+**Walk your path.** Phase 5 of the combat rework — every fighting style grows a talent tree, and the biggest single feature of the rework closes its combat arc.
+
+- **Talent trees for all six styles.** Your class's three familiar skills are now the tree's **Fundamentals** — every point you'd already spent still counts. Six points in, your style's two **Paths** open: pick one (the other locks until a free reset) and climb through three path talents to its **⭐ Keystone**, then three deeper talents beyond.
+- **Keystones are signature abilities that cast themselves at the right moment.** The Sentinel's **Shield Wall** rises to meet a King's Crushing Blow; the Warlord's **Battle Roar** drags every foe onto the warrior and stirs the party; the Sharpshooter's **Deathmark** singles out the mightiest enemy; the Assassin's **Assassinate** ends a wounded foe in one perfect strike; the Renewal mystic's **Verdant Bloom** floods the party with healing that closes Rend-wounds double-quick; the Purity mystic's **Cleanse** burns every bleed away. Twelve in all — a defensive and an aggressive road for every style.
+- **Idle players lose nothing**: auto-assign now walks your style's recommended path — fundamentals, the ★ path, its keystone (around level 17, before your first retell beckons), the deep talents (a build completes near level 37). Veterans' banked points flow in the moment this ships: new powers awaken.
+- **⚡ "On my mark."** Prefer to time your ultimate yourself? A new toggle holds the charge at full until you press FIRE — from the Skills tab, with a ready-pip on your party card.
+- Style changes now return your path points (the trunk stays); a reset returns everything including the path choice. All still free.
+- **The Kings grow with you.** A finished build is real power, so the veteran wall rises to match (boss bulk cap ×30 → ×36). A fresh world's first hours are untouched — measured to the second against the first-hour guardrail.
+
+Measured (live scale, multi-seed): trinity Kings ~27s (the band held), a solo tank's sieges lengthen to ~93s at zero wipes (the Crusader path is your faster trade), the solo healer's nightmare seeds are gone (Renewal sustain), and the solo DPS knife-edge stays exactly as advertised.
+
 ## v0.1.35 — 2026-07-25
 
 **The Kings learn to fight back.** Phase 4 of the combat rework — bosses become the wall the whole redesign was building toward, and the road to them earns its name.

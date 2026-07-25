@@ -1,6 +1,7 @@
 # Combat & Damage Rework — Design Plan
 
-Status: **agreed with the owner, not yet implemented** (2026-07-25). This document is
+Status: **Phases 0–5 SHIPPED** (all 2026-07-25, v0.1.31–v0.1.36); Phase 6
+(economy endgame) designed in outline, not started. This document is
 the source of truth for the rework's goals, decisions, and phase plan. When a phase
 ships, update this file and BALANCE.md together.
 
@@ -213,8 +214,41 @@ codebases.
   to the first King clear + wipes before it, fresh fixture); Phase 4 must not
   regress a fresh solo party's first King materially, and should improve it —
   a brand-new player's first session decides whether they reach month two.
-- **Phase 5 — Talent trees.** The largest single work item; deliberately last
-  among the combat phases.
+- **Phase 5 — Talent trees. ✅ DONE (v0.1.36, 2026-07-25).**
+  **Owner decisions (2026-07-25, one-at-a-time sign-off):** (1) bigger trees —
+  trunk 15 / gate 6 / path 9 + keystone + 11 deep, keystone at 16 pts
+  (level 17, before the retell gate), full build 36 (level ~37), extras bank,
+  mastery sink deferred to Phase 6; (2) hard path lock with free respec;
+  (3) keystone roster approved as proposed; (4) auto-assign walks Path A
+  everywhere (Sentinel/Juggernaut/Sharpshooter/Assassin/Impaler/Renewal).
+  Shipped in both sims: `TALENTS` per-style trees (trunk = the pre-5 class
+  skills, ids unchanged — migration-free for the live guild; banked veteran
+  points flow into the new tiers at first tick as a "new powers awaken"
+  moment); path passives on FINAL stats; twelve keystones (taunt +
+  shield-wall tanks, execute + burst DPS, HoT + cleanse healer) as auto-cast
+  answers wired into Phase 4's checks (Shield Wall meets the Crusher windup,
+  Bloom/Cleanse staunch Rend, Purity's Soothe ranks calm the clock, executes
+  stack with Warpath); scripted `talentPlan` auto-assign replacing random
+  spending; `choosePath`/`setUltMode`/`fireUlt` intents (owner-gated); the
+  manual-ult "on my mark" toggle (decision 5's deferred item); style changes
+  refund path points and keep the trunk; new tree Skills UI in both
+  codebases; `path`/`ult_mode` character columns via guarded ALTER.
+  **Tuning (the sweep drove it, multi-seed after the single-seed scare):**
+  execute/crit-dmg talents cut a notch (exec 6→4%/3%, critDmg 8→6%/4%,
+  Deathmark 25→15%), then `bossTier` cap 30 → 36 — a finished build is a
+  permanent power step for a capped veteran world, so the wall grows with
+  the ceiling. Fresh worlds (threat ≤35 → tier ≤22.5) never touch the cap.
+  **Measured v0.1.36 (live, 4-seed means):** trinity Kings 27.2s (v0.1.35:
+  27.4 — restored), five 29.7s / nine 20.7s (unchanged), solo tank 93s
+  sieges at 0 wipes (was 63s — slower but safe; the Crusader path is the
+  player's faster trade), solo healer 80.8s and the catastrophic seeds GONE
+  (v0.1.35 multi-seed hid 150+-wipe tails; Renewal's sustain closed them),
+  solo DPS 8.8s knife-edge with the same seed-swingy wipes (1–37 across
+  seeds in v0.1.35, 7–24 now — the baseline's famous "1 wipe" was a lucky
+  seed, now documented). **First-hour guardrail:** fresh solo tank 142s/0
+  IDENTICAL, trinity 79s vs 76s, solo DPS 431s/17 vs 423s/16 (noise), solo
+  healer improved 1441s → 327s to the first King. Keystones arrive at level
+  ~17, so hour one is untouched by design.
 - **Phase 6 — Economy endgame (owner-proposed 2026-07-25; design agreed in
   outline, not yet started).** Fixes long-horizon currency saturation: the
   live guild maxed every legacy ages ago (renown is a dead drip) and gold's

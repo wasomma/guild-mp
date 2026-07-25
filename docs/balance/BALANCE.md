@@ -53,9 +53,13 @@ guild throughput now rises only ~linearly with bodies (no headcount stat buff
 on top), so the old steeper curve — tuned when every extra voice also carried
 +4% damage — overtaxed big parties. The small squared term remains as a nudge
 against the role-coverage buffs compounding at the top end.
-A **King's bulk rides threat, not party size** (v0.1.35):
-`bossTier = min(30, 5 + 0.5×threat) × clamp(0.75 + 0.125×(members−1), 0.75, 1)`
-— a fresh world's first Kings are stern, a veteran world's are ×30 sieges, and
+A **King's bulk rides threat, not party size** (v0.1.35; cap raised v0.1.36):
+`bossTier = min(36, 5 + 0.5×threat) × clamp(0.75 + 0.125×(members−1), 0.75, 1)`
+— the cap rose 30 → 36 with Phase 5: a finished talent build is a permanent
+power step for a capped veteran world, and the wall grows with the ceiling
+(measured: the live trinity's mean King TTK had slipped 27.4s → 23.2s; the
+new cap restores 27.2s). Fresh worlds sit far below the cap (threat 35 →
+tier 22.5) and never feel it. A fresh world's first Kings are stern, a veteran world's are ×36 sieges, and
 the small-party relief is a sliver (×0.75 solo), not the old deleted King. The
 wall stands the same height for everyone; solo attempts are meant to be long
 (tank), a race against the Crusher (DPS), or a soothed grind (healer).
@@ -140,7 +144,7 @@ The practical consequence: **gold and characters now flow across chapters.** Not
 - **Cosmetics** (the long-horizon sink, and as of v0.1.34 the only one): prices run from 60g accents to the 4,000g Golden Aura — hats to 1,600g, capes to 1,400g, pets to 2,000g, auras 1,800–4,000g, weapon skins to 680g, plus outfits, hairstyles, colors, and accessories. Purchases are per-character and permanent.
 - **Potions are no longer a gold sink** (v0.1.34, Phase 3): they are **per-chapter charges** — the feast sets stock to base + 2×(Alchemist Stipend rank) (heal base 3, others 1) and nothing refills it mid-chapter. The `buyPotion` intent is gone. Gold could always outbuy danger (the live guild's 62M made sustain infinite); scarcity is what makes a potion a decision. All still auto-consume (toggleable per type).
 
-There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys looks only. Skill points auto-assign at random by default (idle-first); resetting reclaims every rank and switches that character to manual assignment until auto is turned back on.
+There is no gold cost on respec, skill points, or style changes — builds are free to experiment with; gold buys looks only. Skill points auto-assign by default along the style's scripted recommended-path build (idle-first; see the talent trees under Outgoing damage); resetting reclaims every rank and the path choice and switches that character to manual assignment until auto is turned back on. A style change refunds path points but keeps the trunk.
 
 ## Renown
 
@@ -199,7 +203,50 @@ the Dire Bat's drain).
 
 (Attack period is seconds between swings — lower is faster, so the Rogue's ×0.85 is a buff.)
 
-Skills (5 ranks each): tanks take +8% HP / +4% damage reduction / +6% stun-on-hit per rank; DPS take +8% damage / +6% attack speed / +5% crit per rank; healers take +10% healing / 15% heal splash to party / +4% party max-HP aura per rank (aura uses the highest rank among living healers).
+**The talent trees (v0.1.36, COMBAT-REWORK Phase 5).** Every fighting style
+carries its own tree in `TALENTS`, all one shape: the **trunk** is the class's
+three fundamentals (the pre-5 skill set, ids unchanged — tanks +8% HP / +4% DR
+/ +6% stun-on-hit per rank; DPS +8% damage / +6% attack speed / +5% crit;
+healers +10% healing / 15% splash / +4% party max-HP aura, highest living
+rank), 5 ranks each, **multiplying base stats** (they wash out under gear —
+that's the trunk's altitude). Six spent points open the style's two **paths**
+(mutually exclusive — the hard lock; a free respec or style change refunds
+path points). A path is 3 pre-keystone talents × 3 ranks, a 1-point
+**keystone** (below), then 3 post-keystone talents (4+4+3 ranks). **Path
+passives multiply the FINAL stats** (post-gear, like the class triangle) so a
+build matters as much at live scale as on day one. Fastest keystone: 16
+points (level 17). Full build: 36 (level ~37); further points bank.
+
+Path passive vocabulary (per rank): +4–5% max HP, +4–6% damage, +2% DR,
++0.5%/s Grit, +6% crit damage (pre) / +4% (post), +2% crit, +4% damage vs
+foes below 35% HP (pre, "execute") / +3% (post), +4% / +3% attack speed,
++5–6% healing, +4–5% splash, +1s / +0.5s Soothe, +1.5% / +1% lifesteal,
++6–8% thorns, 5% faster ult charge, and −2 to −3s off the keystone cooldown.
+Execute damage stacks multiplicatively with Warpath's ×1.5 under 20%.
+
+**Keystones** — auto-cast cooldown abilities; each watches for the moment its
+path exists for and holds otherwise (cooldown min 8s after cuts):
+
+| Style | Path (★ = auto-assign default) | Keystone | Effect | CD |
+|---|---|---|---|---|
+| Paladin | ★ Sentinel | Shield Wall | party ×0.5 damage taken 6s; fires on a King's Crusher windup or party avg <55% | 30s |
+| Paladin | Crusader | Challenger's Call | taunts all foes 8s, self ×0.85 taken | 20s |
+| Warrior | ★ Juggernaut | Unbreakable | self ×0.4 taken + Grit ×3 for 8s; fires below 40% | 30s |
+| Warrior | Warlord | Battle Roar | taunts all 6s + party ×1.2 damage 6s | 25s |
+| Archer | ★ Sharpshooter | Deathmark | marks the biggest foe: party +15% vs it 8s | 25s |
+| Archer | Skirmisher | Rain of Barbs | ×1.2 volley to all + 0.8s attack stagger | 22s |
+| Rogue | ★ Assassin | Assassinate | ×4 strike on a foe <30% HP | 18s |
+| Rogue | Tempest | Blade Dance | 8 strikes ×0.6 across the pack | 22s |
+| Chainblade | ★ Impaler | Impale | ×3 + 1s stun on a foe <30% HP (stun interrupts windups) | 20s |
+| Chainblade | Cyclone | Hook Cyclone | ×1.3 to all + knockback | 24s |
+| Mystic | ★ Renewal | Verdant Bloom | party HoT 4% max HP/s 8s; bleeds drain double beneath it | 25s |
+| Mystic | Purity | Cleanse | strips every bleed + heals each victim ×1.5 heal | 20s |
+
+Taunts (`e.tauntId`/`tauntT`) override all threat targeting while the caller
+stands. Keystone guards (Shield Wall / Unbreakable / Challenger's ×0.85)
+apply before mitigation, like Vanguard, so they stack with armor. Grit is now
+`st.regen` (class base + talent grit); the healer's Soothe reads
+`CLASSES.soothe + st.sootheAdd`.
 
 Gear feeds in by slot: **weapon** adds its full power to damage (and ×0.8 to healing), **armor** adds power×4 to HP and power×0.25 to armor, **trinket** adds power×0.5 damage, power×2 HP, and crit **capped at +25**. That cap matters: uncapped at power×0.35 a single trinket pinned the 60% crit ceiling on its own, which quietly made Precision, the Rogue's +10 and the Archer/Warrior +5 worth exactly nothing.
 
@@ -216,7 +263,7 @@ Each swing rolls `damage × rand(0.85–1.15)`. Crit chance is capped at **60%**
 
 ### Ultimates
 
-Ults charge passively while alive over `ULT_CD` seconds (Rogue 22, Warrior/Chain 24, Archer 25, Paladin/Mystic 26; Storm Chorus mutator charges 30% faster) and fire automatically in combat:
+Ults charge passively while alive over `ULT_CD` seconds (Rogue 22, Warrior/Chain 24, Archer 25, Paladin/Mystic 26; Storm Chorus mutator charges 30% faster; the Skirmisher/Tempest/Cyclone `ult` talents charge up to 15% faster) and fire automatically in combat — unless the player flips their ultimate to **on my mark** (`setUltMode`), which holds the full charge until `fireUlt` latches it for the next combat beat:
 
 - **Judgment** (Paladin): ×3 damage guaranteed crit + 1.5s stun.
 - **Whirlwind** (Warrior): ×1.8 to every enemy.
@@ -267,7 +314,7 @@ Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes
 
 ## Tuning knobs, by location
 
-All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`); potion charge baselines in `endChapter`'s refill (and `newWorld`'s starting stock); cosmetics prices in their lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`, and the Phase 5 `TALENTS` trees: node `fx` values, keystone `cd`s, and the keystone coefficients in `castKeystone`; the auto-assign order lives in `talentPlan`); potion charge baselines in `endChapter`'s refill (and `newWorld`'s starting stock); cosmetics prices in their lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
 
 To re-measure after any of these, drive the sim headlessly: build a world,
 `joinVoice` N members, `tick` at 1/20s, and record per cleared stage the combat

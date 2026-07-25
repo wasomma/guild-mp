@@ -117,7 +117,7 @@ export function handleAuthHttp(req, res) {
 }
 
 /* ---- intent authorization ---- */
-const MEMBER_INTENTS = new Set(["skillUp", "respecSkills", "setAutoSkill", "setClass", "setStyle", "setBody", "cosmetic", "appearance", "retell"]);
+const MEMBER_INTENTS = new Set(["skillUp", "choosePath", "respecSkills", "setAutoSkill", "setUltMode", "fireUlt", "setClass", "setStyle", "setBody", "cosmetic", "appearance", "retell"]);
 const GUILD_INTENTS = new Set(["toggleAuto", "legacyUp", "joinVoice", "leaveVoice", "autoSim", "retreat"]);
 
 export function authorizeIntent(sock, msg, world) {

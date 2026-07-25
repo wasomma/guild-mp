@@ -5,6 +5,7 @@ import {
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
   AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
   RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, classNeed,
+  TALENTS, GATE_PTS, spentPts, pathPreDone,
 } from "@shared/sim.js";
 import { VERSION } from "@shared/version.js";
 import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
@@ -92,7 +93,7 @@ const HTTP_BASE = DEV ? `http://${location.hostname}:8787` : location.origin;
 const SERVER_URL = HTTP_BASE.replace(/^http/, "ws");
 const AUTH_URL = `${HTTP_BASE}/auth`;
 document.title = `Guild of the Open Mic - Alpha v${VERSION}`;
-const LERP_KEYS = ["x", "y", "lunge", "hop", "shootT", "castT", "chainT", "hp", "bubble", "stunT", "hitT", "poisonT", "windup", "slamT", "screechT", "cleaveWind", "ult", "ultT"];
+const LERP_KEYS = ["x", "y", "lunge", "hop", "shootT", "castT", "chainT", "hp", "bubble", "stunT", "hitT", "poisonT", "windup", "slamT", "screechT", "cleaveWind", "ult", "ultT", "wallT", "unbrkT", "callT", "roarT", "hotT", "tauntT", "markT"];
 
 function lerpEnts(prev, cur, a, keys) {
   const pm = new Map((prev || []).map((e) => [e.id, e]));
@@ -656,7 +657,7 @@ function PartyList({ g, onSel }) {
             <div className="bar"><div className="fill" style={{ width: `${clamp((m.hp / st.hp) * 100, 0, 100)}%`, background: CLASSES[m.cls].color }} /></div>
             <div className="prow dim small">
               <span>XP {fmt(m.xp)}/{fmt(xpNeed(m.level))}</span>
-              <span>{m.sp > 0 ? `★ ${m.sp} pts` : `${m.kills} kills`}</span>
+              <span>{m.ultMode === "manual" && (m.ult || 0) >= 1 ? <b style={{ color: "#f2c14e" }}>⚡ ULT READY</b> : m.sp > 0 ? `★ ${m.sp} pts` : `${m.kills} kills`}</span>
             </div>
           </button>
         );
@@ -825,14 +826,31 @@ function Equipment({ m }) {
   );
 }
 
+function TalentRow({ m, n, ranks, open, send, lock }) {
+  const r = m.skills[n.id] || 0;
+  return (
+    <div className={"skrow" + (open ? "" : " lockedrow")}>
+      <div>
+        <div>{n.name} <span className="dim small">{"◆".repeat(r)}{"◇".repeat(ranks - r)}</span></div>
+        <div className="dim small">{n.desc}</div>
+      </div>
+      <button className="mini" disabled={!!lock || !open || m.sp <= 0 || r >= ranks}
+        onClick={() => send({ a: "skillUp", memberId: m.id, skillId: n.id })}>+</button>
+    </div>
+  );
+}
+
 function Skills({ g, m, send, lock }) {
+  const tree = TALENTS[m.style];
+  const gateMet = spentPts(m) >= GATE_PTS;
+  const chosen = tree && m.path ? tree.paths.find((p) => p.id === m.path) : null;
   return (
     <div className="skills">
       <div className="dim small pad">Skill points: <b style={{ color: "#f2c14e" }}>{m.sp}</b></div>
       <div className="skrow">
         <div>
           <div>🎲 Auto-assign</div>
-          <div className="dim small">{m.autoSkill ? "Points spend themselves as they are earned." : "Off — spend your points below."}</div>
+          <div className="dim small">{m.autoSkill ? "Points walk the recommended path as they are earned." : "Off — spend your points below."}</div>
         </div>
         <button className="mini" disabled={!!lock}
           onClick={() => send({ a: "setAutoSkill", memberId: m.id, on: !m.autoSkill })}>{m.autoSkill ? "turn off" : "turn on"}</button>
@@ -840,24 +858,62 @@ function Skills({ g, m, send, lock }) {
       <div className="skrow">
         <div>
           <div>↺ Reset points</div>
-          <div className="dim small">Reclaim all spent points and assign them yourself (turns auto off).</div>
+          <div className="dim small">Reclaim every point and the path choice; spend freely (turns auto off).</div>
         </div>
         <button className="mini" disabled={!!lock}
           onClick={() => send({ a: "respecSkills", memberId: m.id })}>reset</button>
       </div>
-      {SKILLS[m.cls].map((sk) => {
-        const r = m.skills[sk.id] || 0;
-        return (
-          <div key={sk.id} className="skrow">
-            <div>
-              <div>{sk.name} <span className="dim small">{"◆".repeat(r)}{"◇".repeat(MAX_RANK - r)}</span></div>
-              <div className="dim small">{sk.desc}</div>
+      <div className="skrow">
+        <div>
+          <div>⚡ Ultimate: {m.ultMode === "manual" ? "on my mark" : "automatic"}</div>
+          <div className="dim small">{m.ultMode === "manual" ? "The charge holds at full until you call it." : "Fires itself the moment it is charged."}</div>
+        </div>
+        <div className="ultbtns">
+          <button className="mini" disabled={!!lock}
+            onClick={() => send({ a: "setUltMode", memberId: m.id, mode: m.ultMode === "manual" ? "auto" : "manual" })}>{m.ultMode === "manual" ? "auto" : "manual"}</button>
+          {m.ultMode === "manual" && (
+            <button className="mini fire" disabled={!!lock || (m.ult || 0) < 1 || m.ultFire}
+              onClick={() => send({ a: "fireUlt", memberId: m.id })}>{m.ultFire ? "…" : "FIRE"}</button>
+          )}
+        </div>
+      </div>
+      <div className="coshead pad">Fundamentals</div>
+      {SKILLS[m.cls].map((sk) => <TalentRow key={sk.id} m={m} n={sk} ranks={MAX_RANK} open send={send} lock={lock} />)}
+      {tree && (
+        <>
+          <div className="coshead pad">The {styleOf(m).name}'s Paths {gateMet ? "" : `— opens at ${GATE_PTS} points spent (${spentPts(m)}/${GATE_PTS})`}</div>
+          {!chosen && (
+            <div className="pathgrid">
+              {tree.paths.map((p) => (
+                <button key={p.id} className="pathcard" disabled={!!lock || !gateMet}
+                  onClick={() => send({ a: "choosePath", memberId: m.id, pathId: p.id })}>
+                  <span className="pathname">{p.name}{p.rec ? " ★" : ""}</span>
+                  <span className="dim small">{p.blurb}</span>
+                  <span className="dim small">Keystone: {p.key.name}</span>
+                </button>
+              ))}
             </div>
-            <button className="mini" disabled={!!lock || m.sp <= 0 || r >= MAX_RANK}
-              onClick={() => send({ a: "skillUp", memberId: m.id, skillId: sk.id })}>+</button>
-          </div>
-        );
-      })}
+          )}
+          {chosen && (
+            <>
+              <div className="dim small pad">The path of the {chosen.name} — {chosen.blurb}. The other road is closed until a reset.</div>
+              {chosen.pre.map((n) => <TalentRow key={n.id} m={m} n={n} ranks={n.ranks} open send={send} lock={lock} />)}
+              <div className={"keycard" + ((m.skills[chosen.key.id] || 0) > 0 ? " keyowned" : "")}>
+                <div>
+                  <div className="pathname">⭐ {chosen.key.name} <span className="dim small">{(m.skills[chosen.key.id] || 0) > 0 ? `keystone — every ${Math.max(8, chosen.key.cd - (m._st && m._st.cdCut || 0))}s` : "keystone"}</span></div>
+                  <div className="dim small">{chosen.key.desc}</div>
+                </div>
+                {(m.skills[chosen.key.id] || 0) < 1 && (
+                  <button className="mini" disabled={!!lock || m.sp <= 0 || !pathPreDone(m, chosen)}
+                    title={pathPreDone(m, chosen) ? "" : "Complete the three path talents first"}
+                    onClick={() => send({ a: "skillUp", memberId: m.id, skillId: chosen.key.id })}>+</button>
+                )}
+              </div>
+              {chosen.post.map((n) => <TalentRow key={n.id} m={m} n={n} ranks={n.ranks} open={(m.skills[chosen.key.id] || 0) > 0} send={send} lock={lock} />)}
+            </>
+          )}
+        </>
+      )}
       <div className="coshead pad">Respec (resets skills)</div>
       <div className="cosgrid">
         {Object.keys(CLASSES).map((c) => (
@@ -1100,6 +1156,16 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .price { color: #8b84ad; flex: none; }
 .swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #0008; }
 .skrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px solid #26213c; }
+.lockedrow { opacity: 0.45; }
+.ultbtns { display: flex; gap: 5px; }
+.mini.fire { border-color: #f2c14e; color: #f2c14e; }
+.pathgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px 0; }
+.pathcard { font-family: 'VT323', monospace; font-size: 16px; display: flex; flex-direction: column; gap: 3px; text-align: left; background: #17142a; color: #cfc9e8; border: 1px solid #3a3550; border-radius: 8px; padding: 8px; cursor: pointer; }
+.pathcard:hover:not(:disabled) { background: #201c36; border-color: #c9a24b; }
+.pathcard:disabled { opacity: 0.45; cursor: default; }
+.pathname { color: #f2c14e; }
+.keycard { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #1b1530; border: 1px solid #c9a24b55; border-radius: 8px; padding: 8px; margin: 4px 0; }
+.keycard.keyowned { border-color: #f2c14e; box-shadow: 0 0 8px #f2c14e33; }
 .logbox { display: flex; flex-direction: column; gap: 3px; }
 .logline { font-size: 17px; }
 .prestigebox { background: #17142a; border: 1px solid #3a3550; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
