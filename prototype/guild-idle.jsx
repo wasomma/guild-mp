@@ -21,9 +21,9 @@ const GROUND = 244;
    carry innate damage reduction: share-based armor thins out against the
    threat-scaled soak, so armor alone can no longer be the tank's identity. */
 const CLASSES = {
-  tank:   { name: "Tank",   color: "#5aa9e6", icon: "🛡️", base: { hp: 130, hpL: 26, dmg: 6,  dmgL: 1.6, spd: 1.5,  armor: 6, crit: 5 }, mul: { hp: 1.30, dmg: 0.75 }, drBase: 0.20 },
+  tank:   { name: "Tank",   color: "#5aa9e6", icon: "🛡️", base: { hp: 130, hpL: 26, dmg: 6,  dmgL: 1.6, spd: 1.5,  armor: 6, crit: 5 }, mul: { hp: 1.30, dmg: 0.75 }, drBase: 0.20, regen: 0.02 },
   dps:    { name: "DPS",    color: "#ef6461", icon: "⚔️", base: { hp: 72,  hpL: 12, dmg: 14, dmgL: 3.4, spd: 0.85, armor: 0, crit: 15 }, mul: { hp: 0.80, dmg: 1.15 } },
-  healer: { name: "Healer", color: "#7fd069", icon: "💚", base: { hp: 88,  hpL: 15, dmg: 5,  dmgL: 1.2, spd: 1.25, armor: 1, crit: 5, heal: 15, healL: 3 }, mul: { hp: 1.00, dmg: 0.55 }, healBolt: 0.35 },
+  healer: { name: "Healer", color: "#7fd069", icon: "💚", base: { hp: 88,  hpL: 15, dmg: 5,  dmgL: 1.2, spd: 1.25, armor: 1, crit: 5, heal: 15, healL: 3.5 }, mul: { hp: 1.00, dmg: 0.55 }, healBolt: 0.35, soothe: 3 },
 };
 const CLASS_ORDER = ["tank", "dps", "healer"];
 
@@ -287,6 +287,7 @@ function newGame() {
   return {
     members: [], enemies: [], floaters: [], log: [],
     stage: 1, best: 1, gold: 150, joinCount: 0, momentum: 0,
+    wave: 0, waveMax: 0, camp: false, ambush: false, retreatV: null,
     renown: 0, prestiges: 0, everBest: 1, prestigeT: 0,
     legacy: { hymn: 0, banner: 0, merchant: 0, scholar: 0, head: 0, stipend: 0 },
     phase: "advance", advanceT: 1.6, wipeT: 0, scroll: 0,
@@ -748,11 +749,24 @@ const crowdMul = (g) => {
   return 1 + 0.17 * (n - 1) + 0.012 * (n - 1) ** 2;
 };
 const crowdBite = (g) => 1 + 0.05 * Math.max(0, g.members.length - 1);
-/* A King is a single body: the whole party focuses it and no amount of extra
-   heroes splits its attention the way a pack does, so the flat x9 that suited
-   a trio made Kings unkillable for one or two heroes — the measured cause of
-   a lone hero wiping on every boss stage for a whole chapter. */
-const bossTier = (g) => 9 * clamp(0.58 + 0.14 * g.members.length, 0.58, 1);
+/* A King no longer shrinks for a small party (COMBAT-REWORK Phase 4): the
+   wall stands the same height for everyone — kill it or don't. The bulk
+   instead scales with THREAT, so a fresh world's first Kings are merely
+   stern while a veteran world's are sieges; solo attempts are meant to be
+   long (tank), a razor race against the enrage clock (DPS), or a grind
+   (healer). The old party-size discount was Phase 0's measured reason a
+   lone DPS deleted Kings before any mechanic could fire. */
+const bossTier = (g) => {
+  const relief = clamp(0.75 + 0.125 * (g.members.length - 1), 0.75, 1);
+  return Math.min(30, 5 + threatOf(g) * 0.5) * relief;
+};
+/* The enrage clock: seconds a King tolerates being fought before its fury
+   mounts, and how long the mounting takes to reach the cap. Deliberately
+   slow and capped — its job is to make DAWDLING unsustainable, not to
+   execute the slow classes. The hard "kill it fast or die" check is the
+   Crusher, which comes FIRST when no tank holds the line. */
+const ENRAGE_AT = 45;
+const ENRAGE_RAMP = 90;
 /* The mercy discount is gone (COMBAT-REWORK.md Phase 1). Enemies hit with
    the same hand whoever stands there: solo danger is now real by design —
    each class survives it by its own route (tanks mitigate, DPS kill first,
@@ -786,10 +800,68 @@ function makeEnemy(g, tier) {
 }
 
 const PACK_CAP = 8;
+/* Position and field a set of tiers on the enemy side — shared by regular
+   stages, honor-guard waves, and ambushes. The enemy side of the stage is
+   ~180px wide; spread the line to fit however many turn up. */
+function fieldEnemies(g, tiers) {
+  const span = tiers.length > 1 ? Math.min(56, 180 / (tiers.length - 1)) : 0;
+  tiers.forEach((tier, i) => {
+    const e = typeof tier === "string" ? makeEnemy(g, tier) : tier;
+    e.x = 440 + i * span;
+    e.y = GROUND - (i % 3) * 8;
+    g.enemies.push(e);
+  });
+}
+/* The King's honor guard (Phase 4): stage %5==4 is a gauntlet of 2 waves
+   (3 for a party of five or more) with NO advance-phase breather between
+   them — the party arrives at the King carrying the fight's cost. The
+   final wave is led by a Herald whose blows carry a taste of the King's
+   Rend, teaching the fight it guards. */
+const gauntletWaves = (g) => (g.members.length >= 5 ? 3 : 2);
+function spawnGauntletWave(g) {
+  g.enemies = []; g.projectiles = []; g.pending = [];
+  const zone = zoneOf(g);
+  /* the Herald sits out the true first hour: a brand-new world's first
+     honor guards are plain soldiers, so the very first King approach is a
+     lesson rather than an execution (the first-hour guardrail) */
+  const final = g.wave === g.waveMax && threatOf(g) >= 8;
+  const extra = Math.floor(Math.max(0, g.members.length - 1) / 2);
+  const ceiling = clamp(Math.ceil(g.members.length * 1.5), 2, PACK_CAP);
+  const n = clamp(2 + Math.floor(Math.random() * 2) + extra, 2, ceiling);
+  const tiers = Array(final ? Math.max(1, n - 1) : n).fill("normal");
+  if (final) {
+    const h = makeEnemy(g, "elite");
+    h.herald = true;
+    h.name = `Herald of the ${zone.label} King`;
+    h.hp = h.maxHp = Math.round(h.maxHp * 0.9);
+    h.dmg *= 1.15;
+    tiers.unshift(h);
+  }
+  fieldEnemies(g, tiers);
+  g.phase = "combat";
+  addLog(g, final
+    ? `The ${zone.label} King's Herald leads the final wave (${g.wave}/${g.waveMax})!`
+    : `The honor guard presses in — wave ${g.wave} of ${g.waveMax}!`, "#e77463");
+  if (final) sfx.elite();
+}
 function spawnEncounter(g) {
   g.enemies = [];
+  g.camp = false;
+  g.retreatV = null;
   const boss = g.stage % 5 === 0;
   const elite = !boss && g.stage % 5 === 3;
+  const gaunt = !boss && !elite && g.stage % 5 === 4;
+  if (gaunt) {
+    g.wave = 1; g.waveMax = gauntletWaves(g);
+    spawnGauntletWave(g);
+    if (g.auto.armor && g.stock.armor > 0) {
+      g.stock.armor--; g.buffT = 12;
+      addLog(g, "Armor Elixir shatters. The party hardens! (+armor 12s)", "#5aa9e6");
+      sfx.potion();
+    }
+    return;
+  }
+  g.wave = 0; g.waveMax = 0;
   /* Extra voices bring extra bodies: the party's tanks scale with headcount
      too, so a bigger warband keeps the autos-per-tank ratio honest. */
   const extra = Math.floor(Math.max(0, g.members.length - 1) / 2);
@@ -801,13 +873,7 @@ function spawnEncounter(g) {
   if (g.mutator === "horde" && !boss && tiers.length < PACK_CAP) tiers.push("normal");
   /* The enemy side of the stage is ~180px wide; spread the line to fit it
      however many turn up, rather than marching the tail off-screen. */
-  const span = tiers.length > 1 ? Math.min(56, 180 / (tiers.length - 1)) : 0;
-  tiers.forEach((tier, i) => {
-    const e = makeEnemy(g, tier);
-    e.x = 440 + i * span;
-    e.y = GROUND - (i % 3) * 8;
-    g.enemies.push(e);
-  });
+  fieldEnemies(g, tiers);
   g.phase = "combat";
   if (elite) {
     addLog(g, `${g.enemies[0].name} guards the road ahead!`, "#e77463");
@@ -1003,33 +1069,38 @@ function hurtMember(g, m, rawDmg, src) {
     if (src.hp <= 0) killEnemy(g, m, src);
   }
   sfx.hurt();
-  if (m.hp <= 0) {
-    m.alive = false; m.hp = 0; m.deadT = g.time;
-    burst(g, m.x, m.y - 24, "#7a7490", 14, 1.6);
-    g.shake = Math.max(g.shake, 4);
-    addLog(g, `${m.name} has fallen!`, "#ef6461");
-    sfx.fall();
-    if (g.session) g.session.deaths++;
-  }
+  if (m.hp <= 0) downMember(g, m);
   return dmg;
+}
+
+/* The death rites, shared by every way a hero can drop (hurtMember's blows
+   and the Rend bleed alike): one place owns the fall. */
+function downMember(g, m) {
+  m.alive = false; m.hp = 0; m.deadT = g.time;
+  burst(g, m.x, m.y - 24, "#7a7490", 14, 1.6);
+  g.shake = Math.max(g.shake, 4);
+  addLog(g, `${m.name} has fallen!`, "#ef6461");
+  sfx.fall();
+  if (g.session) g.session.deaths++;
 }
 
 /* ---------------- boss kings: specials and phases ---------------- */
 function bossSpecial(g, e, alive) {
   const s = e.scale || 1;
+  const D = e.dmg * (1 + 0.6 * (e.rage || 0)); // specials ride the enrage clock too
   if (e.kind === "slime") {
     e.slamT = 0.45;
     g.shake = Math.max(g.shake, 10);
     sfx.slam();
     addLog(g, "ROYAL SLAM! The ground heaves beneath the party!", "#ef6461");
-    for (const m of alive) if (m.alive) { hurtMember(g, m, e.dmg * 1.5, e); burst(g, m.x, m.y - 8, "#6fbf5e", 10, 1.8, 2); }
+    for (const m of alive) if (m.alive) { hurtMember(g, m, D * 1.5, e); burst(g, m.x, m.y - 8, "#6fbf5e", 10, 1.8, 2); }
     burst(g, e.x, e.y - 10, "#6fbf5e", 24, 2.6, 2);
   } else if (e.kind === "bat") {
     e.screechT = 0.6;
     g.shake = Math.max(g.shake, 6);
     sfx.screech();
     addLog(g, "A deafening SCREECH staggers the party!", "#b07fe0");
-    for (const m of alive) if (m.alive) { hurtMember(g, m, e.dmg * 0.9, e); m.atkT += 1.1; addFloat(g, m.x, m.y - 84, "DAZED", "#b07fe0"); }
+    for (const m of alive) if (m.alive) { hurtMember(g, m, D * 0.9, e); m.atkT += 1.1; addFloat(g, m.x, m.y - 84, "DAZED", "#b07fe0"); }
   } else if (e.kind === "skeleton") {
     sfx.rise();
     g.shake = Math.max(g.shake, 5);
@@ -1048,11 +1119,40 @@ function bossSpecial(g, e, alive) {
     g.shake = Math.max(g.shake, 8);
     addLog(g, "Fire rains from the deeps of Emberdeep!", "#ef6461");
     for (const m of alive) if (m.alive) {
-      hurtMember(g, m, e.dmg * 1.1, e);
+      hurtMember(g, m, D * 1.1, e);
       burst(g, m.x, m.y - 30, "#ff6a3a", 12, 2, 1);
       sparkle(g, m.x, m.y - 10, "#f2a94e", 5);
     }
   }
+}
+
+/* The CRUSHING BLOW (Phase 4, the tank check): one overwhelming hit at
+   whoever holds the King's attention — the same threat logic as its autos.
+   A tank's mitigation makes it a survivable slam; anyone else eats a blow
+   they were never built for. Vanguard (hurtMember) still softens it for a
+   protected backliner if aggro somehow sits on them. */
+function bossCrusher(g, e, alive) {
+  const s = e.scale || 1;
+  const D = e.dmg * (1 + 0.6 * (e.rage || 0));
+  const tanks = alive.filter((m) => m.alive && m.cls === "tank");
+  let tgt;
+  if (tanks.length) tgt = pick(tanks);
+  else {
+    const standing = alive.filter((m) => m.alive);
+    if (!standing.length) return;
+    tgt = standing[0];
+    for (const m of standing) if (m._st.dmg / m._st.spd > tgt._st.dmg / tgt._st.spd) tgt = m;
+  }
+  e.slamT = 0.45;
+  g.shake = Math.max(g.shake, 11);
+  sfx.slam();
+  addLog(g, `CRUSHING BLOW! The ${e.name} brings its full weight down on ${tgt.name}!`, "#ef6461");
+  /* the blow grows into its reputation with threat: a fresh world's first
+     Kings swing hard but survivably (the first-hour guardrail), a veteran
+     world's crushers are the full tank-or-die check */
+  hurtMember(g, tgt, D * Math.min(3, 1.5 + threatOf(g) * 0.05), e);
+  burst(g, tgt.x, tgt.y - 20, "#ffb24a", 18, 2.4, 2);
+  burst(g, e.x, e.y - 10 * s, "#ef6461", 16, 2.2);
 }
 function bossPhase(g, e) {
   const s = e.scale || 1;
@@ -1174,6 +1274,19 @@ function tick(g, dt) {
     m.castT = Math.max(0, m.castT - dt);
     m.chainT = Math.max(0, m.chainT - dt);
     if (m.alive && Math.random() < dt * 0.03) m.bubble = 1.6;
+    /* Grit (Phase 4): a tank's wounds close even mid-battle — the sustain
+       that makes a solo tank's long King sieges winnable at all. */
+    if (g.phase === "combat" && m.alive && CLASSES[m.cls].regen) {
+      m.hp = Math.min(m._st.hp, m.hp + m._st.hp * CLASSES[m.cls].regen * dt);
+    }
+    /* Rend (Phase 4, the healer check): the bleed a King's blows leave
+       behind ignores armor — only healing, potions, or time answer it. */
+    if (m.alive && (m.bleedT || 0) > 0) {
+      m.bleedT -= dt;
+      m.hp -= (m.bleedDps || 0) * dt;
+      if (Math.random() < dt * 2) sparkle(g, m.x, m.y - 20, "#c9506d", 2);
+      if (m.hp <= 0) downMember(g, m);
+    }
     if (m.alive && m.cos.aura !== "none" && Math.random() < dt * 7 && g.particles.length < 240) {
       const auraDef = AURAS.find((a) => a.id === m.cos.aura);
       if (auraDef && auraDef.c) g.particles.push({ x: m.x + rand(-9, 9), y: m.y - rand(0, 6), vx: 0, vy: -rand(0.4, 0.8), life: rand(0.5, 0.9), color: auraDef.c, size: 2, grav: 0 });
@@ -1188,9 +1301,25 @@ function tick(g, dt) {
     g.advanceT -= dt;
     /* Lifeward: with a mender standing, the road restores the party as it
        always did; without one, wounds knit slowly and stages wear you down.
-       This is the healer's out-of-combat half of the trinity's bargain. */
-    const mendRate = rolesAlive(g).healer ? 0.08 : 0.025;
+       This is the healer's out-of-combat half of the trinity's bargain.
+       A camp (after a fallen King) restores everyone fully regardless. */
+    const mendRate = g.camp ? 0.10 : rolesAlive(g).healer ? 0.08 : 0.025;
     for (const m of g.members) if (m.alive) m.hp = Math.min(m._st.hp, m.hp + m._st.hp * mendRate * dt);
+    /* Ambush (Phase 4): the road itself is unsafe — now and then a pack
+       jumps the party mid-march. A toll fight: pays kills and gold, moves
+       no stage. Never at a camp; the fire keeps the dark honest. */
+    if (!g.camp && g.advanceT > 0.6 && g.members.some((m) => m.alive) && Math.random() < dt * 0.045) {
+      g.ambush = true;
+      const n = clamp(2 + Math.floor(g.members.length / 3), 2, PACK_CAP);
+      g.enemies = [];
+      fieldEnemies(g, Array(n).fill("normal"));
+      for (const e of g.enemies) { e.hp = e.maxHp = Math.round(e.maxHp * 0.8); e.atkT = rand(0.4, 1.0); }
+      g.phase = "combat";
+      g.shake = Math.max(g.shake, 4);
+      sfx.warn();
+      addLog(g, "AMBUSH! Shapes burst from the roadside dark!", "#e77463");
+      return;
+    }
     if (g.advanceT <= 0 && g.members.some((m) => m.alive)) spawnEncounter(g);
     return;
   }
@@ -1204,7 +1333,7 @@ function tick(g, dt) {
          chapter's opening stages can't be lost to a stage the guild never
          had to clear. */
       g.stage = Math.max(1 + g.legacy.head * 2, Math.floor((g.stage - 1) / 5) * 5 + 1);
-      for (const m of g.members) { m.alive = true; m.hp = m._st.hp * 0.6; }
+      for (const m of g.members) { m.alive = true; m.hp = m._st.hp * 0.6; m.bleedT = 0; }
       g.phase = "advance"; g.advanceT = 2.2; g.enemies = [];
       addLog(g, `Broken, the party falls back to the last King's fallen ground — stage ${g.stage}.`, "#8b84ad");
     }
@@ -1221,6 +1350,22 @@ function tick(g, dt) {
     return;
   }
   if (!foes.length) {
+    /* an ambush is a toll, not a stage: clearing it resumes the road */
+    if (g.ambush) {
+      g.ambush = false;
+      g.phase = "advance"; g.advanceT = 1.8; g.enemies = [];
+      g.projectiles = []; g.pending = [];
+      addLog(g, "The ambushers lie broken. The road goes on.", "#8b84ad");
+      return;
+    }
+    /* the honor guard fights in waves — no breather, no regen between them */
+    if (g.wave && g.wave < g.waveMax) {
+      g.wave++;
+      spawnGauntletWave(g);
+      return;
+    }
+    g.wave = 0;
+    for (const m of g.members) m.bleedT = 0; // wounds close when the field is won
     /* Trinity momentum: a stage cleared with shield, blade, and mercy all
        standing stokes the guild's spoils (+8% gold and XP per stack, up to
        5). A clear without the full trinity — or any wipe — lets it gutter. */
@@ -1231,11 +1376,19 @@ function tick(g, dt) {
       if (g.momentum === 5 && was < 5) addLog(g, "The trinity's momentum peaks — the guild fights as one! (+40% spoils)", "#8fe3ff");
     } else g.momentum = 0;
     if (g.stage % 20 === 0) { endChapter(g); return; }
+    const kingFell = g.stage % 5 === 0;
     g.stage++; g.best = Math.max(g.best, g.stage);
     g.everBest = Math.max(g.everBest, threatOf(g));
     if (g.session) g.session.best = Math.max(g.session.best, g.stage);
     g.phase = "advance"; g.advanceT = 2.4; g.enemies = [];
     g.projectiles = []; g.pending = [];
+    /* Camp (Phase 4): after a King falls, the party rests before the next
+       zone — a real breather at full recovery whatever the composition,
+       which is the healer-less soloist's lifeline every five stages. */
+    if (kingFell) {
+      g.camp = true; g.advanceT = 6;
+      addLog(g, "The party makes camp on the King's fallen ground. Wounds knit; the fire crackles.", "#f2c14e");
+    }
     for (const m of alive) m.hop = 0.7;
     return;
   }
@@ -1271,17 +1424,21 @@ function tick(g, dt) {
     if (m.cls === "healer") {
       const hurt = [...alive].sort((a, b) => a.hp / a._st.hp - b.hp / b._st.hp)[0];
       m.castT = 0.32;
-      /* mend when someone genuinely needs it, otherwise fight: the old
-         <99.9% threshold kept a solo healer casting heals on every scratch
-         and never attacking, which is half of how their fights became
-         infinite (the radiant bolt in stats() is the other half) */
-      if (hurt && hurt.hp / hurt._st.hp < 0.75) {
+      /* The weave: mend when someone genuinely needs it, but never ONLY
+         mend — after two mends in a row, if nobody is critical (below
+         45%), the third cast is a bolt. Under sustained pressure a healer
+         who never attacks can never end the fight, and their bolts carry
+         the Soothe, so weaving also holds a King's fury down. */
+      const ratio = hurt ? hurt.hp / hurt._st.hp : 1;
+      if (hurt && ratio < 0.75 && !((m.weave || 0) >= 2 && ratio > 0.45)) {
+        m.weave = (m.weave || 0) + 1;
         const amt = m._st.heal * rand(0.9, 1.1);
         g.projectiles.push({ kind: "heal", x: m.x + 18, y: m.y - 66, tgtKind: "member", tgtId: hurt.id, spd: 260, amt, srcId: m.id });
         continue;
       }
       const zap = foes.find((e) => e.hp > 0);
       if (!zap) continue;
+      m.weave = 0;
       const rb = rollDmg(m);
       sfx.shoot();
       g.projectiles.push({ kind: "bolt", x: m.x + 18, y: m.y - 66, tgtKind: "enemy", tgtId: zap.id, spd: 340, dmg: rb.dmg, crit: rb.crit, srcId: m.id, tint: WEAPON_SKINS.find((w) => w.id === m.cos.weapon).c });
@@ -1360,7 +1517,7 @@ function tick(g, dt) {
     e.screechT = Math.max(0, (e.screechT || 0) - dt);
     if (e.hp <= 0) continue;
     e.lunge = Math.max(0, e.lunge - dt);
-    if (e.elite && e.kind === "skeleton" && !e.raised && e.hp <= e.maxHp * 0.6) {
+    if (e.elite && !e.herald && e.kind === "skeleton" && !e.raised && e.hp <= e.maxHp * 0.6) {
       e.raised = true; e.atkT += 1.2;
       const sk = makeEnemy(g, "normal");
       sk.x = e.x + 34; sk.y = clamp(e.y + 8, GROUND - 10, GROUND);
@@ -1373,7 +1530,7 @@ function tick(g, dt) {
       sparkle(g, sk.x, sk.y, "#c8d4ff", 8);
       g.shake = Math.max(g.shake, 3);
     }
-    if (e.elite && e.kind === "imp" && !e.enraged && e.hp <= e.maxHp * 0.5) {
+    if (e.elite && !e.herald && e.kind === "imp" && !e.enraged && e.hp <= e.maxHp * 0.5) {
       e.enraged = true;
       e.dmg *= 1.5; e.spd *= 0.65;
       addFloat(g, e.x, e.y - 66 * (e.scale || 1) - 14, "ENRAGED!", "#ff4a3a", true);
@@ -1383,6 +1540,24 @@ function tick(g, dt) {
       g.shake = Math.max(g.shake, 4);
     }
     if (e.boss) {
+      /* The enrage clock (Phase 4, the DPS check): a King tolerates being
+         fought for so long, then its fury mounts. Soft on purpose: a solo
+         tank can still out-mitigate the ramp and a solo healer's Soothe
+         can wind the clock back down; a party that dawdles is punished,
+         not executed. */
+      e.fightT = (e.fightT || 0) + dt;
+      /* recomputed every tick (not latched): the healer's Soothe can wind
+         the clock back down, and the fury should recede with it */
+      e.rage = e.fightT > ENRAGE_AT ? Math.min(1, (e.fightT - ENRAGE_AT) / ENRAGE_RAMP) : 0;
+      if (e.rage > 0) {
+        if (Math.random() < dt * 2 * e.rage) sparkle(g, e.x, e.y - 30 * (e.scale || 1), "#ff4a3a", 2);
+        if (!e.raged) {
+          e.raged = true;
+          addLog(g, `The ${e.name}'s fury mounts — end this quickly!`, "#ff4a3a");
+          addFloat(g, e.x, e.y - 66 * (e.scale || 1) - 16, "FURY RISES", "#ff4a3a", true);
+          sfx.enrage();
+        }
+      } else e.raged = false;
       const PH = { slime: [0.66, 0.33], bat: [0.5], skeleton: [0.5], imp: [0.66, 0.33] }[e.kind] || [];
       e.phaseIdx = e.phaseIdx || 0;
       while (e.phaseIdx < PH.length && e.hp <= e.maxHp * PH[e.phaseIdx]) {
@@ -1398,17 +1573,25 @@ function tick(g, dt) {
           e.windup -= dt;
           e.atkT = Math.max(e.atkT, 0.6);
           if (e.windup <= 0) {
-            bossSpecial(g, e, alive);
+            if (e.nextSpec === "crusher") bossCrusher(g, e, alive); else bossSpecial(g, e, alive);
             e.specT = rand(7, 10);
           }
         }
       } else {
         e.specT = (e.specT == null ? rand(4.5, 7) : e.specT) - dt;
         if (e.specT <= 0 && alive.length) {
-          e.windupMax = { slime: 1.6, bat: 1.4, skeleton: 1.8, imp: 1.7 }[e.kind];
+          /* every other special is the CRUSHING BLOW (Phase 4, the tank
+             check): a single overwhelming hit at whoever holds the King's
+             attention. A tank soaks it; anyone else had better not be
+             holding aggro. Interruptible like every windup. */
+          e.specN = (e.specN || 0) + 1;
+          e.nextSpec = e.specN % 2 === 1 ? "crusher" : "kind"; /* the tank check comes FIRST */
+          e.windupMax = e.nextSpec === "crusher" ? 1.6 : { slime: 1.6, bat: 1.4, skeleton: 1.8, imp: 1.7 }[e.kind];
           e.windup = e.windupMax;
           const names = { slime: "gathers itself for a ROYAL SLAM", bat: "draws breath for a SCREECH", skeleton: "raises its blade in a GRAVE CALL", imp: "calls fire from the deep" };
-          addLog(g, `The ${e.name} ${names[e.kind]}!`, "#e77463");
+          addLog(g, e.nextSpec === "crusher"
+            ? `The ${e.name} heaves its whole bulk for a CRUSHING BLOW!`
+            : `The ${e.name} ${names[e.kind]}!`, "#e77463");
           sfx.warn();
         }
       }
@@ -1465,9 +1648,15 @@ function tick(g, dt) {
     /* one incoming-damage path for autos, cleaves, and boss specials alike:
        hurtMember owns mitigation, thorns, the death rites, and returns what
        actually landed so the drinkers below know how much to drink */
-    const dmg = hurtMember(g, tgt, e.dmg * rand(0.85, 1.15), e);
+    const dmg = hurtMember(g, tgt, e.dmg * (1 + 0.6 * (e.rage || 0)) * rand(0.85, 1.15), e);
     burst(g, tgt.x + 4, tgt.y - 30, "#ef6461", 4, 1.1);
-    if ((e.elite || e.frenzy) && e.kind === "bat" && e.hp > 0) {
+    /* Rend: a King's blows — and its Herald's — leave a bleed behind */
+    if ((e.boss || e.herald) && tgt.alive) {
+      tgt.bleedDps = Math.max(tgt.bleedDps || 0, e.dmg * (e.boss ? 0.10 : 0.05));
+      tgt.bleedT = 8;
+      if (Math.random() < 0.35) addFloat(g, tgt.x, tgt.y - 86, "REND", "#c9506d");
+    }
+    if (((e.elite && !e.herald) || e.frenzy) && e.kind === "bat" && e.hp > 0) {
       const drain = dmg * (e.frenzy ? 0.4 : 0.6);
       e.hp = Math.min(e.maxHp, e.hp + drain);
       addFloat(g, e.x, e.y - 66 * (e.scale || 1), "+" + fmt(drain), "#c9506d");
@@ -1497,7 +1686,7 @@ function killEnemy(g, killer, e) {
   }
   g.shake = Math.max(g.shake, e.boss ? 8 : e.elite ? 4 : 1.5);
   addFloat(g, e.x, e.y - 50, `+${goldGain}g`, "#f2c14e");
-  if (e.elite && e.kind === "slime") {
+  if (e.elite && !e.herald && e.kind === "slime") {
     for (let k = 0; k < 2; k++) {
       const sp = makeEnemy(g, "normal");
       sp.x = e.x + (k ? 30 : -26);
@@ -1532,6 +1721,13 @@ function hitEnemy(g, m, tgt, dmg, crit) {
   /* Warpath: a killer's presence teaches the whole party to finish what it
      starts — everyone's blows land half again as hard on wounded foes. */
   if (tgt.hp / tgt.maxHp < 0.2 && rolesAlive(g).dps) dmg *= 1.5;
+  /* Soothe (Phase 4): a mender's bolt is a balm even to its target — each
+     one calms a King's mounting fury by a few seconds. The healer's answer
+     to the enrage clock, and why their weave holds long sieges together. */
+  if (m && CLASSES[m.cls].soothe && tgt.boss) {
+    tgt.fightT = Math.max(0, (tgt.fightT || 0) - CLASSES[m.cls].soothe);
+    if ((tgt.rage || 0) > 0 && Math.random() < 0.4) addFloat(g, tgt.x, tgt.y - 66 * (tgt.scale || 1) - 14, "SOOTHED", "#7fd069");
+  }
   if (tgt.shell > 0) {
     dmg *= 0.5;
     tgt.shell--;
@@ -1564,6 +1760,9 @@ function hitEnemy(g, m, tgt, dmg, crit) {
 function applyHeal(g, m, ally, amt) {
   if (!ally.alive) return;
   ally.hp = Math.min(ally._st.hp, ally.hp + amt);
+  /* a mender's touch staunches the King's Rend (Phase 4): each mend closes
+     3s of the bleed — what makes the healer THE answer to the affliction. */
+  if ((ally.bleedT || 0) > 0) ally.bleedT = Math.max(0, ally.bleedT - 3);
   if (m) m.healDone += amt;
   addFloat(g, ally.x, ally.y - 74, `+${fmt(amt)}`, "#7fd069");
   sparkle(g, ally.x, ally.y, "#9fe88c", 6);
@@ -1599,6 +1798,28 @@ function resetChar(g, m) {
   m.kills = 0; m.dmgDone = 0; m.healDone = 0;
   m.ult = 0; m.ultT = 0;
   m.alive = true; m._st = stats(m, g); m.hp = m._st.hp;
+}
+
+/* The sounded retreat (Phase 4, owner decision 5): abandon a King rather
+   than die to it. The same ground is lost as a wipe — back to the last
+   King's fallen ground — but the party walks out on its feet: the living
+   keep their health, the fallen rise at 40%, and no deaths are added to
+   the ledger. Momentum still gutters; retreat is a choice, not a reroll.
+   (Multiplayer routes this through the majority-vote retreat intent; the
+   prototype's lone player simply sounds the horn.) */
+function doRetreat(g) {
+  g.stage = Math.max(1 + g.legacy.head * 2, Math.floor((g.stage - 1) / 5) * 5 + 1);
+  for (const m of g.members) {
+    m.bleedT = 0;
+    if (!m.alive) { m.alive = true; m.hp = m._st.hp * 0.4; }
+  }
+  g.momentum = 0;
+  g.retreatV = null;
+  g.wave = 0; g.ambush = false;
+  g.enemies = []; g.projectiles = []; g.pending = [];
+  g.phase = "advance"; g.advanceT = 2.2;
+  sfx.wipe();
+  addLog(g, `The horn sounds. The party retreats in good order to stage ${g.stage} — alive to try again.`, "#f2c14e");
 }
 
 function endChapter(g) {
@@ -5415,7 +5636,7 @@ export default function GuildIdle() {
         <main style={{ flex: 1, minWidth: 320, display: "flex", flexDirection: "column", minHeight: 0 }}>
           <header style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 14px", borderBottom: "2px solid #2e2947", flexWrap: "wrap" }}>
             <span className="gi-h" style={{ fontSize: 11, color: zone.top }}>{zone.name.toUpperCase()}</span>
-            <span style={{ color: "#8b84ad" }}>Stage <b style={{ color: "#cfc9e8" }}>{g.stage}</b>{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""} · Best {g.best}</span>
+            <span style={{ color: "#8b84ad" }}>Stage <b style={{ color: "#cfc9e8" }}>{g.stage}</b>{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : g.stage % 5 === 4 ? " · GAUNTLET" : ""} · Best {g.best}</span>
             <span style={{ color: "#8b84ad" }} title="How hard the foes ahead are built: how deep the guild has pushed across every tale, floored by the party's own level. Stage restarts each chapter; threat does not.">⚔️ Threat <b style={{ color: "#cfc9e8" }}>{threatOf(g)}</b></span>
             <span style={{ marginLeft: "auto", color: "#f2c14e" }}>◈ {fmt(g.gold)}g</span>
             {(g.renown > 0 || g.prestiges > 0) && <span style={{ color: "#b07fe0" }}>✦ {fmt(g.renown)}</span>}
@@ -5423,6 +5644,11 @@ export default function GuildIdle() {
               <span key={mu.id} style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
             ))}
             <span style={{ color: "#8b84ad", fontSize: 16 }}>🧪{g.stock.heal} 🛡️{g.stock.armor} ☠️{g.stock.poison} 🔥{g.stock.res}</span>
+            {g.phase === "combat" && g.enemies.some((e) => e.boss && e.hp > 0) && (
+              <button className="gi-btn" style={{ fontSize: 15, borderColor: "#f2c14e", color: "#f2c14e" }}
+                title="Sound the retreat: fall back to the last King's fallen ground, alive — no deaths, the fallen rise at 40%. Momentum is lost."
+                onClick={() => { doRetreat(g); force((v) => v + 1); }}>🏳 Retreat</button>
+            )}
             {g.momentum > 0 && <span style={{ color: "#8fe3ff", fontSize: 16 }} title={`Trinity momentum: clear stages with a tank, DPS, and healer all standing to stack +8% gold and XP each, up to 5. A wipe or a broken trinity resets it.`}>🔥 ×{g.momentum}</span>}
             <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px" }} title={sfxOff ? "unmute sounds" : "mute sounds"}
               onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>

@@ -132,7 +132,11 @@ export function runMeasured(g, opts = {}) {
       cur = {
         chapter: g.prestiges - p0 + 1,
         stage: g.stage,
-        tier: g.stage % 5 === 0 ? "king" : g.stage % 5 === 3 ? "elite" : "normal",
+        tier: g.ambush ? "ambush"
+          : g.stage % 5 === 0 ? "king"
+          : g.stage % 5 === 3 ? "elite"
+          : g.stage % 5 === 4 ? "gauntlet"
+          : "normal",
         _t0: g.time, _hp0: partyHp(), _max0: partyMax(),
       };
       stages.push(cur);
@@ -173,6 +177,8 @@ export function runMeasured(g, opts = {}) {
     deaths: (g.session ? g.session.deaths : 0) - deaths0,
     kings: { ...byTier("king"), attempts: attempts("king") },
     elites: { ...byTier("elite"), attempts: attempts("elite") },
+    gauntlets: { ...byTier("gauntlet"), attempts: attempts("gauntlet") },
+    ambushes: { ...byTier("ambush"), attempts: attempts("ambush") },
     normals: { ...byTier("normal"), attempts: attempts("normal") },
     hpLostPctPerStage: round2(avg(cleared.map((s) => s.hpLostPct))),
     finalThreat: sim.threatOf(g),

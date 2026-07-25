@@ -34,7 +34,11 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 Combat is fully automatic: the party attacks, heals, dodges, crits, and casts ultimates on its own. Waves of enemies come in a rhythm:
 
-- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone). Kings telegraph big special attacks with a wind-up — a Tank's stun can **interrupt** them — and grow more dangerous as their health drops.
+- **The wave before each boss is the King's honor guard** — a gauntlet of back-to-back waves with no breather between them, led by a **Herald** whose blows carry a taste of the King's wounds. You arrive at the throne carrying the fight's cost.
+- **Every 5th wave is a boss** — one of the four Kings (Slime, Cave Bat, Skeleton, Imp, one per zone), and each is a threefold test: the **Crushing Blow** falls on whoever holds its attention (a Tank shrugs it; anyone else shouldn't be standing there), its blows leave a **bleeding Rend** that armor ignores (a Healer's mending staunches it), and fight too long and its **fury mounts** (a Healer's bolts can soothe the clock back down). Kings telegraph specials with a wind-up — a Tank's stun **interrupts** — and grow more dangerous as their health drops.
+- **After a King falls, the party makes camp** — a real rest at the fire that heals everyone fully, whatever the party's shape.
+- **The road itself is unsafe** — now and then a pack ambushes the party mid-march. It pays gold and XP but wins no ground.
+- **A fight you can't win can be abandoned** — during a King fight, vote 🏳 Retreat (a majority must agree): the party falls back to the last King's fallen ground on its feet, no deaths, momentum lost. Losing costs the same ground *and* the wounds.
 - **Two waves before each boss** an **elite** appears: tougher, meaner, better loot.
 - The world cycles through four zones — Verdant Fields, Gloomwood, Forgotten Crypt, Emberdeep — every five waves.
 

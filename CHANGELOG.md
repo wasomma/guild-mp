@@ -2,6 +2,21 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.35 — 2026-07-25
+
+**The Kings learn to fight back.** Phase 4 of the combat rework — bosses become the wall the whole redesign was building toward, and the road to them earns its name.
+
+- **Every King is a threefold test.** The **CRUSHING BLOW** falls on whoever holds its attention — a Tank shrugs it off, anyone else gets flattened — and it comes *first*, so a party with no shield meets the lesson early. Its blows leave a **bleeding Rend** that armor ignores; a Healer's mending staunches it. And fight too long and its **fury mounts** — damage climbing toward ×1.6 — though a Healer's bolts can *soothe* the clock back down. Bring the trinity and each threat has its answer; go alone and your class decides which two you must survive.
+- **Tanks have Grit**: wounds close even mid-battle (2% per second). A lone tank's long King sieges are now winnable on endurance — as they should be.
+- **Healers weave**: two mends, then a bolt, whenever nobody's critical. A mender who never strikes can never end a fight.
+- **The honor guard bars the way.** The wave before every King is now a gauntlet — waves back-to-back with no breather, led by a **Herald** carrying a taste of its King's Rend. You arrive at the throne already bleeding.
+- **The party makes camp** after every fallen King: a real rest that heals everyone fully, whatever the party's shape.
+- **Ambushes**: the road itself is unsafe — packs jump the party mid-march for gold and XP, but win no ground.
+- **🏳 Retreat**: a King fight you can't win can be abandoned by majority vote — the party falls back to the last King's fallen ground *on its feet*: no deaths, the fallen rise at 40%, momentum lost. Losing costs the same ground and the wounds.
+- Kings no longer shrink for small parties. The wall stands the same height for everyone; it merely grows with the guild's legend (threat), so a fresh world's first Kings remain a lesson rather than an execution.
+
+Measured against the plan's targets: a trinity fells a veteran King in ~29s, a solo tank sieges one in ~56s, a solo DPS races the Crusher at ~9s a coin-flip from death, and a solo healer grinds one down in ~71s — every calling viable, none of them safe.
+
 ## v0.1.34 — 2026-07-25
 
 **Stakes.** Phase 3 of the combat rework: failure costs something now, and preparation is a real resource.

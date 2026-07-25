@@ -35,7 +35,7 @@ for (const fixture of fixtures) {
   console.log(`\n=== ${fixture.toUpperCase()} fixture — ${chapters} chapters per comp, seed ${seed} ===`);
   console.log(
     pad("comp", 12) + num("ch", 3) + num("king TTK", 10) + num("king rng", 14) + num("king tries", 11) +
-    num("norm TTK", 9) + num("%HP/stg", 8) + num("wipes", 6) + num("deaths", 7) + num("threat", 7) +
+    num("gaunt TTK", 10) + num("norm TTK", 9) + num("%HP/stg", 8) + num("wipes", 6) + num("deaths", 7) + num("threat", 7) +
     num("1stKing", 9) + num("wipes<K1", 9) + "  note"
   );
   for (const comp of compNames) {
@@ -48,6 +48,7 @@ for (const fixture of fixtures) {
       num(kings.ttkAvg + "s", 10) +
       num(`${kings.ttkMin}-${kings.ttkMax}s`, 14) +
       num(`${kings.attempts}/${kings.cleared}`, 11) +
+      num(r.gauntlets.ttkAvg + "s", 10) +
       num(r.normals.ttkAvg + "s", 9) +
       num(r.hpLostPctAvg ?? r.hpLostPctPerStage, 8) +
       num(r.wipes, 6) +

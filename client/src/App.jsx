@@ -264,7 +264,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "threat", "momentum", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "threat", "momentum", "retreat", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -382,7 +382,7 @@ export default function App() {
               <div className="worldbar">
                 <div className="wgroup">
                   <span>📖 Chapter {g.prestiges + 1}</span>
-                  <span>🏰 Stage {g.stage}{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : ""}</span>
+                  <span>🏰 Stage {g.stage}{g.stage % 5 === 0 ? " · BOSS" : g.stage % 5 === 3 ? " · ELITE" : g.stage % 5 === 4 ? " · GAUNTLET" : ""}</span>
                   <span title="How hard the foes ahead are built: how deep the guild has pushed across every tale, floored by the party's own level. Stage restarts each chapter; threat does not.">⚔️ Threat {g.threat}</span>
                   <span>🗺️ {zone.name}</span>
                   {MUTATORS.filter((x) => x.id === g.mutator).map((mu) => (
@@ -390,6 +390,12 @@ export default function App() {
                   ))}
                 </div>
                 <div className="wgroup">
+                  {g.phase === "combat" && g.enemies?.some((e) => e.boss && e.hp > 0) && me && (
+                    <button className="mini" title="Vote to abandon the King: the party falls back to the last King's fallen ground, but walks out alive — no deaths, the fallen rise at 40%. A majority of the party must agree within 25s."
+                      onClick={() => send({ a: "retreat", key: me.key })}>
+                      🏳 Retreat{g.retreat ? ` ${g.retreat.n}/${g.retreat.need}` : ""}
+                    </button>
+                  )}
                   <span className="wgold">🪙 {fmt(g.gold)}</span>
                   <span className="wrenown">✨ {fmt(g.renown)}</span>
                 </div>

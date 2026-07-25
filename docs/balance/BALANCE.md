@@ -53,10 +53,12 @@ guild throughput now rises only ~linearly with bodies (no headcount stat buff
 on top), so the old steeper curve — tuned when every extra voice also carried
 +4% damage — overtaxed big parties. The small squared term remains as a nudge
 against the role-coverage buffs compounding at the top end.
-A **King's ×9 HP** scales down for small parties
-(`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
-the whole party focuses — no amount of extra heroes splits its attention the
-way a pack does, and a flat ×9 made Kings simply unkillable solo.
+A **King's bulk rides threat, not party size** (v0.1.35):
+`bossTier = min(30, 5 + 0.5×threat) × clamp(0.75 + 0.125×(members−1), 0.75, 1)`
+— a fresh world's first Kings are stern, a veteran world's are ×30 sieges, and
+the small-party relief is a sliver (×0.75 solo), not the old deleted King. The
+wall stands the same height for everyone; solo attempts are meant to be long
+(tank), a race against the Crusher (DPS), or a soothed grind (healer).
 
 The old **mercy discount** (×0.6 enemy damage for a lone hero, ×0.9 for any
 no-healer party) is gone as of v0.1.31: it made solo play the *safest* shape in
@@ -171,9 +173,9 @@ A member's damage starts from class base + per-level growth, then multiplies thr
 
 | Class | HP (base +/lvl) | Dmg (base +/lvl) | Attack period | Armor | Crit | Heal (base +/lvl) | Final mul (HP / Dmg) | Extra |
 |---|---|---|---|---|---|---|---|---|
-| Tank | 130 +26 | 6 +1.6 | 1.5s | 6 | 5% | — | ×1.30 / ×0.75 | +20% innate damage reduction |
+| Tank | 130 +26 | 6 +1.6 | 1.5s | 6 | 5% | — | ×1.30 / ×0.75 | +20% innate DR; **Grit**: 2% max-HP/s regen in combat |
 | DPS | 72 +12 | 14 +3.4 | 0.85s | 0 | 15% | — | ×0.80 / ×1.15 | — |
-| Healer | 88 +15 | 5 +1.2 | 1.25s | 1 | 5% | 15 +3 | ×1.00 / ×0.55 | radiant bolt: +heal×0.35 damage |
+| Healer | 88 +15 | 5 +1.2 | 1.25s | 1 | 5% | 15 +3.5 | ×1.00 / ×0.55 | radiant bolt: +heal×0.35 damage; **Soothe**: bolts calm a boss 3s of fightT |
 
 The **final multipliers are the class triangle** (v0.1.31): they apply to the
 finished hp/dmg numbers *after* gear, because gear power dominates both within
@@ -210,7 +212,7 @@ World-level multipliers stack on top: Battle Hymns (+10%/rank) and mutators (Cha
 
 ### The attack roll
 
-Each swing rolls `damage × rand(0.85–1.15)`. Crit chance is capped at **60%**; a crit multiplies by `2 + crit-damage affix total` (so +90% crit damage from Sunsplitter makes crits ×2.9). Style shapes: the Rogue hits twice at 55% each (second hit rerolls crit), the Chainblade lands its full hit on a 0.17s delay, the Archer fires a projectile. The healer heals the lowest-HP ally when someone sits below **75%**, and fights otherwise — the old <99.9% threshold kept a solo healer casting heals on every scratch and never attacking, half of how their fights became infinite.
+Each swing rolls `damage × rand(0.85–1.15)`. Crit chance is capped at **60%**; a crit multiplies by `2 + crit-damage affix total` (so +90% crit damage from Sunsplitter makes crits ×2.9). Style shapes: the Rogue hits twice at 55% each (second hit rerolls crit), the Chainblade lands its full hit on a 0.17s delay, the Archer fires a projectile. The healer runs **the weave** (v0.1.35): heal the lowest ally when someone sits below 75% — but after two mends in a row, if nobody is below 45%, the third cast is a bolt. A healer who only mends can never end a fight, and their bolts carry the Soothe.
 
 ### Ultimates
 
@@ -236,7 +238,11 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 - Mitigation: `raw × (1 − armor/(armor + 30 + 4.5×threat)) × (1 − damage reduction)`, the share capped at 75% and the result floored at 1. Armor **soaks a share**; it does not subtract a flat amount. The old `max(1, raw − armor×0.6)` became outright immunity the moment gear power outran the stage's damage — at gear power ~104 a party took literally nothing from a stage-10 normal, and measured runs showed whole chapters at 0.0% health lost. The soak constant rises with threat so armor keeps its worth at every depth without ever reaching a wall. The Armor Elixir still adds +6 armor for 12s at combat start.
 - **One incoming-damage path.** Autos, cleaves, and boss specials all run through `hurtMember`, which owns mitigation, thorns, and the death rites and returns what actually landed. The enemy auto-attack used to inline its own copy of that logic, which is exactly the kind of duplication that drifts.
 - **Cleaves** are the sustain check: any non-boss enemy — at **any party size** as of v0.1.31, a lone hero included — winds up (0.4s, 0.5s elite — a visible telegraph) and hits the *entire party* for ×0.5 of its damage (×0.7 elite). The per-enemy cooldown (~4–9s) is stretched by `1 + 0.5 × (packSize − 2)` so a large warband doesn't carpet the party; the party-wide cleave rate stays roughly fixed however many bodies turn up.
-- **Boss Kings** telegraph a special every ~4.5–10s with a 1.4–1.8s windup that a tank stun **interrupts** (delaying it 6s): Royal Slam ×1.5 to all, Screech ×0.9 to all + attack delay, Grave Call summons 2 skeletons at 60% HP, meteor fire ×1.1 to all. Each King also has HP-threshold phases (Slime splits off spawn, Bat frenzies, Skeleton gains 8-charge bone armor halving hits, Imp ignites for ×1.25 damage and faster swings).
+- **Boss Kings are a tri-fold check** (v0.1.35), one per role, each answered by the class it names:
+  - **The Crusher (tank check)**: every other special — and the FIRST, so a tankless party meets it early — is a CRUSHING BLOW at whoever holds aggro: `dmg × min(3, 1.5 + 0.05×threat)`, single target, through `hurtMember`. A tank's mitigation makes it a survivable slam; a DPS holding aggro dies. Interruptible like any windup.
+  - **The enrage clock (DPS check)**: after `ENRAGE_AT` = 45s of being fought, a King's damage ramps to ×1.6 over `ENRAGE_RAMP` = 90s (autos and specials both). Soft and capped — it punishes dawdling, not the slow classes. A healer's **Soothe** (each bolt on a boss winds `fightT` back 3s) can hold the clock down through a long siege.
+  - **Rend (healer check)**: King autos (and the Herald's) leave a bleed — 10% of the King's damage per second for 8s (5% herald), **unmitigated by armor**. A mender's heal staunches 3s of it per cast; without one it's a potion-cadence problem. Cleared on stage clear, wipe, and retreat.
+  - The kind specials remain in rotation (windup 1.4–1.8s, tank stun **interrupts**, delaying 6s): Royal Slam ×1.5 to all, Screech ×0.9 to all + attack delay, Grave Call summons 2 skeletons at 60% HP, meteor fire ×1.1 to all — plus the HP-threshold phases (Slime splits, Bat frenzies, Skeleton bone armor, Imp ignites).
 - Elites have their own turns: the Elder Slime death-splits into two 65%-HP slimes, the Bone Captain raises an ally at 60% HP, the Imp Warlord enrages at 50% (×1.5 damage, much faster), and Dire Bats drain 60% of damage dealt as self-healing.
 
 ## Recovery
@@ -250,7 +256,7 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 
 ## The difficulty and reward curve
 
-- Enemy HP: `(28 + threat^1.18 × 15) × tier × crowdMul × rand(0.9–1.1)` — tier ×3.6 elite / ×1 normal, and bosses `×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`. Packs run 2–4 normals plus one per two extra members, capped at 8 and additionally ceilinged at `ceil(members × 1.5)`; elite stages field the elite plus that many normals; stage %5==0 is a lone King. Endless Horde still adds one more (at 80% HP each) while the pack is under the cap. The line is spread across the enemy band's ~180px however many turn up, rather than marching the tail off a 640px stage.
+- Enemy HP: `(28 + threat^1.18 × 15) × tier × crowdMul × rand(0.9–1.1)` — tier ×3.6 elite / ×1 normal, and bosses ×`bossTier` (see the threat section). Packs run 2–4 normals plus one per two extra members, capped at 8 and additionally ceilinged at `ceil(members × 1.5)`; elite stages field the elite plus that many normals; **stage %5==4 is the honor-guard gauntlet** (v0.1.35): 2 waves (3 for parties of 5+) with no advance-phase regen between them, the final wave led by a **Herald** (elite-grade, ×0.9 HP, ×1.15 damage, inflicts the weak Rend, exempt from kind-elite tricks; absent below threat 8 — the first-hour grace); stage %5==0 is a lone King. **Camps**: after a King falls (not at chapter end), a 6s camp restores 10% max HP/s to everyone regardless of Lifeward. **Ambushes**: during any non-camp advance, ~4.5%/s chance a pack (80% HP normals) jumps the party — a toll fight paying kills and gold but moving no stage and touching no momentum. **Retreat**: during a King fight, a majority of members voting `retreat` (25s window) falls the party back to just after the last defeated King on its feet — no deaths, the fallen rise at 40%, momentum lost. Endless Horde still adds one more (at 80% HP each) while the pack is under the cap. The line is spread across the enemy band's ~180px however many turn up, rather than marching the tail off a 640px stage.
 - Loot power: `(4 + threat×1.25) × rarity multiplier × rand(0.9–1.12)`, rarity multipliers 1.0 / 1.35 / 1.75 / 2.35 / 3.2 (unique 3.4). Drop odds: bosses always drop (plus a 60% second drop) at 10% unique chance each; elites always drop at 5% unique; normals drop 13% of the time at 1% unique.
 - Rarity weights start at 54/26/12/6/2 (common→legendary) and shift with threat: common loses `threat×0.4` weight (the shift caps at 20, leaving common at weight 34) while each higher tier gains a quarter of the shift — deep tales steadily favor rare+ gear.
 - Member damage still grows multiplicatively (level × style × skills × gear power × legacy), which is why enemy bulk grows on `threat^1.18` instead of a straight line, and why threat — not stage — is what enemies are built from. The intended wall is still the King's special-phase check; it now stands at every depth instead of dissolving after the first tale.

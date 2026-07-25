@@ -185,9 +185,28 @@ codebases.
   which staged the difficulty in practice, and Phase 3's remaining cuts only
   bite on wipes or at the feast conversion. Revisit only if the live guild
   reports whiplash.
-- **Phase 4 — Bosses + encounters.** Tri-fold King checks; honor-guard gauntlet
-  at every stage % 5 == 4 with herald elites; advance-phase ambushes; camp rest
-  nodes; party-voted retreat intent (and optional manual-ult toggle).
+- **Phase 4 — Bosses + encounters. ✅ DONE (v0.1.35, 2026-07-25).**
+  Shipped in both sims across five tuning rounds (the sweep drove every
+  number): tri-fold King checks — Crusher first-and-alternating at the aggro
+  holder (threat-scaled ×1.5→×3), enrage clock (45s + 90s ramp to ×1.6,
+  soft/capped, recomputed so Soothe can unwind it), Rend bleed (unmitigated,
+  10% King dmg/s, staunched 3s per heal) — with each class countering its
+  own check: tanks soak the Crusher and gained **Grit** (2%/s combat regen,
+  the sustain that makes solo sieges winnable), healers **Soothe** the clock
+  with bolts and staunch Rend, and got the **weave** AI (2 mends then a
+  bolt) + healL 3→3.5; `bossTier` rides threat (cap 30, ×0.75 solo relief).
+  Honor-guard gauntlets at %5==4 (2–3 waves, Herald above threat 8 with weak
+  Rend, exempt from kind-elite tricks — an elite-bat Herald recreated the
+  infinite-sustain stalemate), advance-phase ambushes (toll fights), camps
+  after fallen Kings (10%/s), majority-vote retreat intent + world-bar
+  button (manual-ult toggle deferred to Phase 5's trees).
+  **Measured v0.1.35 (live)**: trinity Kings 29.2s (target 30–45 ✓), solo
+  tank 55.5s sieges at 0 wipes, solo DPS 9.1s knife-edge vs the Crusher
+  (1 wipe/9 Kings), solo healer VIABLE at 70.8s Kings / 19 wipes (was
+  0-for-127 before Soothe+weave), five 27.7s / nine 21.2s. **First-hour
+  guardrail**: fresh tank 142s/0 deaths and trinity 76s/0 to the first King
+  (Herald gated below threat 8); fresh solo DPS is 423s/16 — the deliberate
+  hard mode, documented, with the creator's need-hint steering newcomers.
   **Exit criterion — the first hour (added 2026-07-25):** the rework made a
   fresh world's chapter 1 sharp (24 wipes, solo tank), and Phase 4 adds
   gauntlets and ambushes on top. The sweep now reports `firstHour` (sim-time
