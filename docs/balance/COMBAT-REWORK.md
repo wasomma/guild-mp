@@ -1,0 +1,213 @@
+# Combat & Damage Rework — Design Plan
+
+Status: **agreed with the owner, not yet implemented** (2026-07-25). This document is
+the source of truth for the rework's goals, decisions, and phase plan. When a phase
+ships, update this file and BALANCE.md together.
+
+## Goal
+
+Combat should reward playing together and make progression feel earned:
+
+- **Solo play in any class is viable but slow.** Each class survives alone by a
+  different route, and each is dramatically slower than a party.
+- **The trinity (tank + DPS + healer) is the fast, rewarding way to play.**
+  Composition — not headcount — is what pays.
+- **Bosses are a genuine challenge** with a real chance of wiping and a real cost
+  to it.
+
+## Why combat is currently unrewarding (diagnosis)
+
+Measured band today: 6.7–18.2% of party HP lost per stage, wipes rare after
+chapter 1 — safe by design. The mechanisms:
+
+1. **Solo is coddled**: ×0.6 mercy discount (`mercyMul`), pack ceiling of 2,
+   cleaves require 2+ members so a soloist never sees the healer-check, King HP
+   shrinks to ~×6.5 solo.
+2. **Class barely matters**: nothing tests each class's weakness; every class
+   clears comfortably.
+3. **No attrition**: 8% max HP/s regen between fights means every fight starts
+   fresh; the healer's core job doesn't exist.
+4. **Potions erase danger**: auto-sipped, gold-priced — and the live world holds
+   62M gold, so sustain is infinite.
+5. **Wiping costs nothing**: stage −1, revive at 60%, 4 seconds.
+6. **Chorus of Courage rewards headcount, not teamwork** (+4% dmg / +3% HP per
+   voice, composition-blind).
+7. **Structural blocker**: class is auto-assigned by party need (tank first), so
+   a solo player's first hero is always a tank — solo DPS/healer cannot exist.
+
+Framing constraint: this is an idle game. Challenge = composition, builds,
+preparation (potion charges, economy), and pacing decisions — never execution
+skill — plus a small set of light tactical intents (see decisions).
+
+## Owner decisions (locked 2026-07-25)
+
+1. **Class choice**: free pick in the character creator; party-need suggestion
+   shown as a hint.
+2. **Wipe stakes**: stage set-back — a wipe returns the party to just after the
+   last defeated King (up to 4 stages lost, refought through re-rolled packs).
+3. **Pacing targets (King TTK)**: full trinity ~30–45s; solo DPS ~1.5–2 min with
+   real death risk; solo tank ~4–5 min; solo healer ~8–10 min. Normal fights
+   scale proportionally.
+4. **Live rollout**: new rules ramp in over the first ~3 chapters after deploy,
+   framed in-fiction (a "world sharpens" mutator arc). Potion stock converts to
+   charges at the first chapter end post-deploy.
+5. **Idle purity**: light tactical intents allowed — party-voted "retreat from
+   boss" and possibly a manual ult trigger toggle. Combat stays auto.
+6. **Party bonus**: **Chorus of Courage is removed entirely**, replaced by
+   role-coverage buffs. Consequence: crowd scaling (`crowdMul`/`crowdBite`) was
+   tuned assuming Chorus and must be retuned so large parties don't get worse
+   per head; the trinity momentum bonus is the reward for stacking past three.
+7. **Skills**: **full talent-tree rework** — branching per-style trees with
+   mutually exclusive choices and keystone nodes. Cooldown abilities (taunt,
+   shield-wall, execute, HoT…) ship as keystones inside the trees, not as a
+   separate system. Scheduled last so it doesn't block the difficulty work.
+8. **Encounters before bosses**: more encounters, delivered **inside the
+   existing 20-stage / boss-every-5 skeleton** (which is load-bearing across
+   renown, Veteran Paths, the boss rail, timeline UI, quests, mutators):
+   - Every pre-King stage (stage % 5 == 4) becomes a **multi-wave gauntlet**
+     (2–3 back-to-back waves, no advance-phase regen between waves), themed as
+     the King's honor guard.
+   - A **herald elite** in the gauntlet carries a weak preview of its King's
+     mechanic, teaching the fight.
+   - **Ambushes** during the advance phase: a small chance (mutator-scalable)
+     that a pack jumps the party between stages.
+   - The attrition change (Phase 3) is the multiplier that makes the existing
+     4 stages before each King matter at all.
+
+## Design pillars
+
+### 1. Class triangle (asymmetric stats)
+
+| | Tank | DPS | Healer |
+|---|---|---|---|
+| Durability | Very high (HP ~2.5–3× DPS, high armor/DR) | Very low — dies if fights drag | Low armor, self-sustaining |
+| Damage | Low (solo TTK ~4–6× DPS) | High | Very low (solo TTK ~6–10× DPS) |
+| Solo route | Outlast everything, slowly | Kill fast or die — a race | Nearly unkillable but glacial |
+
+### 2. Aggro rework
+
+- Delete `mercyMul` (solo/no-healer discounts) entirely.
+- Threat-table targeting: tanks generate high threat; with no tank standing,
+  enemies prefer the highest damage-dealer.
+- Cleaves fire at any party size.
+
+### 3. Role coverage replaces Chorus
+
+- **Vanguard** (tank stands): backline takes −40–50% from autos and is off the
+  threat table.
+- **Lifeward** (healer stands): restores meaningful between-fight recovery and
+  counters attrition effects.
+- **Warpath** (DPS stands): pack-wide kill-speed bonus (e.g. execute damage
+  below 20% HP).
+- **Trinity momentum**: all three roles present → momentum stacks on fast
+  clears (bonus loot/gold/XP), so a coordinated trio visibly out-earns three
+  soloists and extra members past three still feel valuable.
+
+### 4. Attrition, scarcity, stakes
+
+- Between-fight regen cut from 8%/s to a trickle; HP is a resource across a
+  zone. Camp scenes (roadmap) become rest nodes.
+- Potions become **per-chapter charges** (Alchemist Stipend raises the cap);
+  gold's sink stays cosmetics.
+- Wipe = set-back to just after the last King.
+
+### 5. Bosses as tri-fold checks
+
+Each King checks all three roles; composition decides which route you fight:
+
+- **Enrage clock** (DPS check): damage ramps after T seconds — soft, so a solo
+  tank can out-mitigate it and a solo healer can out-sustain it, slowly.
+- **Crusher special** (tank check): telegraphed hit non-tanks cannot reasonably
+  eat; soaked by a tank or interrupted by stun (existing interrupt machinery).
+- **Affliction** (healer check): a DoT that outpaces potion cadence — trivial
+  with a healer, a charge-management problem without.
+
+### 6. Talent trees
+
+Branching per-style trees, keystone auto-cast cooldown abilities, free respec
+retained, and a sane auto-assign path for idle players. New Skills UI in both
+codebases.
+
+## Phase plan
+
+- **Phase 0 — Measurement harness. ✅ DONE (2026-07-25).** Vitest + headless
+  sweeps: party sizes 1/2/3/5/9 × class compositions × fresh world **and** a
+  live-scale fixture (levels 73–162, deep chapter count — the v0.1.27 lesson:
+  always test against the live world's scale). Baseline snapshot of today's
+  numbers including per-composition King TTK. Every later phase re-runs the
+  sweep against the pacing targets in decision 3.
+  Shipped: `scripts/balance/harness.mjs` (seeded RNG, forced comps, live
+  fixture), `qa-balance-sweep.mjs` (`npm run sweep`), vitest at the repo root
+  (`npm test`, `test/balance-harness.test.mjs`), baselines in
+  `docs/balance/baselines/`. See "Baseline findings" below.
+- **Phase 1 — Class triangle + aggro. ⚙ CORE DONE (v0.1.31, 2026-07-25); creator class pick outstanding.**
+  Shipped in both sims: `CLASSES` triangle (final-stat `mul` per class so
+  identity survives gear: tank ×1.30 hp / ×0.75 dmg + 20% innate DR, dps
+  ×0.80 / ×1.15, healer ×1.00 / ×0.55 + radiant bolt `dmg += heal×0.35`);
+  `mercyMul` deleted; threat targeting (tanks first, else hardest hitter by
+  `dmg/spd`); cleaves at any party size; healer AI heals below 75% and fights
+  otherwise. Measured v0.1.31 vs the v0.1.30 baseline (fresh/live King TTK):
+  solo healer **finite everywhere** (was impossible; 93s/81s Kings, brutal
+  fresh chapter 1 at 136 wipes — Phase 3 wipe redesign revisits), solo DPS
+  dies on a fresh world (4 wipes; still untouched at live scale — closes in
+  Phases 2–4), solo tank at 3.7–5.6× solo-DPS King time (target band),
+  every comp now loses 1.9–10.9% HP per stage (was 0.2–1.4% for groups).
+  Still open in this phase: the character-creator class pick (decision 1 —
+  note a free class *respec* already exists in the Skills tab, so this is
+  UX at creation, not new capability).
+- **Phase 2 — Role coverage.** Vanguard/Lifeward/Warpath + trinity momentum in
+  `stats()`; remove Chorus; retune `crowdMul`/`crowdBite` for the post-Chorus
+  world.
+- **Phase 3 — Stakes.** Regen trickle; potion charges; wipe set-back to last
+  King; the ramp-in mutator arc for the live save.
+- **Phase 4 — Bosses + encounters.** Tri-fold King checks; honor-guard gauntlet
+  at every stage % 5 == 4 with herald elites; advance-phase ambushes; camp rest
+  nodes; party-voted retreat intent (and optional manual-ult toggle).
+- **Phase 5 — Talent trees.** The largest single work item; deliberately last.
+
+Every phase honors the cardinal rule (identical diffs into
+`prototype/guild-idle.jsx`), re-runs the sweep, gets a doc sweep
+(docs/balance/BALANCE.md / TUTORIAL.md / ARCHITECTURE.md), and a version bump + tag before
+deploy.
+
+## Baseline findings (v0.1.30, seed 20260725, 3 chapters/comp)
+
+Full data: `docs/balance/baselines/v0.1.30-fresh.json` and `-live.json`.
+Method: fixed styles (paladin/archer/mystic), mutators stripped, potions
+auto-restocked, feast fast-forwarded. King TTK = seconds of combat per King
+stage; %HP/stg = net party HP lost per cleared stage.
+
+| Comp | King TTK fresh | King TTK live | %HP/stg fresh | %HP/stg live | Wipes (fr/lv) |
+|---|---|---|---|---|---|
+| solo-tank | 31.2s | 14.9s | 6.0 | 7.4 | 1 / 0 |
+| solo-dps | 7.4s | 4.4s | 4.3 | 2.7 | 0 / 0 |
+| solo-healer | **never** | **never** | — | — | 19 / 0 |
+| duo-td | 8.4s | 8.3s | 4.7 | 4.6 | 0 / 0 |
+| trinity | 16.4s | 11.5s | 1.4 | 0.8 | 0 / 0 |
+| five | 21.3s | 12.1s | 0.4 | 0.2 | 0 / 0 |
+| nine | 12.3s | 8.9s | 0.5 | 0.9 | 0 / 0 |
+
+What the numbers say (the rework's targets, quantified):
+
+1. **Grouping is currently a kill-speed PENALTY.** A trinity takes 2.2–2.6×
+   longer to fell a King than a solo DPS, and a five-stack is slower still —
+   party size scales enemy bulk (`crowdMul`, `bossTier`) while adding mostly
+   non-damage roles. Together buys only safety, and nobody needs safety.
+2. **Solo DPS is untouchable.** Zero wipes, zero deaths across both fixtures;
+   Kings die in 4–7s — before any mechanic can matter. The glass cannon has
+   no glass.
+3. **Parties of 3+ are statistically invulnerable**: 0.2–1.4% of party HP per
+   stage. The measured "danger band" exists only for soloists.
+4. **Solo healer is not slow — it is impossible.** Fresh: perma-walls on the
+   first King (18 attempts, 19 wipes, 0 clears in 6 sim-hours). Live: entered
+   a stage-8 **elite** fight at t=27s and was still in it at 6 sim-hours —
+   enemy sustain (elite self-heal) exceeds healer damage output, an infinite
+   stalemate with no wipe and no kill. The rework's "viable but very slow"
+   for healers requires *new capability* (real damage floor or sustain-
+   breaking mechanics), not just retuning.
+5. Solo tank is the only comp that resembles the intended feel today: slow
+   Kings (up to 92s), occasional wipes, real attrition.
+
+Deltas vs the decision-3 targets: trinity needs Kings ~3× harder/longer than
+today; solo DPS needs ~15–25× (and real lethality); solo tank ~5–10×; solo
+healer needs to become *finite* first, then land at ~8–10 min.

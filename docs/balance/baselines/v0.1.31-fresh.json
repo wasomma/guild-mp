@@ -1,0 +1,4451 @@
+{
+ "meta": {
+  "version": "0.1.31",
+  "generatedAt": "2026-07-25T12:02:19.579Z",
+  "node": "v24.18.0",
+  "seed": 20260725,
+  "chapters": 3,
+  "fixture": "fresh",
+  "notes": [
+   "Styles fixed per class: {\"tank\":\"paladin\",\"dps\":\"archer\",\"healer\":\"mystic\"}",
+   "Mutators stripped each chapter (measurement noise).",
+   "Potions auto-restocked to the stipend baseline whenever gold allows.",
+   "Fresh world from newWorld().",
+   "kings.attempts counts combat entries at king stages; attempts > cleared means wipes forced re-fights."
+  ]
+ },
+ "runs": [
+  {
+   "comp": "solo-tank",
+   "fixture": "fresh",
+   "seed": 75196725,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 771.45,
+   "simSteps": 15429,
+   "timedOut": false,
+   "wipes": 0,
+   "deaths": 0,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 21.65,
+    "ttkMin": 10.6,
+    "ttkMax": 36.45,
+    "hpLostPctAvg": 4.77,
+    "attempts": 12
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 13.76,
+    "ttkMin": 9.1,
+    "ttkMax": 25.6,
+    "hpLostPctAvg": 10.26,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 36,
+    "ttkAvg": 5.56,
+    "ttkMin": 2.1,
+    "ttkMax": 9.05,
+    "hpLostPctAvg": 6.67,
+    "attempts": 36
+   },
+   "hpLostPctPerStage": 7.01,
+   "finalThreat": 30,
+   "finalLevels": [
+    30
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 6.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 5.45,
+     "hpLostPct": 10.81
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 15.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 16.51
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 30.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 5.6,
+     "hpLostPct": 7.23
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 5.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 17.35,
+     "hpLostPct": 19.9
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 36.45,
+     "hpLostPct": 0.33
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 9.05,
+     "hpLostPct": 29
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 9.05,
+     "hpLostPct": 26.77
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 25.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 3.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 19.55,
+     "hpLostPct": 4.73
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 4.6,
+     "hpLostPct": 2.92
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 1.27
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 10.55,
+     "hpLostPct": 43.8
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 3.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 20.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 6.55,
+     "hpLostPct": 6.61
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 8.7
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 12.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 6.27
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 19.6,
+     "hpLostPct": 25.39
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 9.61
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 4.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 10.95,
+     "hpLostPct": 19.5
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 4.11
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 20.7,
+     "hpLostPct": 7.41
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 6.1,
+     "hpLostPct": 7.39
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 1.78
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 12.05,
+     "hpLostPct": 6.63
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 2.1,
+     "hpLostPct": 1.2
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 25.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 11.72
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 8.92
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 12.1,
+     "hpLostPct": 2.73
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 14.44
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 12.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 3.05,
+     "hpLostPct": 0.06
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 10.03
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 19.6,
+     "hpLostPct": 6.44
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 6.75,
+     "hpLostPct": 11.89
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 28.25,
+     "hpLostPct": 1.07
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 6.06
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 7.37
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 9.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 2.1
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 17.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 5.45,
+     "hpLostPct": 6.7
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 3.85
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 10.6,
+     "hpLostPct": 13.1
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 0.67
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 19.6,
+     "hpLostPct": 18.35
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 3.05,
+     "hpLostPct": 2.46
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 0.87
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 9.1,
+     "hpLostPct": 11.03
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 12.7
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 10.6,
+     "hpLostPct": 0
+    }
+   ]
+  },
+  {
+   "comp": "solo-dps",
+   "fixture": "fresh",
+   "seed": 1501119904,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 412.9,
+   "simSteps": 8258,
+   "timedOut": false,
+   "wipes": 4,
+   "deaths": 4,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 5.78,
+    "ttkMin": 3.2,
+    "ttkMax": 10.9,
+    "hpLostPctAvg": 9.33,
+    "attempts": 16
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 4.02,
+    "ttkMin": 1,
+    "ttkMax": 9.9,
+    "hpLostPctAvg": 7.34,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 40,
+    "ttkAvg": 2.23,
+    "ttkMin": 0.7,
+    "ttkMax": 4,
+    "hpLostPctAvg": 4.89,
+    "attempts": 40
+   },
+   "hpLostPctPerStage": 6.18,
+   "finalThreat": 30,
+   "finalLevels": [
+    30
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 3.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 3.65,
+     "hpLostPct": 37.78
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 9.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 0.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 2.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 0.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 4,
+     "hpLostPct": 7.94
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 0.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 10.9,
+     "hpLostPct": 30.82
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 2.5,
+     "hpLostPct": 9.96
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 3.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 3.15,
+     "hpLostPct": 36.37
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 3.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 4.85,
+     "hpLostPct": 11.1
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 2.3,
+     "hpLostPct": 2.53
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 2.15,
+     "hpLostPct": 11.39
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 5.65,
+     "hpLostPct": 45.92
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 2.9,
+     "hpLostPct": 18.37
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 9.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 2.7,
+     "hpLostPct": 21.42
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 2.85,
+     "hpLostPct": 14.35
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 5.65,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 2.15,
+     "hpLostPct": 9.51
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 4.2,
+     "hpLostPct": 14.47
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 2.5,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 2.15,
+     "hpLostPct": 1.18
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 4.2,
+     "hpLostPct": 5.79
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 1.5,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 5.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 1.5,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 2.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 2.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 2.65,
+     "hpLostPct": 2.62
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 3.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 2.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 2.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 0.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 4.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 2.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 1.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 3.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 0.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 4.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 3,
+     "hpLostPct": 9.94
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 1.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 5.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 2.25,
+     "hpLostPct": 1.26
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 6.3,
+     "hpLostPct": 47.44
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 2.2,
+     "hpLostPct": 14.54
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 2.15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 2.2,
+     "hpLostPct": 8.52
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 4.8,
+     "hpLostPct": 2.59
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 1.6,
+     "hpLostPct": 9.51
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 1.45,
+     "hpLostPct": 6.3
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 2.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 2.65,
+     "hpLostPct": 5.75
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 5.5,
+     "hpLostPct": 5.48
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 1.6,
+     "hpLostPct": 2.32
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 1.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 1.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 2.1,
+     "hpLostPct": 0.29
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 4.8,
+     "hpLostPct": 0
+    }
+   ]
+  },
+  {
+   "comp": "solo-healer",
+   "fixture": "fresh",
+   "seed": 767329888,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 15977.55,
+   "simSteps": 319551,
+   "timedOut": false,
+   "wipes": 136,
+   "deaths": 136,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 93.22,
+    "ttkMin": 31.25,
+    "ttkMax": 478,
+    "hpLostPctAvg": 12.17,
+    "attempts": 37
+   },
+   "elites": {
+    "cleared": 13,
+    "ttkAvg": 63.17,
+    "ttkMin": 23.65,
+    "ttkMax": 318.9,
+    "hpLostPctAvg": 15.39,
+    "attempts": 25
+   },
+   "normals": {
+    "cleared": 79,
+    "ttkAvg": 52.44,
+    "ttkMin": 3.65,
+    "ttkMax": 765.75,
+    "hpLostPctAvg": 7.17,
+    "attempts": 178
+   },
+   "hpLostPctPerStage": 8.78,
+   "finalThreat": 35,
+   "finalLevels": [
+    39
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 7.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 27.6
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 7.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 318.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 47.95,
+     "hpLostPct": 23.42
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 51.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 50.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 60.6,
+     "hpLostPct": 6.83
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 74.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 133,
+     "hpLostPct": 3.93
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 64.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 352.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 370.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 98.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 196.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 179.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 67.95,
+     "hpLostPct": 18.78
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 86.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 53.9,
+     "hpLostPct": 33.42
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 765.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 46.35,
+     "hpLostPct": 26.69
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 258.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 61.7,
+     "hpLostPct": 14.52
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 552.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 72.95,
+     "hpLostPct": 3.23
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "wiped": true
+    },
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 12.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 12.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 32.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 7.6,
+     "hpLostPct": 26.03
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 46.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 3.65,
+     "hpLostPct": 21.24
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 5.65,
+     "hpLostPct": 7.56
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 92.25,
+     "hpLostPct": 23.37
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 5.85,
+     "hpLostPct": 13.39
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 70.85,
+     "hpLostPct": 8.93
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 4,
+     "hpLostPct": 12.73
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 33.8,
+     "hpLostPct": 17.02
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 5.15,
+     "hpLostPct": 18.5
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 74.3,
+     "hpLostPct": 19.01
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 6.3,
+     "hpLostPct": 17.76
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 6.3,
+     "hpLostPct": 15.22
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 23.85,
+     "hpLostPct": 5.12
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 4.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 49.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 3.95,
+     "hpLostPct": 19.12
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 7.7,
+     "hpLostPct": 15.52
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 23.65,
+     "hpLostPct": 19.51
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 6.35,
+     "hpLostPct": 5.95
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 79.1,
+     "hpLostPct": 22.77
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 6.35,
+     "hpLostPct": 28.81
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 10.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 106.55,
+     "hpLostPct": 20.16
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 6.45,
+     "hpLostPct": 20.81
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 478,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 5.3,
+     "hpLostPct": 8.44
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 7.1,
+     "hpLostPct": 31.33
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 53.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6,
+     "hpLostPct": 17.83
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 9.15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 9.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 12.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 12.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 13.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 11.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 14.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 9.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 13.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 14.65,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 12.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 15.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 19.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 14.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 1.45
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 12.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 18.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "wiped": true
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 9.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 69.05,
+     "hpLostPct": 11.25
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 7.8,
+     "hpLostPct": 4.11
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.75,
+     "hpLostPct": 1.29
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 25.85,
+     "hpLostPct": 33.94
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 6.8,
+     "hpLostPct": 2.21
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 31.25,
+     "hpLostPct": 24.09
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 4.25,
+     "hpLostPct": 11.71
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 5.1,
+     "hpLostPct": 2.48
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 26.3,
+     "hpLostPct": 1.36
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 5.1,
+     "hpLostPct": 17.33
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 50.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 5,
+     "hpLostPct": 13.98
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 5.55,
+     "hpLostPct": 17.2
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 27,
+     "hpLostPct": 18.57
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 5.2,
+     "hpLostPct": 4.16
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 66.65,
+     "hpLostPct": 33.07
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 6.95,
+     "hpLostPct": 13.82
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 6.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 30.1,
+     "hpLostPct": 26.73
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 7.6,
+     "hpLostPct": 4.93
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 65.35,
+     "hpLostPct": 8.7
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 8.8,
+     "hpLostPct": 16.41
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 6.3,
+     "hpLostPct": 16.98
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 27.3,
+     "hpLostPct": 34.31
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 5.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 37.8,
+     "hpLostPct": 18.17
+    }
+   ]
+  },
+  {
+   "comp": "duo-td",
+   "fixture": "fresh",
+   "seed": 1891736454,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 487.25,
+   "simSteps": 9745,
+   "timedOut": false,
+   "wipes": 0,
+   "deaths": 0,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 9.99,
+    "ttkMin": 6.3,
+    "ttkMax": 17.75,
+    "hpLostPctAvg": 8.39,
+    "attempts": 12
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 6.03,
+    "ttkMin": 4.45,
+    "ttkMax": 10.15,
+    "hpLostPctAvg": 6.8,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 36,
+    "ttkAvg": 4.13,
+    "ttkMin": 2.15,
+    "ttkMax": 7.3,
+    "hpLostPctAvg": 5.09,
+    "attempts": 36
+   },
+   "hpLostPctPerStage": 6.09,
+   "finalThreat": 24,
+   "finalLevels": [
+    24,
+    24
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 7.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 5.45,
+     "hpLostPct": 11.21
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 6.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 3.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 11.7,
+     "hpLostPct": 16.9
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 3,
+     "hpLostPct": 10.29
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 2.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 5.45,
+     "hpLostPct": 18.08
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 4.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 10.8,
+     "hpLostPct": 26.84
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 3.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 4.4,
+     "hpLostPct": 8.74
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 10.15,
+     "hpLostPct": 26.36
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 7.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 17.75,
+     "hpLostPct": 3.3
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 5.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.35,
+     "hpLostPct": 11.89
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 5.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 3.3,
+     "hpLostPct": 2.78
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 9.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 4.05,
+     "hpLostPct": 6.95
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 4.05,
+     "hpLostPct": 4.68
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 4.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 3.15,
+     "hpLostPct": 7.21
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 10.2,
+     "hpLostPct": 1.49
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 4,
+     "hpLostPct": 4.61
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 3.3,
+     "hpLostPct": 3.31
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 5.9,
+     "hpLostPct": 9.09
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 3.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 6.3,
+     "hpLostPct": 10.14
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 2.95,
+     "hpLostPct": 1.37
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 2.15,
+     "hpLostPct": 2.13
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 6.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 2.95,
+     "hpLostPct": 5.92
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 10.45,
+     "hpLostPct": 13
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 3.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 2.7,
+     "hpLostPct": 3.46
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 6.05,
+     "hpLostPct": 10.91
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 4.4,
+     "hpLostPct": 7.81
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 7.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 5.2,
+     "hpLostPct": 11.07
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 4.9,
+     "hpLostPct": 8.87
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 6.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 5.75,
+     "hpLostPct": 14.43
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 9.65,
+     "hpLostPct": 3.87
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 3.1,
+     "hpLostPct": 4.39
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 4.95,
+     "hpLostPct": 10.78
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 5.5,
+     "hpLostPct": 10.38
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 4.4,
+     "hpLostPct": 7.18
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 8.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 4.9,
+     "hpLostPct": 8.04
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 4.25,
+     "hpLostPct": 7.99
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 4.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 4.2,
+     "hpLostPct": 7.41
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 9.85,
+     "hpLostPct": 11.15
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 2.8,
+     "hpLostPct": 4.48
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 4.8,
+     "hpLostPct": 6.79
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 4.4,
+     "hpLostPct": 6.4
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 7.55,
+     "hpLostPct": 13.99
+    }
+   ]
+  },
+  {
+   "comp": "trinity",
+   "fixture": "fresh",
+   "seed": 2804770376,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 647.3,
+   "simSteps": 12946,
+   "timedOut": false,
+   "wipes": 0,
+   "deaths": 0,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 14.75,
+    "ttkMin": 8.6,
+    "ttkMax": 25.35,
+    "hpLostPctAvg": 4.48,
+    "attempts": 12
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 9,
+    "ttkMin": 5.35,
+    "ttkMax": 15.9,
+    "hpLostPctAvg": 7.12,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 36,
+    "ttkAvg": 5.99,
+    "ttkMin": 2.9,
+    "ttkMax": 11.65,
+    "hpLostPctAvg": 3.64,
+    "attempts": 36
+   },
+   "hpLostPctPerStage": 4.5,
+   "finalThreat": 24,
+   "finalLevels": [
+    24,
+    24,
+    24
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 6.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 8.7,
+     "hpLostPct": 11.03
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 12.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 7.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 22.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 4.7,
+     "hpLostPct": 7.53
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 13.55,
+     "hpLostPct": 22.4
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 11.65,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 22.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 5.75,
+     "hpLostPct": 10.12
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 7.45,
+     "hpLostPct": 7.11
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 15.9,
+     "hpLostPct": 10.67
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6.65,
+     "hpLostPct": 3.27
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 25.35,
+     "hpLostPct": 3.93
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 7.5,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 6.75,
+     "hpLostPct": 11.27
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 13.3,
+     "hpLostPct": 14.49
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 7.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 17.7,
+     "hpLostPct": 13.61
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 3.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 5.9,
+     "hpLostPct": 0.98
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 7.35,
+     "hpLostPct": 11.19
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 5.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 11.6,
+     "hpLostPct": 14.77
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 6.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 5.7,
+     "hpLostPct": 8.71
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 6.25,
+     "hpLostPct": 0.81
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 9.69
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 11.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 6.55,
+     "hpLostPct": 11.27
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 5.7,
+     "hpLostPct": 5.84
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 5.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 4.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 11.75,
+     "hpLostPct": 7.41
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 5.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 4.1,
+     "hpLostPct": 0.96
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 7.05,
+     "hpLostPct": 8.75
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 2.9,
+     "hpLostPct": 1.71
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 12.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 6.65,
+     "hpLostPct": 12.9
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 5.85,
+     "hpLostPct": 6.62
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 8.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 3.95,
+     "hpLostPct": 3.87
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 12.7,
+     "hpLostPct": 2.96
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 4.5,
+     "hpLostPct": 4.38
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 6.2,
+     "hpLostPct": 6.54
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 4.6,
+     "hpLostPct": 0.33
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 8.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 5.35,
+     "hpLostPct": 1.38
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 5.6,
+     "hpLostPct": 8.65
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 5.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6.05,
+     "hpLostPct": 1.89
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 9.45,
+     "hpLostPct": 2.96
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 6.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 6.35,
+     "hpLostPct": 1.35
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 6.6,
+     "hpLostPct": 10.57
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 4.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 10.3,
+     "hpLostPct": 8.16
+    }
+   ]
+  },
+  {
+   "comp": "five",
+   "fixture": "fresh",
+   "seed": 1712744601,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 797.75,
+   "simSteps": 15955,
+   "timedOut": false,
+   "wipes": 0,
+   "deaths": 0,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 16.92,
+    "ttkMin": 10.05,
+    "ttkMax": 31.15,
+    "hpLostPctAvg": 4.21,
+    "attempts": 12
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 12.01,
+    "ttkMin": 7.25,
+    "ttkMax": 20.95,
+    "hpLostPctAvg": 4.94,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 36,
+    "ttkAvg": 8.45,
+    "ttkMin": 4.25,
+    "ttkMax": 15.95,
+    "hpLostPctAvg": 3.4,
+    "attempts": 36
+   },
+   "hpLostPctPerStage": 3.87,
+   "finalThreat": 24,
+   "finalLevels": [
+    24,
+    24,
+    24,
+    24,
+    24
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 11.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 9.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 17.25,
+     "hpLostPct": 9.98
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 6.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 28.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 12.45,
+     "hpLostPct": 12.14
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 13.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 16.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 10.7,
+     "hpLostPct": 6.34
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 25.65,
+     "hpLostPct": 23.9
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 11.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 14.15,
+     "hpLostPct": 9.59
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 20.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 13.15,
+     "hpLostPct": 7.1
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 31.15,
+     "hpLostPct": 4.41
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 10.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 12.25,
+     "hpLostPct": 9.27
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 16.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 15.95,
+     "hpLostPct": 5.25
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 22.15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 5.3,
+     "hpLostPct": 5.67
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 6.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 11.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 5.85,
+     "hpLostPct": 0.73
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 15.7,
+     "hpLostPct": 17.21
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 7.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 6.5,
+     "hpLostPct": 0.65
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 7.25,
+     "hpLostPct": 9.59
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 6.45,
+     "hpLostPct": 2.17
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 12.65,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 7.3,
+     "hpLostPct": 1.28
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 6.3,
+     "hpLostPct": 4.23
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 9.65,
+     "hpLostPct": 9.4
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 6.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 10.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 8.6,
+     "hpLostPct": 1.34
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 7.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 8,
+     "hpLostPct": 7.18
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 6.85,
+     "hpLostPct": 2.96
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 12.65,
+     "hpLostPct": 2.18
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 6.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 4.25,
+     "hpLostPct": 3.92
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 10.05,
+     "hpLostPct": 8.74
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 8.3,
+     "hpLostPct": 9.39
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 12.6,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 7.8,
+     "hpLostPct": 5.29
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 7.15,
+     "hpLostPct": 7.33
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 8.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 6,
+     "hpLostPct": 6.1
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 11.6,
+     "hpLostPct": 1.34
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 5,
+     "hpLostPct": 2.38
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 5,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 9.65,
+     "hpLostPct": 3.09
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 8.65,
+     "hpLostPct": 7.84
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 10.2,
+     "hpLostPct": 1.43
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 6.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 5.35,
+     "hpLostPct": 5.71
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 8.55,
+     "hpLostPct": 11.26
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 8.35,
+     "hpLostPct": 5.73
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 10.05,
+     "hpLostPct": 0
+    }
+   ]
+  },
+  {
+   "comp": "nine",
+   "fixture": "fresh",
+   "seed": 3378023065,
+   "startThreat": 1,
+   "chaptersCompleted": 3,
+   "simSeconds": 853.55,
+   "simSteps": 17071,
+   "timedOut": false,
+   "wipes": 0,
+   "deaths": 0,
+   "kings": {
+    "cleared": 12,
+    "ttkAvg": 14.95,
+    "ttkMin": 10.3,
+    "ttkMax": 22.7,
+    "hpLostPctAvg": 0.39,
+    "attempts": 12
+   },
+   "elites": {
+    "cleared": 12,
+    "ttkAvg": 13.99,
+    "ttkMin": 9.25,
+    "ttkMax": 21.15,
+    "hpLostPctAvg": 2.23,
+    "attempts": 12
+   },
+   "normals": {
+    "cleared": 36,
+    "ttkAvg": 10,
+    "ttkMin": 6.35,
+    "ttkMax": 16.05,
+    "hpLostPctAvg": 2.36,
+    "attempts": 36
+   },
+   "hpLostPctPerStage": 1.94,
+   "finalThreat": 25,
+   "finalLevels": [
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25
+   ],
+   "stages": [
+    {
+     "chapter": 1,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 10.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 10.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 16.9,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 7.95,
+     "hpLostPct": 0.49
+    },
+    {
+     "chapter": 1,
+     "stage": 5,
+     "tier": "king",
+     "dur": 19.15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 12.55,
+     "hpLostPct": 3.72
+    },
+    {
+     "chapter": 1,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 12.1,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 18.35,
+     "hpLostPct": 5.44
+    },
+    {
+     "chapter": 1,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 12.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 10,
+     "tier": "king",
+     "dur": 18.25,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 13.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 14.5,
+     "hpLostPct": 1.87
+    },
+    {
+     "chapter": 1,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 21.15,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 12.85,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 15,
+     "tier": "king",
+     "dur": 22.7,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 16.05,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 14.7,
+     "hpLostPct": 1.03
+    },
+    {
+     "chapter": 1,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 19.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 1,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 13.5,
+     "hpLostPct": 0.96
+    },
+    {
+     "chapter": 1,
+     "stage": 20,
+     "tier": "king",
+     "dur": 21.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 9.35,
+     "hpLostPct": 8.46
+    },
+    {
+     "chapter": 2,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 8.7,
+     "hpLostPct": 2.68
+    },
+    {
+     "chapter": 2,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 13.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 8.7,
+     "hpLostPct": 4.25
+    },
+    {
+     "chapter": 2,
+     "stage": 5,
+     "tier": "king",
+     "dur": 14.55,
+     "hpLostPct": 3.49
+    },
+    {
+     "chapter": 2,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 8.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 11.15,
+     "hpLostPct": 10.52
+    },
+    {
+     "chapter": 2,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 12.95,
+     "hpLostPct": 2.96
+    },
+    {
+     "chapter": 2,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 7.75,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 10,
+     "tier": "king",
+     "dur": 10.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 7.35,
+     "hpLostPct": 1.06
+    },
+    {
+     "chapter": 2,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 9.3,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 12.45,
+     "hpLostPct": 2.54
+    },
+    {
+     "chapter": 2,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 7.35,
+     "hpLostPct": 7.01
+    },
+    {
+     "chapter": 2,
+     "stage": 15,
+     "tier": "king",
+     "dur": 11.55,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 6.95,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 11.25,
+     "hpLostPct": 4.89
+    },
+    {
+     "chapter": 2,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 9.65,
+     "hpLostPct": 3.02
+    },
+    {
+     "chapter": 2,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 8.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 2,
+     "stage": 20,
+     "tier": "king",
+     "dur": 11.2,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 1,
+     "tier": "normal",
+     "dur": 10.3,
+     "hpLostPct": 2.07
+    },
+    {
+     "chapter": 3,
+     "stage": 2,
+     "tier": "normal",
+     "dur": 8.7,
+     "hpLostPct": 0.99
+    },
+    {
+     "chapter": 3,
+     "stage": 3,
+     "tier": "elite",
+     "dur": 12.55,
+     "hpLostPct": 4.02
+    },
+    {
+     "chapter": 3,
+     "stage": 4,
+     "tier": "normal",
+     "dur": 7.65,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 5,
+     "tier": "king",
+     "dur": 14.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 6,
+     "tier": "normal",
+     "dur": 6.35,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 7,
+     "tier": "normal",
+     "dur": 10.25,
+     "hpLostPct": 6.9
+    },
+    {
+     "chapter": 3,
+     "stage": 8,
+     "tier": "elite",
+     "dur": 9.25,
+     "hpLostPct": 1.12
+    },
+    {
+     "chapter": 3,
+     "stage": 9,
+     "tier": "normal",
+     "dur": 10.45,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 10,
+     "tier": "king",
+     "dur": 11.6,
+     "hpLostPct": 1.17
+    },
+    {
+     "chapter": 3,
+     "stage": 11,
+     "tier": "normal",
+     "dur": 8.15,
+     "hpLostPct": 2.12
+    },
+    {
+     "chapter": 3,
+     "stage": 12,
+     "tier": "normal",
+     "dur": 6.5,
+     "hpLostPct": 7.73
+    },
+    {
+     "chapter": 3,
+     "stage": 13,
+     "tier": "elite",
+     "dur": 10.8,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 14,
+     "tier": "normal",
+     "dur": 8.3,
+     "hpLostPct": 10.17
+    },
+    {
+     "chapter": 3,
+     "stage": 15,
+     "tier": "king",
+     "dur": 12.4,
+     "hpLostPct": 0
+    },
+    {
+     "chapter": 3,
+     "stage": 16,
+     "tier": "normal",
+     "dur": 7.55,
+     "hpLostPct": 7.09
+    },
+    {
+     "chapter": 3,
+     "stage": 17,
+     "tier": "normal",
+     "dur": 10.15,
+     "hpLostPct": 0.65
+    },
+    {
+     "chapter": 3,
+     "stage": 18,
+     "tier": "elite",
+     "dur": 10.05,
+     "hpLostPct": 7.69
+    },
+    {
+     "chapter": 3,
+     "stage": 19,
+     "tier": "normal",
+     "dur": 8.45,
+     "hpLostPct": 0.36
+    },
+    {
+     "chapter": 3,
+     "stage": 20,
+     "tier": "king",
+     "dur": 11.55,
+     "hpLostPct": 0
+    }
+   ]
+  }
+ ]
+}

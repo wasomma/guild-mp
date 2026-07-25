@@ -8,10 +8,20 @@
 export const P = 3;
 export const W = 640, H = 300, GROUND = 244;
 
+/* The class triangle (COMBAT-REWORK.md Phase 1). Base+level stats set the
+   early game, but gear power dominates both damage and HP within a few
+   chapters and used to erase class identity entirely — at live scale a tank
+   hit only ~25% softer than a DPS. `mul` is applied to the FINAL hp/dmg in
+   stats(), after gear, so the triangle holds at every depth: tanks durable
+   and slow to kill with, DPS a true glass cannon, healers barely armed but
+   self-sustaining (their real damage floor is the heal-scaled radiant bolt
+   in stats() — without it a solo healer's fights never end). Tanks also
+   carry innate damage reduction: share-based armor thins out against the
+   threat-scaled soak, so armor alone can no longer be the tank's identity. */
 export const CLASSES = {
-  tank:   { name: "Tank",   color: "#5aa9e6", icon: "🛡️", base: { hp: 130, hpL: 26, dmg: 6,  dmgL: 1.6, spd: 1.5,  armor: 4, crit: 5 } },
-  dps:    { name: "DPS",    color: "#ef6461", icon: "⚔️", base: { hp: 72,  hpL: 12, dmg: 14, dmgL: 3.4, spd: 0.85, armor: 0, crit: 15 } },
-  healer: { name: "Healer", color: "#7fd069", icon: "💚", base: { hp: 88,  hpL: 15, dmg: 5,  dmgL: 1.2, spd: 1.25, armor: 1, crit: 5, heal: 15, healL: 3 } },
+  tank:   { name: "Tank",   color: "#5aa9e6", icon: "🛡️", base: { hp: 130, hpL: 26, dmg: 6,  dmgL: 1.6, spd: 1.5,  armor: 6, crit: 5 }, mul: { hp: 1.30, dmg: 0.75 }, drBase: 0.20 },
+  dps:    { name: "DPS",    color: "#ef6461", icon: "⚔️", base: { hp: 72,  hpL: 12, dmg: 14, dmgL: 3.4, spd: 0.85, armor: 0, crit: 15 }, mul: { hp: 0.80, dmg: 1.15 } },
+  healer: { name: "Healer", color: "#7fd069", icon: "💚", base: { hp: 88,  hpL: 15, dmg: 5,  dmgL: 1.2, spd: 1.25, armor: 1, crit: 5, heal: 15, healL: 3 }, mul: { hp: 1.00, dmg: 0.55 }, healBolt: 0.35 },
 };
 export const CLASS_ORDER = ["tank", "dps", "healer"];
 
@@ -378,6 +388,16 @@ export function stats(m, g) {
       hp *= 1 + 0.03 * chorus;
     }
   }
+  /* the class triangle: applied to the FINAL numbers so gear power can't
+     wash class identity out (see the CLASSES comment) */
+  const cm = CLASSES[m.cls].mul;
+  hp *= cm.hp; dmg *= cm.dmg;
+  dr = Math.min(0.6, dr + (CLASSES[m.cls].drBase || 0));
+  /* the healer's radiant bolt rides their true stat: without this a solo
+     healer literally cannot finish fights whose foes sustain themselves
+     (measured: a live-scale solo healer stuck in one elite fight for six
+     sim-hours against the Dire Bat's drain) */
+  if (CLASSES[m.cls].healBolt) dmg += heal * CLASSES[m.cls].healBolt;
   return { hp: Math.round(hp), dmg, spd, armor, crit: clamp(crit, 0, 60), heal, dr, stun, splash, ls, thorns, critDmg, goldF, chorus };
 }
 
@@ -673,19 +693,12 @@ export const crowdBite = (g) => 1 + 0.05 * Math.max(0, g.members.length - 1);
    a trio made Kings unkillable for one or two heroes — the measured cause of
    a lone hero wiping on every boss stage for a whole chapter. */
 export const bossTier = (g) => 9 * clamp(0.58 + 0.14 * g.members.length, 0.58, 1);
-/* Enemies pull their punches against a party with nobody to mend it. A lone
-   hero has no healer, no Sanctuary, and soaks every auto personally; without
-   this a solo tale was 90 wipes long while a full guild never wiped at all. */
-export const mercyMul = (g) => {
-  if (g.members.some((m) => m.cls === "healer")) return 1;
-  /* A lone hero needs a real break — no healer, no Sanctuary, every auto
-     landing on them personally. A pair does not: two heroes carry twice the
-     throughput and end fights in half the time, so handing them the same
-     discount made a duo the softest party in the game at 6% of its health per
-     stage, against a solo hero's 19%. Role coverage in nextClass means three
-     or more without a healer is now only a transient (someone stepped away). */
-  return g.members.length <= 1 ? 0.6 : 0.9;
-};
+/* The mercy discount is gone (COMBAT-REWORK.md Phase 1). Enemies hit with
+   the same hand whoever stands there: solo danger is now real by design —
+   each class survives it by its own route (tanks mitigate, DPS kill first,
+   healers mend themselves) instead of being handed a pulled punch. The old
+   ×0.6 solo / ×0.9 no-healer discounts made a lone hero the safest shape in
+   the game, the exact inverse of the design goal. */
 
 function makeEnemy(g, tier) {
   const zone = zoneOf(g);
@@ -697,7 +710,7 @@ function makeEnemy(g, tier) {
     scale: boss ? 1.8 : elite ? 1.35 : 1,
     name: boss ? `${zone.label} King` : elite ? zone.eliteLabel : zone.label,
     hp, maxHp: hp,
-    dmg: (4 + curve * 2.2) * (boss ? 1.9 : elite ? 1.4 : 1) * crowdBite(g) * mercyMul(g),
+    dmg: (4 + curve * 2.2) * (boss ? 1.9 : elite ? 1.4 : 1) * crowdBite(g),
     spd: boss ? 2.0 : elite ? 1.8 : rand(1.5, 2.1),
     xp: Math.round((9 + curve * 3.2) * (boss ? 6 : elite ? 2.5 : 1)),
     gold: Math.round((10 + T * 4) * (boss ? 8 : elite ? 3.5 : 1)),
@@ -1329,7 +1342,11 @@ export function tick(g, dt) {
     if (m.cls === "healer") {
       const hurt = [...alive].sort((a, b) => a.hp / a._st.hp - b.hp / b._st.hp)[0];
       m.castT = 0.32;
-      if (hurt && hurt.hp / hurt._st.hp < 0.999) {
+      /* mend when someone genuinely needs it, otherwise fight: the old
+         <99.9% threshold kept a solo healer casting heals on every scratch
+         and never attacking, which is half of how their fights became
+         infinite (the radiant bolt in stats() is the other half) */
+      if (hurt && hurt.hp / hurt._st.hp < 0.75) {
         const amt = m._st.heal * rand(0.9, 1.1);
         g.projectiles.push({ kind: "heal", x: m.x + 18, y: m.y - 66, tgtKind: "member", tgtId: hurt.id, spd: 260, amt, srcId: m.id });
         continue;
@@ -1484,7 +1501,10 @@ export function tick(g, dt) {
         e.atkT = Math.max(e.atkT, 0.4);
         if (Math.random() < dt * 30) sparkle(g, e.x, e.y - 24 * (e.scale || 1), "#ffb24a", 2);
         if (e.cleaveWind <= 0) { enemyCleave(g, e, party); e.cleaveT = rand(6, 9) * packT; }
-      } else if (party.length >= 2) {
+      } else {
+        /* cleaves fire at any party size now (Phase 1): the telegraphed
+           sweep is the sustain check, and a lone hero was never taking it —
+           which was one more way solo play dodged every mechanic */
         e.cleaveT = (e.cleaveT == null ? rand(4, 7) * packT : e.cleaveT) - dt;
         if (e.cleaveT <= 0) {
           e.cleaveWind = e.elite ? 0.5 : 0.4;
@@ -1496,8 +1516,18 @@ export function tick(g, dt) {
     e.atkT -= dt;
     if (e.atkT > 0) continue;
     e.atkT = e.spd; e.lunge = 0.22;
+    /* threat targeting: tanks hold aggro; with no tank standing, foes turn
+       on whoever threatens them most — the hardest hitter by stat sheet
+       (damage per second, so a fast Rogue reads as the threat it is). An
+       unprotected DPS eats the autos their glass-cannon build invites. */
     const tanks = alive.filter((m) => m.cls === "tank" && m.alive);
-    const tgt = tanks.length ? pick(tanks) : pick(alive.filter((m) => m.alive));
+    let tgt;
+    if (tanks.length) tgt = pick(tanks);
+    else {
+      const standing = alive.filter((m) => m.alive);
+      tgt = standing[0];
+      for (const m of standing) if (m._st.dmg / m._st.spd > tgt._st.dmg / tgt._st.spd) tgt = m;
+    }
     if (!tgt) continue;
     /* one incoming-damage path for autos, cleaves, and boss specials alike:
        hurtMember owns mitigation, thorns, the death rites, and returns what

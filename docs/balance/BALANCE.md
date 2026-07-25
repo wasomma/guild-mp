@@ -2,6 +2,11 @@
 
 This document explains the current state of the two coupled gameplay loops — **the economy** (gold, renown, XP) and **damage** (outgoing, incoming, and recovery) — with every number as it exists in the code today. The source of truth is `shared/sim.js`; the prototype (`prototype/guild-idle.jsx`) carries identical values per the cardinal rule in CLAUDE.md. If a number here disagrees with the sim, the sim wins and this file needs updating.
 
+> **The combat rework is in flight** (v0.1.31 = Phase 1 of `COMBAT-REWORK.md (this folder)`:
+> class triangle, mercy removal, threat targeting, universal cleaves). Measured
+> bands quoted in prose below predate it where noted; the current measured
+> numbers live in `baselines/ (this folder)` (regenerate with `npm run sweep`).
+
 ## Threat: the axis everything hangs from
 
 `stage` restarts at 1 with every chapter while heroes keep their levels, gear,
@@ -47,14 +52,16 @@ squared term is small and exists for the top end: guild throughput climbs about
 linearly with headcount *and* carries the Chorus multiplier, so a purely linear
 bulk bump loses the race at depth. Measured to level 146, nine heroes had
 settled into 3-second King fights for 6% of their health while a trio still
-spent 12–17%; the term barely moves a duo and firms the full guild back up. Two adjustments keep the
-extremes honest: a party with **no healer** faces enemies that hit for ×0.6
-when it is a lone hero and ×0.9 otherwise — a pair carries twice the throughput
-and ends fights in half the time, so giving it a solo's discount made a duo the
-softest party in the game — and a **King's ×9 HP** scales down for small parties
+spent 12–17%; the term barely moves a duo and firms the full guild back up.
+A **King's ×9 HP** scales down for small parties
 (`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
 the whole party focuses — no amount of extra heroes splits its attention the
 way a pack does, and a flat ×9 made Kings simply unkillable solo.
+
+The old **mercy discount** (×0.6 enemy damage for a lone hero, ×0.9 for any
+no-healer party) is gone as of v0.1.31: it made solo play the *safest* shape in
+the game, the exact inverse of the rework's goal. Solo danger is real now, and
+each class answers it by its own route (see the class triangle below).
 
 Measured over **24 chapters**, to heroes at level 156 — the live guild's own
 scale, not just the first few tales. Normal fights run 3–10s, Kings 4–25s, a
@@ -162,11 +169,22 @@ There is no gold cost on respec, skill points, or style changes — builds are f
 
 A member's damage starts from class base + per-level growth, then multiplies through style, skills, gear, and party/world buffs:
 
-| Class | HP (base +/lvl) | Dmg (base +/lvl) | Attack period | Armor | Crit | Heal (base +/lvl) |
-|---|---|---|---|---|---|---|
-| Tank | 130 +26 | 6 +1.6 | 1.5s | 4 | 5% | — |
-| DPS | 72 +12 | 14 +3.4 | 0.85s | 0 | 15% | — |
-| Healer | 88 +15 | 5 +1.2 | 1.25s | 1 | 5% | 15 +3 |
+| Class | HP (base +/lvl) | Dmg (base +/lvl) | Attack period | Armor | Crit | Heal (base +/lvl) | Final mul (HP / Dmg) | Extra |
+|---|---|---|---|---|---|---|---|---|
+| Tank | 130 +26 | 6 +1.6 | 1.5s | 6 | 5% | — | ×1.30 / ×0.75 | +20% innate damage reduction |
+| DPS | 72 +12 | 14 +3.4 | 0.85s | 0 | 15% | — | ×0.80 / ×1.15 | — |
+| Healer | 88 +15 | 5 +1.2 | 1.25s | 1 | 5% | 15 +3 | ×1.00 / ×0.55 | radiant bolt: +heal×0.35 damage |
+
+The **final multipliers are the class triangle** (v0.1.31): they apply to the
+finished hp/dmg numbers *after* gear, because gear power dominates both within
+a few chapters and used to wash class identity out — at live scale a tank hit
+only ~25% softer than a DPS. The tank's innate 20% damage reduction (stacking
+with Bulwark, capped at 60%) exists because share-based armor thins against the
+threat-scaled soak and can't carry the tank identity alone. The healer's
+**radiant bolt** term is structural, not flavor: without damage that scales
+with their real stat, a solo healer's fights never end (measured pre-rework: a
+live-scale solo healer stuck in a single elite fight for six sim-hours against
+the Dire Bat's drain).
 
 | Style (class) | Dmg | Speed | Crit | Armor |
 |---|---|---|---|---|
@@ -187,7 +205,7 @@ World-level multipliers stack on top: Battle Hymns (+10%/rank), the **Chorus of 
 
 ### The attack roll
 
-Each swing rolls `damage × rand(0.85–1.15)`. Crit chance is capped at **60%**; a crit multiplies by `2 + crit-damage affix total` (so +90% crit damage from Sunsplitter makes crits ×2.9). Style shapes: the Rogue hits twice at 55% each (second hit rerolls crit), the Chainblade lands its full hit on a 0.17s delay, the Archer fires a projectile, and the healer heals the lowest-HP ally first, only bolting when nobody is hurt.
+Each swing rolls `damage × rand(0.85–1.15)`. Crit chance is capped at **60%**; a crit multiplies by `2 + crit-damage affix total` (so +90% crit damage from Sunsplitter makes crits ×2.9). Style shapes: the Rogue hits twice at 55% each (second hit rerolls crit), the Chainblade lands its full hit on a 0.17s delay, the Archer fires a projectile. The healer heals the lowest-HP ally when someone sits below **75%**, and fights otherwise — the old <99.9% threshold kept a solo healer casting heals on every scratch and never attacking, half of how their fights became infinite.
 
 ### Ultimates
 
@@ -208,11 +226,11 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 
 ## Incoming damage
 
-- Enemy damage: `(4 + threat^1.18 × 2.2) × tier × crowdBite × mercy` (tier ×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1). See the threat section for `crowdBite` and the no-healer `mercy` multiplier.
-- **Targeting is tank-focused**: autos pick a random living tank, falling back to anyone only when no tank stands. Tanks are the aggro system — which is also why pack size can scale with party size, since tank count scales alongside it.
+- Enemy damage: `(4 + threat^1.18 × 2.2) × tier × crowdBite` (tier ×1.9 boss / ×1.4 elite / ×1 normal), swung every `spd` seconds (boss 2.0, elite 1.8, normal 1.5–2.1). See the threat section for `crowdBite`; the mercy multiplier is gone as of v0.1.31.
+- **Threat targeting**: autos pick a random living tank; with **no tank standing they turn on the hardest hitter** by stat sheet (damage ÷ attack period, so a fast Rogue reads as the threat it is). Tanks are the aggro system, and an unprotected DPS eats the autos their glass-cannon build invites — which is also why pack size can scale with party size, since tank count scales alongside it.
 - Mitigation: `raw × (1 − armor/(armor + 30 + 4.5×threat)) × (1 − damage reduction)`, the share capped at 75% and the result floored at 1. Armor **soaks a share**; it does not subtract a flat amount. The old `max(1, raw − armor×0.6)` became outright immunity the moment gear power outran the stage's damage — at gear power ~104 a party took literally nothing from a stage-10 normal, and measured runs showed whole chapters at 0.0% health lost. The soak constant rises with threat so armor keeps its worth at every depth without ever reaching a wall. The Armor Elixir still adds +6 armor for 12s at combat start.
 - **One incoming-damage path.** Autos, cleaves, and boss specials all run through `hurtMember`, which owns mitigation, thorns, and the death rites and returns what actually landed. The enemy auto-attack used to inline its own copy of that logic, which is exactly the kind of duplication that drifts.
-- **Cleaves** are the healer check: any non-boss enemy, when 2+ members are alive, winds up (0.4s, 0.5s elite — a visible telegraph) and hits the *entire party* for ×0.5 of its damage (×0.7 elite). The per-enemy cooldown (~4–9s) is stretched by `1 + 0.5 × (packSize − 2)` so a large warband doesn't carpet the party; the party-wide cleave rate stays roughly fixed however many bodies turn up.
+- **Cleaves** are the sustain check: any non-boss enemy — at **any party size** as of v0.1.31, a lone hero included — winds up (0.4s, 0.5s elite — a visible telegraph) and hits the *entire party* for ×0.5 of its damage (×0.7 elite). The per-enemy cooldown (~4–9s) is stretched by `1 + 0.5 × (packSize − 2)` so a large warband doesn't carpet the party; the party-wide cleave rate stays roughly fixed however many bodies turn up.
 - **Boss Kings** telegraph a special every ~4.5–10s with a 1.4–1.8s windup that a tank stun **interrupts** (delaying it 6s): Royal Slam ×1.5 to all, Screech ×0.9 to all + attack delay, Grave Call summons 2 skeletons at 60% HP, meteor fire ×1.1 to all. Each King also has HP-threshold phases (Slime splits off spawn, Bat frenzies, Skeleton gains 8-charge bone armor halving hits, Imp ignites for ×1.25 damage and faster swings).
 - Elites have their own turns: the Elder Slime death-splits into two 65%-HP slimes, the Bone Captain raises an ally at 60% HP, the Imp Warlord enrages at 50% (×1.5 damage, much faster), and Dire Bats drain 60% of damage dealt as self-healing.
 
@@ -238,7 +256,7 @@ Three contracts roll at UTC midnight from five kinds. Targets: slay 40–80 foes
 
 ## Tuning knobs, by location
 
-All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `mercyMul`, `bossTier`; class/style tables at the top (`CLASSES`, `STYLES`, `SKILLS`); prices in `POTIONS` and the cosmetics lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
+All in `shared/sim.js` (mirror any change into `prototype/guild-idle.jsx`): the difficulty axis in `threatOf` (`CHAPTER_DEPTH`, `FLOOR_SLACK`), its curve in `DIFF_EXP`/`threatCurve`, and the party-size responses in `crowdMul`, `crowdBite`, `bossTier`; class/style tables at the top (`CLASSES` — including the triangle's `mul`/`drBase`/`healBolt` fields — `STYLES`, `SKILLS`); prices in `POTIONS` and the cosmetics lists; `LEGACY` and `legacyCost`; `renownEarn`; `MUTATORS`; enemy scaling in `makeEnemy` and pack size in `spawnEncounter` (`PACK_CAP`); incoming mitigation in `mitigate`; kill rewards in `killEnemy`; loot scaling in `genLoot`/`rollAffixes`; XP curve in `xpNeed`; quest scaling in `rollQuests`; ult coefficients in `castUlt` and charge times in `ULT_CD`; cleave pacing in the enemy-actions block of `tick`.
 
 To re-measure after any of these, drive the sim headlessly: build a world,
 `joinVoice` N members, `tick` at 1/20s, and record per cleared stage the combat

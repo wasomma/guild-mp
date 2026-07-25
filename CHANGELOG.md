@@ -2,6 +2,17 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.31 — 2026-07-25
+
+**The world stops pulling its punches.** First phase of the combat rework (`docs/balance/COMBAT-REWORK.md`): fighting alone is now genuinely dangerous, and each class survives it its own way.
+
+- **The class triangle.** Tanks are truly durable (+30% final HP, innate 20% damage reduction) but slow to kill with (×0.75 damage); DPS are true glass cannons (×1.15 damage, ×0.80 HP); Healers barely swing a weapon (×0.55) but their bolts now channel their healing power — a healer's damage grows with their real stat. Applied after gear, so class identity holds at every depth instead of washing out by chapter three.
+- **The mercy discount is gone.** Enemies no longer hit softer at solo or healer-less parties (was ×0.6/×0.9). Solo is viable in any class — but it costs real blood now.
+- **Enemies go for the biggest threat.** Tanks hold aggro as before; with no tank standing, foes turn on the hardest hitter instead of a random victim. An unprotected DPS eats what their glass-cannon build invites.
+- **Cleaves reach everyone.** The telegraphed party sweep now fires against lone heroes too — solo play no longer dodges the sustain check.
+- **Healers fight between mends.** Menders now attack whenever nobody is below 75% HP instead of topping every scratch — which, with the new radiant bolts, fixes a genuine bug-by-numbers: a solo healer could previously get stuck in a literally unwinnable fight against self-healing enemies.
+- Dev tooling (not player-facing): vitest at the repo root (`npm test`), and a seeded balance sweep (`npm run sweep`) that measures King kill times, HP loss, and wipes across seven party compositions on fresh- and live-scale worlds, writing baselines to `docs/balance/baselines/`.
+
 ## v0.1.30 — 2026-07-25
 
 **The guild fills the gaps.** New adventurers now take up whatever the party is actually short of, instead of following a fixed tank-then-damage-then-healer rota that never looked at who was standing there.

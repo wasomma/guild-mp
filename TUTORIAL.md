@@ -42,7 +42,9 @@ If a hero falls, they lie there until the fight ends (or a Phoenix Draught reviv
 
 **The world rises to meet you.** Enemies aren't built from the wave number alone — they're built from **Threat**, shown next to the wave. Threat counts how deep the guild has pushed across *every* chapter it has told, and never drops below your heroes' own level. That's why a fresh chapter doesn't hand you twenty easy waves: your heroes kept everything they earned, so the world keeps pace.
 
-**It also counts heads.** A full guild draws a bigger warband — more foes, sturdier ones — while a lone hero meets a pair rather than a mob, and faces a King cut down to something one sword can actually fell. If nobody in the party can heal, the world hits softer to compensate. Bringing a Healer is still far and away the better answer.
+**It also counts heads.** A full guild draws a bigger warband — more foes, sturdier ones — while a lone hero meets a pair rather than a mob, and faces a King cut down to something one sword can actually fell. But the world no longer pulls its punches for anyone: going alone is genuinely dangerous now, and each class survives it its own way — Tanks grind through on armor and grit, DPS race to kill before they're killed, Healers outlast everything slowly.
+
+**Enemies go for the biggest threat.** As long as a Tank stands, the blows land on their shield. With no Tank in the fight, enemies turn on whoever hits them hardest — which is usually the DPS, and DPS are not built to take it. That's the deal the classes make: damage needs a line to hide behind, and the line needs damage to end the fight.
 
 **Chorus of Courage.** Every voice in the channel past the first empowers the whole party: +4% damage and healing, +3% max HP, stacking up to 9 times. Being together literally makes everyone stronger.
 
