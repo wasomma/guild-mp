@@ -2,6 +2,15 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.39 — 2026-07-25
+
+**The road and the horizon.** The Upcoming Bosses sidebar is gone — everything it knew now lives on the scrolling timeline, and the world view gets the full width back.
+
+- **Richer road**: gauntlet stages fly the honor guard's **war banner**, elite spikes are tinted by their zone, and every King's crown carries a **gem in its King's color**.
+- **The horizon queue**: past a bend at the timeline's right end, the next three Kings beyond the road wait as colored crowns over their wave counts — purple counts mark a **chapter finale**. Hover any of them for the full story, same as the rest of the strip.
+- When a King is on the field, a **golden halo** pulses over the party's banner — the old HERE NOW, where your eyes already are.
+- Timeline changes land in both renderers, so the public demo gets the same road; the sidebar removal is client-only.
+
 ## v0.1.38 — 2026-07-25
 
 **One menu over the world.** The multiplayer client's side panels are gone — everything now lives in a single window that opens over the game.

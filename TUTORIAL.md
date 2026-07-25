@@ -14,7 +14,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 - **Left sidebar** — the party: a card for each person currently in voice, with class, level, HP, and XP. Click a card to open their character sheet.
 - **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, ⚔️ threat (how hard the foes ahead are — see below), zone, the active mutator, guild gold 🪙, renown ✨, and the **☰ Menu** button.
-- **Right edge** — the **boss timeline**: the next ten Kings and how many waves remain before each.
+- **The timeline** — the strip above the world. Near stages scroll by in detail: zone-tinted packs, elite spikes, the honor guard's war banner (the gauntlet before each King), and crowns whose gems are colored by the King who wears them. Past the bend on the right, the **horizon queue**: the next three Kings beyond the road, each crown in its King's color over how many waves remain (purple counts mark a chapter finale). Hover anything — including the queue — for details; when a King is on the field, a golden halo pulses over your party's banner.
 - **The menu** — one window that opens over the game (☰ Menu on the world bar, or click a party card; **Esc** or ✕ closes it) with seven tabs. Four are about a hero: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe** — plus the **🪞 Appearance** button that reopens the character creator. Three are about the guild: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
 - **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵), this guide (❓ How to play), and the Discord login.
 

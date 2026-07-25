@@ -3,7 +3,7 @@ import {
   W, H, CLASSES, STYLES, styleOf, stats, SKILLS, MAX_RANK,
   BODIES, HATS, HAIRS, HAIRSTYLES, OUTFITS, WEAPON_SKINS, ACCESSORIES, CAPES, PETS, AURAS,
   RARITIES, SLOTS, POTIONS, LEGACY, legacyCost, renownEarn, AFFIX_DEFS, questLabel, MUTATORS,
-  AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf, ENEMY_COLORS, ZONES,
+  AURAS as AURA_LIST, fmt, xpNeed, clamp, hexA, zoneOf,
   RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, classNeed,
   TALENTS, GATE_PTS, spentPts, pathPreDone,
   COS_TIERS, tierOf, keyPrice, PITY_AT, CRATE_CAP, OPEN_ENC, COMMISSION_ENC,
@@ -452,23 +452,6 @@ export default function App() {
               </div>
             )}
           </section>
-          {g && (
-            <aside className="bossrail">
-              <div className="vhead">Upcoming Bosses</div>
-              {Array.from({ length: 10 }, (_, i) => {
-                const bossStage = g.stage + (g.stage % 5 === 0 ? 0 : 5 - (g.stage % 5)) + i * 5;
-                const z = ZONES[Math.floor((bossStage - 1) / 5) % ZONES.length];
-                const waves = bossStage - g.stage;
-                return (
-                  <div key={bossStage} className={"bossent" + (i === 0 ? " first" : "")}>
-                    <div className="bossicon">👑</div>
-                    <div className="bossname" style={{ color: ENEMY_COLORS[z.enemy] }}>{z.label} King</div>
-                    <div className="bosswaves">{waves === 0 ? "⚔️ HERE NOW" : `${waves} wave${waves > 1 ? "s" : ""} left`}</div>
-                  </div>
-                );
-              })}
-            </aside>
-          )}
         </div>
       </div>
     </div>
@@ -1136,16 +1119,6 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .main { display: flex; min-height: 560px; flex: 1; }
 .voice { width: 240px; background: #131022; border-right: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
 .voice .plist { grid-template-columns: 1fr; }
-.bossrail { width: 130px; flex: none; background: #131022; border-left: 2px solid #2b2740; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 56px); align-self: flex-start; }
-.bossent { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-bottom: 1px solid #2b2740; width: 100%; opacity: 0.7; }
-.bossent:last-child { border-bottom: none; }
-.bossent.first { opacity: 1; }
-.bossicon { font-size: 20px; line-height: 1; }
-.bossent.first .bossicon { font-size: 30px; }
-.bossname { font-size: 17px; line-height: 1.1; }
-.bossent.first .bossname { font-size: 19px; }
-.bosswaves { color: #f2c14e; font-size: 17px; }
-.bossent.first .bosswaves { font-size: 20px; }
 .vhead { color: #8b84ad; font-size: 17px; }
 .dim { color: #8b84ad; } .small { font-size: 15px; } .pad { padding: 8px; }
 .vuser { display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 6px; opacity: 0.55; }
@@ -1240,5 +1213,5 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .qbar { height: 5px; background: #26213c; border-radius: 3px; overflow: hidden; }
 .qfill { height: 100%; }
 .auto { display: flex; align-items: center; gap: 4px; }
-@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } .bossrail { width: 100%; border-left: none; border-top: 2px solid #2b2740; } }
+@media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } }
 `;

@@ -64,7 +64,7 @@ skill — plus a small set of light tactical intents (see decisions).
    separate system. Scheduled last so it doesn't block the difficulty work.
 8. **Encounters before bosses**: more encounters, delivered **inside the
    existing 20-stage / boss-every-5 skeleton** (which is load-bearing across
-   renown, Veteran Paths, the boss rail, timeline UI, quests, mutators):
+   renown, Veteran Paths, the timeline UI and its King queue, quests, mutators):
    - Every pre-King stage (stage % 5 == 4) becomes a **multi-wave gauntlet**
      (2–3 back-to-back waves, no advance-phase regen between waves), themed as
      the King's honor guard.

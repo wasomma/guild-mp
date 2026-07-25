@@ -5527,7 +5527,12 @@ function drawBossTelegraphs(ctx, g) {
 
 function drawTimeline(ctx, g) {
   const y = 13, x0 = 110, right = W - 14;
-  const sp = (W - 150) / 10;
+  /* The road bends at HZ_X: the near stages roll by in detail on the left,
+     and the far Kings queue beyond the bend — the old sidebar boss rail,
+     folded into the strip. */
+  const HZ_X = right - 122;
+  const ROAD = 10;
+  const sp = (HZ_X - 24 - x0) / (ROAD - 1);
   /* progress through the current stage: walk-in, then enemy HP burned down */
   let p = 0;
   if (g.phase === "advance") p = clamp(1 - (g.advanceT || 0) / 2.4, 0, 1) * 0.35;
@@ -5536,6 +5541,7 @@ function drawTimeline(ctx, g) {
     for (const e of g.enemies) { hp += Math.max(0, e.hp); mx += e.maxHp; }
     if (mx > 0) p = 0.35 + 0.55 * clamp(1 - hp / mx, 0, 1);
   }
+  const kingNow = g.stage % 5 === 0 && g.phase === "combat" && g.enemies.some((e) => e.boss && e.hp > 0);
   /* backing band */
   ctx.fillStyle = "rgba(12,10,20,0.55)";
   ctx.fillRect(0, 0, W, 22);
@@ -5564,11 +5570,12 @@ function drawTimeline(ctx, g) {
     }
   }
   /* upcoming encounters scroll beneath the fixed party marker */
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < ROAD; i++) {
     const st = g.stage + i;
     const x = Math.round(x0 + (i - p) * sp);
-    if (x < 96 || x > right - 4) continue;
-    const zc = ZONES[Math.floor((st - 1) / 5) % ZONES.length].top;
+    if (x < 96 || x > HZ_X - 12) continue;
+    const z = ZONES[Math.floor((st - 1) / 5) % ZONES.length];
+    const zc = z.top;
     ctx.globalAlpha = x < x0 ? 0.35 : 1;
     if (st % 20 === 0 && st !== g.stage) {
       /* the chapter finale ahead: a purple tome on the road */
@@ -5581,18 +5588,24 @@ function drawTimeline(ctx, g) {
       ctx.fillRect(x - 1, 12, 2, 3);
       hits.push({ x, st, kind: "tale" });
     } else if (st % 5 === 0) {
-      /* boss: crown */
+      /* boss: crown, its gem colored by the King who wears it */
       ctx.fillStyle = "#f2c14e";
       ctx.fillRect(x - 4, 4, 2, 2); ctx.fillRect(x - 1, 3, 2, 3); ctx.fillRect(x + 2, 4, 2, 2);
       ctx.fillRect(x - 4, 6, 8, 3);
-      ctx.fillStyle = "#d0455a"; ctx.fillRect(x - 1, 7, 2, 1);
+      ctx.fillStyle = ENEMY_COLORS[z.enemy] || "#d0455a"; ctx.fillRect(x - 1, 7, 2, 1);
       ctx.fillStyle = "#f2c14e"; ctx.fillRect(x - 1, 10, 2, 5);
       hits.push({ x, st, kind: "boss" });
+    } else if (st % 5 === 4) {
+      /* gauntlet: the honor guard's war banner on a pole */
+      ctx.fillStyle = "#8b84ad"; ctx.fillRect(x - 4, 3, 1, 12);
+      ctx.fillStyle = "#d0455a"; ctx.fillRect(x - 3, 3, 7, 3); ctx.fillRect(x - 3, 6, 5, 2);
+      hits.push({ x, st, kind: "gauntlet" });
     } else if (st % 5 === 3) {
-      /* elite: war spikes */
+      /* elite: war spikes, the tall one tinted by its zone */
       ctx.fillStyle = "#e77463";
-      ctx.fillRect(x - 4, 8, 2, 4); ctx.fillRect(x - 1, 5, 2, 7); ctx.fillRect(x + 2, 8, 2, 4);
+      ctx.fillRect(x - 4, 8, 2, 4); ctx.fillRect(x + 2, 8, 2, 4);
       ctx.fillRect(x - 1, 12, 2, 3);
+      ctx.fillStyle = zc; ctx.fillRect(x - 1, 5, 2, 7);
       hits.push({ x, st, kind: "elite" });
     } else {
       /* normal pack, tinted by its zone */
@@ -5602,8 +5615,34 @@ function drawTimeline(ctx, g) {
     }
     ctx.globalAlpha = 1;
   }
+  /* the bend: the road curves away toward the far Kings */
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fillRect(HZ_X - 8, y - 1, 2, 2); ctx.fillRect(HZ_X - 4, y - 3, 2, 2); ctx.fillRect(HZ_X, y - 5, 2, 2);
+  /* the horizon queue: the next Kings beyond the road, each crowned in its
+     own color over how many waves stand before it */
+  const firstFar = Math.ceil((g.stage + ROAD) / 5) * 5;
+  for (let j = 0; j < 3; j++) {
+    const st = firstFar + j * 5;
+    const z = ZONES[Math.floor((st - 1) / 5) % ZONES.length];
+    const xk = HZ_X + 14 + j * 40;
+    ctx.globalAlpha = 1 - j * 0.18;
+    ctx.fillStyle = ENEMY_COLORS[z.enemy] || "#f2c14e";
+    ctx.fillRect(xk - 4, 4, 2, 2); ctx.fillRect(xk - 1, 3, 2, 3); ctx.fillRect(xk + 2, 4, 2, 2);
+    ctx.fillRect(xk - 4, 6, 8, 2);
+    ctx.textAlign = "center";
+    ctx.fillStyle = st % 20 === 0 ? "#b07fe0" : "#8b84ad";
+    ctx.fillText(String(st - g.stage), xk, 19);
+    hits.push({ x: xk, st, kind: "far" });
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = "left";
   /* the party: a banner pointing at the road, with a pulsing position */
   const pulse = 0.55 + 0.45 * Math.sin(g.time * 5);
+  if (kingNow) {
+    /* HERE NOW: a golden halo where the party stands — the King has come */
+    ctx.fillStyle = "rgba(242,193,78," + (0.1 + 0.14 * pulse).toFixed(3) + ")";
+    ctx.fillRect(x0 - 7, 0, 14, 22);
+  }
   ctx.fillStyle = "#f2c14e";
   ctx.fillRect(x0 - 3, 2, 6, 2);
   ctx.fillRect(x0 - 2, 4, 4, 2);
@@ -5626,7 +5665,7 @@ function drawTimeline(ctx, g) {
   let l1 = "", l2 = "", c1 = "#cfc9e8";
   if (best.kind === "party") {
     l1 = "YOUR PARTY"; c1 = "#f2c14e";
-    l2 = "Stage " + g.stage + " · " + zoneOf(g).name;
+    l2 = kingNow ? "The King stands before you!" : "Stage " + g.stage + " · " + zoneOf(g).name;
   } else if (best.kind === "ready") {
     l1 = "CHAPTER FINALE"; c1 = "#b07fe0";
     l2 = "Fell the King to end the chapter";
@@ -5638,6 +5677,12 @@ function drawTimeline(ctx, g) {
     } else if (best.kind === "boss") {
       l1 = "STAGE " + best.st + " · BOSS"; c1 = "#f2c14e";
       l2 = z.label + " King · rich loot awaits";
+    } else if (best.kind === "far") {
+      l1 = "STAGE " + best.st + " · BOSS"; c1 = "#f2c14e";
+      l2 = z.label + " King · " + (best.st - g.stage) + " waves away" + (best.st % 20 === 0 ? " · finale" : "");
+    } else if (best.kind === "gauntlet") {
+      l1 = "STAGE " + best.st + " · GAUNTLET"; c1 = "#d0455a";
+      l2 = "The King's honor guard, in waves";
     } else if (best.kind === "elite") {
       l1 = "STAGE " + best.st + " · ELITE"; c1 = "#e77463";
       l2 = z.eliteLabel + ": " + ELITE_HINTS[z.enemy];
