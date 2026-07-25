@@ -22,7 +22,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 
 **Make them yours.** The first time you join voice, the **character creator** opens over the game: pick your **race** (Human, Elf, Kitsune-kin, Dwarf, Orc, or Tiefling — purely cosmetic, each with its own features like pointed ears, a fox tail, tusks, or horns), body, **skin tone** (nine shades including a few decidedly non-human ones), hairstyle, hair color, and **starter undergarments**, all with a live mirror preview. Everything in the creator is free, and you can reopen it any time with **🪞 Appearance** in your character column — identity is never loot.
 
-**Classes.** New heroes are assigned Tank 🛡️, DPS ⚔️, or Healer 💚 in rotation so the party stays balanced. Tanks stand in front, soak hits, and can stun; DPS melt enemies; Healers keep everyone standing. You can **respec to any class for free** at the bottom of the Skills tab (it resets your skill ranks).
+**Classes.** New heroes take up whichever of Tank 🛡️, DPS ⚔️, or Healer 💚 the guild is currently shortest of — so a party always has someone to hold the line, someone to end fights, and someone to mend, and a guild whose healers all wandered off gets one back with the next arrival. Tanks stand in front, soak hits, and can stun; DPS melt enemies; Healers keep everyone standing. You can **respec to any class for free** at the bottom of the Skills tab (it resets your skill ranks).
 
 **Fighting styles.** Each class has multiple styles (a Tank might be a Paladin, a DPS a Chainblade…) with different weapons, stats, and a unique **ultimate ability** that charges during combat and fires automatically in a burst of glory. Style changes are free too — experiment.
 

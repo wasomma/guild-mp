@@ -49,7 +49,9 @@ bulk bump loses the race at depth. Measured to level 146, nine heroes had
 settled into 3-second King fights for 6% of their health while a trio still
 spent 12–17%; the term barely moves a duo and firms the full guild back up. Two adjustments keep the
 extremes honest: a party with **no healer** faces enemies that hit for ×0.6
-(×0.85 at three or more), and a **King's ×9 HP** scales down for small parties
+when it is a lone hero and ×0.9 otherwise — a pair carries twice the throughput
+and ends fights in half the time, so giving it a solo's discount made a duo the
+softest party in the game — and a **King's ×9 HP** scales down for small parties
 (`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
 the whole party focuses — no amount of extra heroes splits its attention the
 way a pack does, and a flat ×9 made Kings simply unkillable solo.
@@ -59,13 +61,40 @@ scale, not just the first few tales. Normal fights run 3–10s, Kings 4–25s, a
 stage costs 5–28% of the party's health, and after the first chapter wipes are
 rare. None of it decays with depth, which was the whole problem before.
 
-Two honest caveats on that band. Chapter 1 is the sharp end everywhere (a solo
-hero still spends it wiping and relearning — 14 wipes, then essentially none
-for the next twenty-three chapters). And **five-hero parties sit softest**, at
-5–9% per stage against a trio's 10–17%: with the round-robin class assignment
-a party of five lands two DPS out of five, the game's most damage-dense
-composition. That is a composition artefact rather than a scaling failure, and
-it is stable with depth.
+Chapter 1 is the sharp end everywhere: a solo hero spends it wiping and
+relearning, then goes essentially untroubled for the next twenty-three
+chapters.
+
+## Who turns up: class assignment
+
+New characters are assigned **the class the party is most short of**, read off
+who is actually standing there. Roles are covered first, in the order a party
+needs them — a tank to hold the line, someone who can kill, then someone to
+mend — and after that the scarcest class fills, ties breaking toward tank then
+healer. The resulting shapes, which the band above was measured against:
+
+| Party | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| T/D/H | 1/0/0 | 1/1/0 | 1/1/1 | 2/1/1 | 2/1/2 | 2/2/2 | 3/2/2 | 3/2/3 | 3/3/3 |
+
+This replaced `CLASS_ORDER[joinCount % 3]`, which was wrong twice over. It read
+a lifetime join tally rather than the party, so a guild whose healers all left
+kept being handed whatever the counter said next and could never recover.
+And cycling tank→dps→healer gave a party of five two tanks, two DPS and a
+single healer — the most damage-dense shape in the game, and one of the
+softest at 8.1% of party health per stage. It also meant a **duo never got a
+healer at all**, which tripped the no-healer mercy discount and made a pair of
+heroes the easiest party in the game at 6.0%.
+
+The role-coverage step is not decoration: assigning purely by "fewest" hands a
+duo a tank and a healer and no damage whatsoever, measured at 32.6% per stage
+because that pair simply cannot finish a fight.
+
+Measured across nine party sizes, five campaigns each, warm-up chapters
+discarded, the band is now **6.7–18.2%** of party health per stage with no
+structural outlier — against 6.0–16.5% before, where both ends were assignment
+artefacts. Note that class is fixed per character for life, so **this only
+shapes new heroes**; an existing guild keeps whatever it already rolled.
 
 ## The shape of the loop
 

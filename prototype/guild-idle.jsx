@@ -708,7 +708,13 @@ const bossTier = (g) => 9 * clamp(0.58 + 0.14 * g.members.length, 0.58, 1);
    this a solo tale was 90 wipes long while a full guild never wiped at all. */
 const mercyMul = (g) => {
   if (g.members.some((m) => m.cls === "healer")) return 1;
-  return g.members.length >= 3 ? 0.85 : 0.6;
+  /* A lone hero needs a real break — no healer, no Sanctuary, every auto
+     landing on them personally. A pair does not: two heroes carry twice the
+     throughput and end fights in half the time, so handing them the same
+     discount made a duo the softest party in the game at 6% of its health per
+     stage, against a solo hero's 19%. Role coverage in nextClass means three
+     or more without a healer is now only a transient (someone stepped away). */
+  return g.members.length <= 1 ? 0.6 : 0.9;
 };
 
 function makeEnemy(g, tier) {
@@ -4830,7 +4836,30 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) { .gi-speak { animation: none !important; } }
 `;
 
-const nextClass = (g) => CLASS_ORDER[g.joinCount % 3];
+/* Whichever class the party is most short of, read off who is actually
+   standing here rather than a lifetime join tally.
+
+   `CLASS_ORDER[joinCount % 3]` was wrong twice over. It never looked at the
+   party, so a guild that lost all its healers kept being handed whatever the
+   counter said next and could never recover. And cycling tank→dps→healer left
+   a five-hero party at two tanks, two DPS and a single healer — the most
+   damage-dense shape in the game, which measured as one of the softest.
+
+   Cover the three roles first, in the order a party actually needs them: a
+   tank to hold the line, someone who can kill, then someone to mend. After
+   that fill whichever is scarcest, breaking ties toward tank and healer. The
+   role-coverage step matters — filling purely by "fewest" hands a duo a tank
+   and a healer and no damage at all, which measured at 32.6% of the party's
+   health per stage because the pair simply cannot finish a fight. */
+const CLASS_NEED = ["tank", "dps", "healer"];
+const nextClass = (g) => {
+  const have = { tank: 0, dps: 0, healer: 0 };
+  for (const m of g.members) have[m.cls]++;
+  for (const c of CLASS_NEED) if (!have[c]) return c;
+  let best = "tank";
+  for (const c of ["tank", "healer", "dps"]) if (have[c] < have[best]) best = c;
+  return best;
+};
 
 /* Zoomed, animated inspect view of one adventurer: the same drawAdventurer
    that renders the world, at 4x, minus the HUD bars. This is where earned

@@ -2,6 +2,17 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.30 — 2026-07-25
+
+**The guild fills the gaps.** New adventurers now take up whatever the party is actually short of, instead of following a fixed tank-then-damage-then-healer rota that never looked at who was standing there.
+
+- **Your guild can recover.** If every healer steps away, the next person to walk in is a healer. The old rota couldn't do that — it counted lifetime joins, so a guild could be left with no one to mend it indefinitely.
+- **A party of five is no longer damage-heavy.** It used to come out as two tanks, two damage and a single healer — the most damage-dense shape in the game, and one of the easiest. It now settles at two tanks, one damage and two healers, and fights like the rest.
+- **A pair finally gets looked after.** Under the old rota a duo *never* got a healer, which quietly made two heroes the easiest party in the game. A pair is also no longer given the same allowance as someone adventuring completely alone — two people end fights in half the time.
+- Roles are still covered in the order a party needs them, so every duo has someone who can fight and every trio has someone who can mend.
+
+Class is still chosen once per character and kept for life, so this shapes new heroes rather than reshuffling an existing guild.
+
 ## v0.1.29 — 2026-07-25
 
 **Full guilds get a real warband at depth.** The balance was verified over twenty-four chapters this time, out to heroes at level 156 — the scale the live guild actually plays at, rather than the first few tales. It held everywhere except the top end: a nine-strong guild slowly outgrew its foes, settling into three-second King fights that cost 6% of its health while a trio was still spending 12–17%. Enemy bulk now rises a little faster with headcount, which barely touches a duo or a trio and puts a full guild back in a real fight. Nothing else moved.
