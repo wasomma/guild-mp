@@ -264,7 +264,7 @@ export default function App() {
       if (net.cur) {
         const cur = net.cur;
         // copy authoritative scalars
-        for (const k of ["stage", "best", "everBest", "threat", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
+        for (const k of ["stage", "best", "everBest", "threat", "momentum", "gold", "renown", "prestiges", "legacy", "stock", "auto", "phase", "bossT", "prestigeT", "buffT", "autoSim", "users", "log", "advanceT", "feastT", "quests", "questDay", "mutator", "hall"]) v[k] = cur[k];
         // interpolate entities between the last two snapshots (renders one interval behind)
         const span = Math.max(20, net.tCur - net.tPrev);
         const a = net.prev ? clamp((now - net.tCur) / span, 0, 1) : 1;
@@ -356,8 +356,10 @@ export default function App() {
           <aside className="voice">
             <div className="vhead">🔊 Voice Channel</div>
             {g && g.members.length >= 2 && (
-              <div className="chorusline" title="Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP">
-                🎵 Chorus +{Math.min(g.members.length - 1, 9) * 4}% dmg/heal · +{Math.min(g.members.length - 1, 9) * 3}% HP
+              <div className="chorusline" title="Trinity momentum: clear stages with a tank, DPS, and healer all standing to stack +8% gold and XP each, up to 5. A wipe or a broken trinity resets it.">
+                {g.momentum > 0
+                  ? <>🔥 Momentum ×{g.momentum} · +{g.momentum * 8}% spoils</>
+                  : <>⚖ The trinity — shield, blade, mercy — stokes momentum</>}
               </div>
             )}
             {g && <PartyList g={g} onSel={(id) => { setSelId(id === selId ? null : id); setWardTab("stats"); setTab(null); }} />}
@@ -706,7 +708,6 @@ function StatsPanel({ g, m }) {
   if (st.ls > 0) add("Lifesteal", pct(st.ls));
   if (st.thorns > 0) add("Thorns", pct(st.thorns));
   if (st.goldF > 0) add("Gold Find", `+${pct(st.goldF)}`);
-  if (st.chorus > 0) add("Chorus of Courage", `${st.chorus} voice${st.chorus > 1 ? "s" : ""} · +${st.chorus * 4}% dmg/heal · +${st.chorus * 3}% HP`, "#8fd069");
   return (
     <div>
       <div className="statgrid">

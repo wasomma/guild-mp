@@ -281,7 +281,7 @@ let UID = 1;
 function newGame() {
   return {
     members: [], enemies: [], floaters: [], log: [],
-    stage: 1, best: 1, gold: 150, joinCount: 0,
+    stage: 1, best: 1, gold: 150, joinCount: 0, momentum: 0,
     renown: 0, prestiges: 0, everBest: 1, prestigeT: 0,
     legacy: { hymn: 0, banner: 0, merchant: 0, scholar: 0, head: 0, stipend: 0 },
     phase: "advance", advanceT: 1.6, wipeT: 0, scroll: 0,
@@ -374,7 +374,7 @@ function stats(m, g) {
   const b = CLASSES[m.cls].base, L = m.level - 1, sk = m.skills;
   let hp = b.hp + b.hpL * L, dmg = b.dmg + b.dmgL * L, spd = b.spd;
   let armor = b.armor, crit = b.crit, heal = (b.heal || 0) + (b.healL || 0) * L;
-  let dr = 0, stun = 0, splash = 0, ls = 0, thorns = 0, critDmg = 0, goldF = 0, chorus = 0;
+  let dr = 0, stun = 0, splash = 0, ls = 0, thorns = 0, critDmg = 0, goldF = 0;
   const sm = styleOf(m);
   dmg *= sm.dmgMul; spd *= sm.spdMul; crit += sm.critAdd; armor += sm.armorAdd || 0;
   if (m.cls === "tank") { hp *= 1 + 0.08 * (sk.fort || 0); dr = 0.04 * (sk.bulw || 0); stun = 0.06 * (sk.bash || 0); }
@@ -406,12 +406,11 @@ function stats(m, g) {
     }
     if (g.mutator === "moon") spd *= 0.8;
     if (g.mutator === "glass") { dmg *= 1.35; hp *= 0.75; }
-    chorus = Math.min(Math.max(0, g.members.length - 1), 9);
-    if (chorus > 0) {
-      dmg *= 1 + 0.04 * chorus;
-      heal *= 1 + 0.04 * chorus;
-      hp *= 1 + 0.03 * chorus;
-    }
+    /* The Chorus of Courage is gone (COMBAT-REWORK Phase 2): headcount no
+       longer buffs stats. What the party brings is ROLES — Vanguard (a tank
+       shields the line, hurtMember), Warpath (a killer's presence executes
+       wounded foes, hitEnemy), Lifeward (a mender keeps the road's recovery,
+       the advance phase in tick), and trinity momentum (killEnemy). */
   }
   /* the class triangle: applied to the FINAL numbers so gear power can't
      wash class identity out (see the CLASSES comment) */
@@ -423,7 +422,7 @@ function stats(m, g) {
      (measured: a live-scale solo healer stuck in one elite fight for six
      sim-hours against the Dire Bat's drain) */
   if (CLASSES[m.cls].healBolt) dmg += heal * CLASSES[m.cls].healBolt;
-  return { hp: Math.round(hp), dmg, spd, armor, crit: clamp(crit, 0, 60), heal, dr, stun, splash, ls, thorns, critDmg, goldF, chorus };
+  return { hp: Math.round(hp), dmg, spd, armor, crit: clamp(crit, 0, 60), heal, dr, stun, splash, ls, thorns, critDmg, goldF };
 }
 
 const xpNeed = (lvl) => Math.round(26 * Math.pow(lvl, 1.35));
@@ -723,18 +722,25 @@ const threatCurve = (t) => Math.pow(Math.max(1, t), DIFF_EXP);
    (see spawnEncounter) plus this sublinear bulk bump. Per-enemy bite rises
    far more gently than bulk, because a bigger guild brings more tanks to
    spread the autos across and more healers to mend them. */
+/* Which callings are actually standing right now — the input to every
+   role-coverage buff (Vanguard / Warpath / Lifeward / trinity momentum).
+   Alive matters: a fallen tank shields nobody. */
+const rolesAlive = (g) => {
+  const r = { tank: false, dps: false, healer: false };
+  for (const m of g.members) if (m.alive) r[m.cls] = true;
+  return r;
+};
 const crowdMul = (g) => {
   /* a lone hero brings one sword to a pack the curve assumes two will meet,
      so foes come lighter as well as fewer (see the ceiling in spawnEncounter) */
   const n = g.members.length;
   if (n <= 1) return 0.7;
-  /* The squared term is small but it earns its place at the top end. A guild's
-     throughput rises about linearly with headcount AND carries the Chorus
-     multiplier on top, so a purely linear bulk bump slowly loses the race:
-     measured to level 146, a nine-strong guild had settled into 3-second King
-     fights for 6% of its health while a trio was still spending 12-17%. This
-     barely moves a duo or a trio and firms the full guild back up. */
-  return 1 + 0.22 * (n - 1) + 0.025 * (n - 1) ** 2;
+  /* Retuned for the post-Chorus world (Phase 2): with no headcount stat
+     buff, guild throughput rises only ~linearly with bodies, so the old
+     0.22-linear + 0.025-squared bulk (tuned when every extra voice also
+     carried +4% damage) now overtaxes big parties. The remaining squared
+     term is a nudge against role-coverage buffs compounding at the top end. */
+  return 1 + 0.17 * (n - 1) + 0.012 * (n - 1) ** 2;
 };
 const crowdBite = (g) => 1 + 0.05 * Math.max(0, g.members.length - 1);
 /* A King is a single body: the whole party focuses it and no amount of extra
@@ -978,6 +984,10 @@ function mitigate(g, m, raw) {
   return Math.max(1, raw * (1 - cut) * (1 - m._st.dr));
 }
 function hurtMember(g, m, rawDmg, src) {
+  /* Vanguard: while a tank holds the line, every other calling takes far
+     less of the enemy's fury — cleaves and boss specials included. This is
+     the mechanical reason damage wants a shield to stand behind. */
+  if (m.cls !== "tank" && rolesAlive(g).tank) rawDmg *= 0.55;
   const dmg = mitigate(g, m, rawDmg);
   m.hp -= dmg;
   addFloat(g, m.x, m.y - 70, "-" + fmt(dmg), "#ef6461");
@@ -1171,7 +1181,11 @@ function tick(g, dt) {
   if (g.phase === "advance") {
     g.scroll += dt * 85;
     g.advanceT -= dt;
-    for (const m of g.members) if (m.alive) m.hp = Math.min(m._st.hp, m.hp + m._st.hp * 0.08 * dt);
+    /* Lifeward: with a mender standing, the road restores the party as it
+       always did; without one, wounds knit slowly and stages wear you down.
+       This is the healer's out-of-combat half of the trinity's bargain. */
+    const mendRate = rolesAlive(g).healer ? 0.08 : 0.025;
+    for (const m of g.members) if (m.alive) m.hp = Math.min(m._st.hp, m.hp + m._st.hp * mendRate * dt);
     if (g.advanceT <= 0 && g.members.some((m) => m.alive)) spawnEncounter(g);
     return;
   }
@@ -1192,11 +1206,20 @@ function tick(g, dt) {
   const foes = g.enemies.filter((e) => e.hp > 0);
 
   if (!alive.length) {
-    if (g.members.length) { g.phase = "wipe"; g.wipeT = 4; g.projectiles = []; g.pending = []; addLog(g, "The party has been wiped out!", "#ef6461"); sfx.wipe(); }
+    if (g.members.length) { g.phase = "wipe"; g.wipeT = 4; g.momentum = 0; g.projectiles = []; g.pending = []; addLog(g, "The party has been wiped out!", "#ef6461"); sfx.wipe(); }
     else { g.phase = "advance"; g.advanceT = 2; }
     return;
   }
   if (!foes.length) {
+    /* Trinity momentum: a stage cleared with shield, blade, and mercy all
+       standing stokes the guild's spoils (+8% gold and XP per stack, up to
+       5). A clear without the full trinity — or any wipe — lets it gutter. */
+    const roles = rolesAlive(g);
+    if (roles.tank && roles.dps && roles.healer) {
+      const was = g.momentum || 0;
+      g.momentum = Math.min(5, was + 1);
+      if (g.momentum === 5 && was < 5) addLog(g, "The trinity's momentum peaks — the guild fights as one! (+40% spoils)", "#8fe3ff");
+    } else g.momentum = 0;
     if (g.stage % 20 === 0) { endChapter(g); return; }
     g.stage++; g.best = Math.max(g.best, g.stage);
     g.everBest = Math.max(g.everBest, threatOf(g));
@@ -1448,7 +1471,8 @@ function tick(g, dt) {
 function killEnemy(g, killer, e) {
   e.hp = 0;
   if (killer) killer.kills++;
-  const goldGain = Math.round(e.gold * (1 + 0.15 * g.legacy.merchant) * (1 + ((killer && killer._st && killer._st.goldF) || 0)));
+  const momMul = 1 + 0.08 * (g.momentum || 0);
+  const goldGain = Math.round(e.gold * momMul * (1 + 0.15 * g.legacy.merchant) * (1 + ((killer && killer._st && killer._st.goldF) || 0)));
   g.gold += goldGain;
   sfx.kill(); sfx.coin();
   if (g.session) { g.session.kills++; g.session.gold += goldGain; if (e.boss) g.session.bossKills.push(e.name); else if (e.elite) g.session.eliteKills++; }
@@ -1476,7 +1500,7 @@ function killEnemy(g, killer, e) {
     sfx.split();
   }
   const alive = g.members.filter((m) => m.alive);
-  const share = Math.round((e.xp / Math.max(1, alive.length) + e.xp * 0.4) * (1 + 0.15 * g.legacy.scholar));
+  const share = Math.round((e.xp / Math.max(1, alive.length) + e.xp * 0.4) * momMul * (1 + 0.15 * g.legacy.scholar));
   for (const m of alive) gainXp(g, m, share);
   if (e.boss) {
     const drops = [dropLoot(g, 0.10)];
@@ -1495,6 +1519,9 @@ function rollDmg(m) {
 
 function hitEnemy(g, m, tgt, dmg, crit) {
   if (!tgt || tgt.hp <= 0) return;
+  /* Warpath: a killer's presence teaches the whole party to finish what it
+     starts — everyone's blows land half again as hard on wounded foes. */
+  if (tgt.hp / tgt.maxHp < 0.2 && rolesAlive(g).dps) dmg *= 1.5;
   if (tgt.shell > 0) {
     dmg *= 0.5;
     tgt.shell--;
@@ -1591,6 +1618,7 @@ function endChapter(g) {
   g.mutator = next.id;
   g.stage = 1 + g.legacy.head * 2;
   g.best = g.stage;
+  g.momentum = 0;
   /* the feast restocks the pantry: top potions up to the stipend baseline */
   const st = g.legacy.stipend * 2;
   const refill = { heal: 3 + st, armor: 1 + st, poison: 1 + st, res: 1 + st };
@@ -5129,19 +5157,29 @@ export default function GuildIdle() {
     game.joinCount++;
     game.members.push(m);
     addLog(game, `${u.name} joined voice and enters as a ${styleOf(m).name} (${CLASSES[m.cls].name})!`, CLASSES[m.cls].color);
-    const chorusN = Math.min(game.members.length - 1, 9);
-    if (chorusN > 0) {
-      addLog(game, `The Chorus of Courage swells: ${game.members.length} voices, +${chorusN * 4}% might!`, "#8fe3ff");
-      sfx.chorus();
+    /* headcount no longer buffs stats (Phase 2) — what matters is coverage,
+       so the fanfare belongs to the moment the trinity completes */
+    const roles = rolesAlive(game);
+    if (game.members.length > 1 && roles.tank && roles.dps && roles.healer && CLASS_NEED.includes(m.cls)) {
+      const others = { tank: 0, dps: 0, healer: 0 };
+      for (const o of game.members) if (o !== m) others[o.cls]++;
+      if (!others[m.cls]) {
+        addLog(game, "The trinity stands — shield, blade, and mercy. Momentum awaits!", "#8fe3ff");
+        sfx.chorus();
+      }
     }
   }
   function leaveVoice(game, u) {
     if (!u.inVoice) return;
     u.inVoice = false;
+    const gone = game.members.find((m) => m.name === u.name);
     game.members = game.members.filter((m) => m.name !== u.name);
     addLog(game, `${u.name} left voice. Their adventurer fades from the party.`, "#8b84ad");
-    if (game.members.length >= 2) addLog(game, `The chorus quiets: ${game.members.length} voices remain.`, "#8b84ad");
-    else if (game.members.length === 1) addLog(game, `The chorus falls silent. ${game.members[0].name} fights on alone.`, "#8b84ad");
+    const roles = rolesAlive(game);
+    if (gone && game.members.length && !roles[gone.cls]) {
+      const lost = { tank: "The shield wall is gone — the line stands open.", dps: "No killer remains — fights will drag.", healer: "No mender remains — wounds will linger on the road." };
+      addLog(game, lost[gone.cls], "#8b84ad");
+    } else if (game.members.length === 1) addLog(game, `${game.members[0].name} fights on alone.`, "#8b84ad");
     if (selId && !game.members.find((m) => m.id === selId)) setSelId(null);
   }
   function addUser() {
@@ -5374,7 +5412,7 @@ export default function GuildIdle() {
               <span key={mu.id} style={{ color: mu.c }} title={mu.desc}>📖 {mu.name.replace("Chapter of ", "")}</span>
             ))}
             <span style={{ color: "#8b84ad", fontSize: 16 }}>🧪{g.stock.heal} 🛡️{g.stock.armor} ☠️{g.stock.poison} 🔥{g.stock.res}</span>
-            {g.members.length >= 2 && <span style={{ color: "#8fe3ff", fontSize: 16 }} title={`Chorus of Courage: every voice past the first grants +4% damage and healing and +3% max HP`}>🎵 +{Math.min(g.members.length - 1, 9) * 4}%</span>}
+            {g.momentum > 0 && <span style={{ color: "#8fe3ff", fontSize: 16 }} title={`Trinity momentum: clear stages with a tank, DPS, and healer all standing to stack +8% gold and XP each, up to 5. A wipe or a broken trinity resets it.`}>🔥 ×{g.momentum}</span>}
             <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px" }} title={sfxOff ? "unmute sounds" : "mute sounds"}
               onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
             <button className="gi-btn" style={{ fontSize: 14, padding: "2px 8px", opacity: musicOff ? 0.35 : 1 }} title={musicOff ? "unmute music" : "mute music"}

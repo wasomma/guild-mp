@@ -45,14 +45,14 @@ when gear reset to chapter-1 power every twenty stages.
 
 The party's size is the other input. Enemies arrive in bigger packs
 (`ceiling = ceil(members × 1.5)`, hard cap 8, so a lone hero meets a pair and
-never a mob) and carry `1 + 0.22 × (members − 1) + 0.025 × (members − 1)²` bulk,
+never a mob) and carry `1 + 0.17 × (members − 1) + 0.012 × (members − 1)²` bulk,
 while per-enemy bite rises only `1 + 0.05 × (members − 1)` — a bigger guild
 brings more tanks to spread the autos over and more healers to mend them. The
-squared term is small and exists for the top end: guild throughput climbs about
-linearly with headcount *and* carries the Chorus multiplier, so a purely linear
-bulk bump loses the race at depth. Measured to level 146, nine heroes had
-settled into 3-second King fights for 6% of their health while a trio still
-spent 12–17%; the term barely moves a duo and firms the full guild back up.
+bulk slope was retuned down in v0.1.33 when the Chorus of Courage was removed:
+guild throughput now rises only ~linearly with bodies (no headcount stat buff
+on top), so the old steeper curve — tuned when every extra voice also carried
++4% damage — overtaxed big parties. The small squared term remains as a nudge
+against the role-coverage buffs compounding at the top end.
 A **King's ×9 HP** scales down for small parties
 (`×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`), because a King is one body that
 the whole party focuses — no amount of extra heroes splits its attention the
@@ -201,7 +201,12 @@ Skills (5 ranks each): tanks take +8% HP / +4% damage reduction / +6% stun-on-hi
 
 Gear feeds in by slot: **weapon** adds its full power to damage (and ×0.8 to healing), **armor** adds power×4 to HP and power×0.25 to armor, **trinket** adds power×0.5 damage, power×2 HP, and crit **capped at +25**. That cap matters: uncapped at power×0.35 a single trinket pinned the 60% crit ceiling on its own, which quietly made Precision, the Rogue's +10 and the Archer/Warrior +5 worth exactly nothing.
 
-World-level multipliers stack on top: Battle Hymns (+10%/rank), the **Chorus of Courage** presence buff (+4% damage/healing and +3% HP per voice in the party beyond the first, capped at 9 stacks), and mutators (Chapter of Glass: ×1.35 damage / ×0.75 HP for both sides; Racing Moon: everyone attacks 20% faster).
+World-level multipliers stack on top: Battle Hymns (+10%/rank) and mutators (Chapter of Glass: ×1.35 damage / ×0.75 HP for both sides; Racing Moon: everyone attacks 20% faster). The **Chorus of Courage is gone** (v0.1.33): headcount no longer buffs stats. In its place stand the **role-coverage buffs**, keyed on which callings are alive (`rolesAlive`):
+
+- **Vanguard** — while a tank lives, every non-tank takes ×0.55 of all enemy damage (applied in `hurtMember`, so autos, cleaves, and boss specials alike).
+- **Warpath** — while a DPS lives, everyone's hits deal ×1.5 against foes below 20% HP (applied in `hitEnemy`).
+- **Lifeward** — while a healer lives, between-fight regen stays 8% max HP/s; without one it drops to 2.5%/s.
+- **Trinity momentum** — each stage cleared with tank+DPS+healer all standing adds a stack (max 5), each worth +8% gold and XP on kills; a wipe or a non-trinity clear resets it to 0. It also resets at chapter end, ships in the snapshot as `momentum`, and renders as the 🔥 pill.
 
 ### The attack roll
 
@@ -237,7 +242,7 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 ## Recovery
 
 - Between fights (advance phase) everyone regenerates 8% max HP per second.
-- Healer throughput: `(15 + 3/level) × (1 + 0.1×Mending) × hymn/chorus multipliers`, splashing 15%/rank of Radiance to the rest of the party.
+- Healer throughput: `(15 + 3/level) × (1 + 0.1×Mending) × hymn multiplier`, splashing 15%/rank of Radiance to the rest of the party.
 - Healing Potion: auto-sips when anyone drops below 40%, restoring 45% max HP (1s internal cooldown between sips).
 - Phoenix Draught: auto-revives a member at 60% HP after 2.5s down.
 - Lifesteal returns its percentage of all damage dealt.
@@ -248,7 +253,7 @@ The Poison Vial adds `2 + threat^1.18 × 0.7` damage per second for 8s to the wh
 - Enemy HP: `(28 + threat^1.18 × 15) × tier × crowdMul × rand(0.9–1.1)` — tier ×3.6 elite / ×1 normal, and bosses `×9 × clamp(0.58 + 0.14 × members, 0.58, 1)`. Packs run 2–4 normals plus one per two extra members, capped at 8 and additionally ceilinged at `ceil(members × 1.5)`; elite stages field the elite plus that many normals; stage %5==0 is a lone King. Endless Horde still adds one more (at 80% HP each) while the pack is under the cap. The line is spread across the enemy band's ~180px however many turn up, rather than marching the tail off a 640px stage.
 - Loot power: `(4 + threat×1.25) × rarity multiplier × rand(0.9–1.12)`, rarity multipliers 1.0 / 1.35 / 1.75 / 2.35 / 3.2 (unique 3.4). Drop odds: bosses always drop (plus a 60% second drop) at 10% unique chance each; elites always drop at 5% unique; normals drop 13% of the time at 1% unique.
 - Rarity weights start at 54/26/12/6/2 (common→legendary) and shift with threat: common loses `threat×0.4` weight (the shift caps at 20, leaving common at weight 34) while each higher tier gains a quarter of the shift — deep tales steadily favor rare+ gear.
-- Member damage still grows multiplicatively (level × style × skills × gear power × legacy × chorus), which is why enemy bulk grows on `threat^1.18` instead of a straight line, and why threat — not stage — is what enemies are built from. The intended wall is still the King's special-phase check; it now stands at every depth instead of dissolving after the first tale.
+- Member damage still grows multiplicatively (level × style × skills × gear power × legacy), which is why enemy bulk grows on `threat^1.18` instead of a straight line, and why threat — not stage — is what enemies are built from. The intended wall is still the King's special-phase check; it now stands at every depth instead of dissolving after the first tale.
 
 ## Daily quests
 

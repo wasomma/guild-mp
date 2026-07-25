@@ -46,7 +46,14 @@ If a hero falls, they lie there until the fight ends (or a Phoenix Draught reviv
 
 **Enemies go for the biggest threat.** As long as a Tank stands, the blows land on their shield. With no Tank in the fight, enemies turn on whoever hits them hardest — which is usually the DPS, and DPS are not built to take it. That's the deal the classes make: damage needs a line to hide behind, and the line needs damage to end the fight.
 
-**Chorus of Courage.** Every voice in the channel past the first empowers the whole party: +4% damage and healing, +3% max HP, stacking up to 9 times. Being together literally makes everyone stronger.
+**Roles are the real party buff.** Headcount alone no longer empowers anyone — what matters is who stands with you:
+
+- **Vanguard** 🛡️ — while a Tank lives, everyone else takes far less damage from everything, cleaves and boss slams included.
+- **Warpath** ⚔️ — while a DPS lives, the whole party's blows land half again as hard on wounded foes, finishing fights fast.
+- **Lifeward** 💚 — while a Healer lives, the party recovers fully on the road between fights; without one, wounds linger and stages wear you down.
+- **Trinity Momentum** 🔥 — clear stages with all three callings standing and the guild's spoils stack +8% gold and XP per stage, up to +40%. A wipe, or clearing without the full trinity, snuffs it out.
+
+A full trinity doesn't just survive better — it visibly out-earns three soloists.
 
 ## Loot and gold
 

@@ -2,7 +2,17 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
-## v0.1.32 — 2026-07-25
+## v0.1.33 — 2026-07-25
+
+**Roles are the party buff now.** Phase 2 of the combat rework: the Chorus of Courage — +4% might per voice, no questions asked — retires. What empowers a party is *who* stands in it:
+
+- **Vanguard** 🛡️ — while a Tank lives, everyone else takes far less damage from everything: autos, cleaves, and boss slams alike. Damage finally has a mechanical reason to want a shield in front of it.
+- **Warpath** ⚔️ — while a DPS lives, the whole party's blows land half again as hard on wounded foes. A killer's presence ends fights.
+- **Lifeward** 💚 — while a Healer lives, the road between fights restores you as it always did; without one, wounds knit slowly and every stage wears you down.
+- **Trinity Momentum** 🔥 — clear stages with shield, blade, and mercy all standing and the guild's spoils stack: +8% gold and XP per stage, up to +40%. A wipe or a broken trinity snuffs it out. The world bar shows the flame.
+- Enemy warbands were retuned for the new math — big guilds no longer face the extra bulk that compensated for a stat buff that no longer exists. A full nine-hero guild now fells Kings *faster* per fight than a trio, instead of slower.
+
+Together this is the promise of the rework made real: soloing any class works but costs blood and time; the trinity is the fast, rich way to play.
 
 **Choose your calling.** The character creator now opens with a class pick — Tank 🛡️, DPS ⚔️, or Healer 💚 — free before your hero first steps through the doors, with the guild's current need marked ★ as a hint. Picking a class re-roots your fighting style, banks your skill points for the new path, and dresses you in that calling's starter outfit. Solo adventurers can finally *be* a lone healer or a glass-cannon DPS from their very first stage; changing your mind later still goes through the free respec in the Skills tab. (Completes Phase 1 of the combat rework.)
 

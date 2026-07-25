@@ -156,9 +156,19 @@ codebases.
   both creators, free while `cos.fresh`, party-need hint via `classNeed`,
   starter outfit re-dressed on pick; validated in `applyAppearance`
   (browser-verified end-to-end + qa-creator regressions).
-- **Phase 2 — Role coverage.** Vanguard/Lifeward/Warpath + trinity momentum in
-  `stats()`; remove Chorus; retune `crowdMul`/`crowdBite` for the post-Chorus
-  world.
+- **Phase 2 — Role coverage. ✅ DONE (v0.1.33, 2026-07-25).**
+  Shipped in both sims: Chorus of Courage removed (no headcount stat buff);
+  Vanguard (living tank → non-tanks take ×0.55 of all enemy damage, in
+  `hurtMember`), Warpath (living DPS → everyone ×1.5 vs foes <20% HP, in
+  `hitEnemy`), Lifeward (living healer → 8%/s advance regen, else 2.5%/s),
+  trinity momentum (`g.momentum` 0–5, +8% gold/XP per stack, reset on wipe /
+  non-trinity clear / chapter end, 🔥 pill in both UIs); `crowdMul` retuned
+  to `1 + 0.17(n−1) + 0.012(n−1)²`. Measured v0.1.33: nine-member Kings now
+  FASTER than trinity (7.3s vs 8.9s live — group scaling fixed, was inverted),
+  solo DPS bleeds 11.7% HP/stage live and wipes 8× fresh (Lifeward attrition),
+  trinity out-earns via momentum. Solo DPS raw King TTK is still the fastest;
+  the inversion lands with Phase 4's enrage clocks and enemy retuning, as
+  planned. Lifeward's regen split front-loads a slice of Phase 3's attrition.
 - **Phase 3 — Stakes.** Regen trickle; potion charges; wipe set-back to last
   King; the ramp-in mutator arc for the live save.
 - **Phase 4 — Bosses + encounters.** Tri-fold King checks; honor-guard gauntlet
