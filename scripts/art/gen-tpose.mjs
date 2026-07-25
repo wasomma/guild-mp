@@ -33,6 +33,22 @@ const SUBJECTS = {
 };
 SUBJECTS["soft-m"] = SUBJECTS["human-m"].replace(PAINT, PAINT + ", " + SOFT);
 SUBJECTS["soft-f"] = SUBJECTS["human-f"].replace(PAINT, PAINT + ", " + SOFT);
+/* race variants (owner picks per race like the human chooser). Style lanes
+   follow the human picks: fem = base lane, masc = soft lane. Learnings
+   baked in: "completely human face" or fox-kin goes anthro; orcs need the
+   explicit warm-skin clause or they drift gray-green; dwarves beardless
+   (beards are tintable hair overlays). */
+const RACE_FLAVOR = {
+  elf: ["elf man with long elegant pointed ears extending out to the sides", "elf woman with long elegant pointed ears extending out to the sides"],
+  kitsunekin: ["man with a completely human face and two upright silver-gray furred fox ears on top of his head", "woman with a completely human face and two upright silver-gray furred fox ears on top of her head"],
+  dwarf: ["short stocky powerfully built dwarf man with broad shoulders", "short stocky sturdily built dwarf woman with broad shoulders"],
+  orc: ["orc man with two small ivory tusks rising from his lower jaw and the same warm golden human skin tone", "orc woman with two small ivory tusks rising from her lower jaw and the same warm golden human skin tone"],
+  tiefling: ["tiefling man with two dark burgundy curved horns sweeping back from his temples", "tiefling woman with two dark burgundy curved horns sweeping back from his temples"],
+};
+for (const [race, [mF, fF]] of Object.entries(RACE_FLAVOR)) {
+  SUBJECTS[race + "-m"] = SUBJECTS["soft-m"].replace("young athletic man", mF);
+  SUBJECTS[race + "-f"] = SUBJECTS["human-f"].replace("young athletic woman", fF);
+}
 
 mkdirSync(DIR, { recursive: true });
 
@@ -121,6 +137,73 @@ function sheet() {
   console.log("chooser:", `${DIR}/chooser.png`, W + "x" + (CH + PAD * 2), "cells:", cells.map((c) => c.name).join(","));
 }
 
+/* fit <rollFile> <outStem> <artH>: key out the card background (flood
+   fill from the borders, so enclosed linen tones survive), split into the
+   left (front) and right (back) figures, alpha-trim each, hard-alpha
+   resample to artH, save <outStem>-front.png / <outStem>-back.png. */
+function fit(rollFile, outStem, artH) {
+  const img = PNG.sync.read(readFileSync(`${DIR}/${rollFile}.png`));
+  const { width: W2, height: H2 } = img;
+  const bgAt = (x, y) => {
+    const i = (y * W2 + x) * 4;
+    return [img.data[i], img.data[i + 1], img.data[i + 2]];
+  };
+  const corners = [[0, 0], [W2 - 1, 0], [0, H2 - 1], [W2 - 1, H2 - 1]];
+  const seen = new Uint8Array(W2 * H2);
+  const stack = [];
+  for (const [cx, cy] of corners) {
+    const ref = bgAt(cx, cy);
+    stack.push([cx, cy, ref]);
+  }
+  while (stack.length) {
+    const [x, y, ref] = stack.pop();
+    if (x < 0 || y < 0 || x >= W2 || y >= H2) continue;
+    const idx = y * W2 + x;
+    if (seen[idx]) continue;
+    const [r, g, b] = bgAt(x, y);
+    if (Math.abs(r - ref[0]) + Math.abs(g - ref[1]) + Math.abs(b - ref[2]) > 60) continue;
+    seen[idx] = 1;
+    img.data[idx * 4 + 3] = 0;
+    stack.push([x + 1, y, ref], [x - 1, y, ref], [x, y + 1, ref], [x, y - 1, ref]);
+  }
+  /* split at the widest all-transparent column gap in the middle half */
+  const colSolid = new Array(W2).fill(0);
+  for (let x = 0; x < W2; x++) for (let y = 0; y < H2; y++) if (img.data[(y * W2 + x) * 4 + 3] >= 128) colSolid[x]++;
+  let best = { len: 0, mid: W2 / 2 };
+  let runStart = -1;
+  for (let x = Math.round(W2 * 0.25); x <= Math.round(W2 * 0.75); x++) {
+    if (colSolid[x] === 0) { if (runStart < 0) runStart = x; }
+    else if (runStart >= 0) {
+      const len = x - runStart;
+      if (len > best.len) best = { len, mid: Math.round((runStart + x) / 2) };
+      runStart = -1;
+    }
+  }
+  const halves = [[0, best.mid, "front"], [best.mid, W2, "back"]];
+  for (const [x0, x1, tag] of halves) {
+    let bx0 = x1, by0 = H2, bx1 = -1, by1 = -1;
+    for (let y = 0; y < H2; y++) for (let x = x0; x < x1; x++) {
+      if (img.data[(y * W2 + x) * 4 + 3] >= 128) {
+        if (x < bx0) bx0 = x; if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y; if (y > by1) by1 = y;
+      }
+    }
+    const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1;
+    const s = artH / bh;
+    const tw = Math.round(bw * s), th = artH;
+    const out = new PNG({ width: tw, height: th });
+    for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
+      const sx = bx0 + Math.min(bw - 1, Math.floor(((x + 0.5) / tw) * bw));
+      const sy = by0 + Math.min(bh - 1, Math.floor(((y + 0.5) / th) * bh));
+      const si = (sy * W2 + sx) * 4, di = (y * tw + x) * 4;
+      out.data[di] = img.data[si]; out.data[di + 1] = img.data[si + 1];
+      out.data[di + 2] = img.data[si + 2]; out.data[di + 3] = img.data[si + 3] > 127 ? 255 : 0;
+    }
+    writeFileSync(`${DIR}/${outStem}-${tag}.png`, PNG.sync.write(out));
+    console.log(`${outStem}-${tag}.png ${tw}x${th} (split at ${best.mid}, gap ${best.len})`);
+  }
+}
+
 const [cmd, only] = process.argv.slice(2);
 if (cmd === "roll" && only) {
   const [lane, sub, seed] = only.split(":");
@@ -128,6 +211,9 @@ if (cmd === "roll" && only) {
   catch (e) { console.error("FAIL", only, e.message); process.exitCode = 1; }
 } else if (cmd === "sheet") {
   sheet();
+} else if (cmd === "fit") {
+  const [, rollFile, outStem, artH] = process.argv.slice(2);
+  fit(rollFile, outStem, Number(artH) || 246);
 } else {
-  console.log("usage: roll <lane>:<sub>:<seed> | sheet");
+  console.log("usage: roll <lane>:<sub>:<seed> | sheet | fit <rollFile> <outStem> <artH>");
 }
