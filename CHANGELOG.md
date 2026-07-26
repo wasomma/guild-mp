@@ -2,6 +2,10 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.43 — 2026-07-25
+
+Discord login now always shows Discord's authorize screen (`prompt: "consent"` instead of `"none"`), so players with multiple Discord accounts can see which account is about to be used and switch via the "Not you?" link. Previously a returning player was silently re-authorized as whatever account the browser was logged into. Server-only.
+
 ## v0.1.42 — 2026-07-25
 
 **The crate ceremony.** Opening a Chronicle Crate is now a proper reveal instead of a log line:

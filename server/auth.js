@@ -64,7 +64,7 @@ export function handleAuthHttp(req, res) {
       response_type: "code",
       scope: "identify",
       state: newState(),
-      prompt: "none",
+      prompt: "consent",
     });
     redirect(res, `https://discord.com/oauth2/authorize?${q}`);
     return true;
