@@ -19,7 +19,7 @@ const MENU_TABS = [
   ["guild", "🏛️ Guild Hall"], ["shop", "🧪 Alchemist"], ["log", "📜 Chronicle"],
 ];
 const MEMBER_TABS = ["stats", "equipment", "skills", "wardrobe"];
-import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, heroSpriteSetFor } from "./render.js";
+import { draw, drawAdventurer, registerBgPlate, registerPropSprite, registerGroundStrip, registerEnemySprite, registerHeroSprite, registerCrateSprite, heroSpriteSetFor } from "./render.js";
 
 /* HD hero layer sets (ART-PIPELINE Phase 7C/7D): the kitsune full-body set,
    the class-body layered puppets with their wardrobe overlays, and the
@@ -52,6 +52,14 @@ for (const kind of ["slime", "bat", "skeleton", "imp"]) {
     img.src = "/assets/enemies/" + kind + ".png";
   };
   hd.src = "/assets/enemies/hd/" + kind + ".png";
+}
+
+/* Chronicle Crate ceremony sprites — the closed/open pair picked in
+   docs/art-src/crate; missing files keep the procedural ceremony chest. */
+for (const state of ["closed", "open"]) {
+  const img = new Image();
+  img.onload = () => registerCrateSprite(state, img);
+  img.src = "/assets/crate/" + state + ".png";
 }
 
 /* Generated seamless ground strips — same fallback contract as the plates. */
@@ -206,6 +214,8 @@ export default function App() {
         }
       } else if (e.t === "shake") {
         v.shake = Math.max(v.shake, e.v);
+      } else if (e.t === "crate") {
+        v.crateFx = { t: 0, tier: e.tier, label: e.label, color: e.color, name: e.name, dupe: e.dupe, enc: e.enc, hero: e.hero };
       }
     }
   };
@@ -406,7 +416,8 @@ export default function App() {
                   <div className="menubody">
                     {MEMBER_TABS.includes(menu) && (menuMember
                       ? <MemberDetail g={g} m={menuMember} send={send} tab={menu} lock={lockOf(menuMember)}
-                          onAppearance={() => setCreatorFor(menuMember.id)} />
+                          onAppearance={() => setCreatorFor(menuMember.id)}
+                          onCrate={() => setMenu(null)} />
                       : <div className="dim pad">No adventurers yet — the tavern waits for a voice.</div>)}
                     {menu === "guild" && <GuildHall g={g} send={send} confirm={confirmRetell} setConfirm={setConfirmRetell} lock={guildLock} lockOf={lockOf} />}
                     {menu === "shop" && <Shop g={g} send={send} lock={guildLock} />}
@@ -669,7 +680,7 @@ function PartyList({ g, onSel }) {
   );
 }
 
-function MemberDetail({ g, m, send, tab, lock, onAppearance }) {
+function MemberDetail({ g, m, send, tab, lock, onAppearance, onCrate }) {
   return (
     <div className="detail">
       <div className="drow">
@@ -686,7 +697,7 @@ function MemberDetail({ g, m, send, tab, lock, onAppearance }) {
           {tab === "stats" && <StatsPanel g={g} m={m} />}
           {tab === "equipment" && <Equipment m={m} />}
           {tab === "skills" && <Skills g={g} m={m} send={send} lock={lock} />}
-          {tab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} />}
+          {tab === "wardrobe" && <Wardrobe g={g} m={m} send={send} lock={lock} onCrate={onCrate} />}
         </div>
       </div>
     </div>
@@ -765,20 +776,22 @@ function CosmeticGrid({ g, m, kind, list, title, send, lock }) {
   );
 }
 
-function Trove({ g, m, send, lock }) {
+function Trove({ g, m, send, lock, onCrate }) {
   const price = keyPrice(g.keysCut || 0);
   const crates = m.crates || 0, enc = m.encores || 0, pity = m.pity || 0;
+  /* opening closes the menu overlay so the ceremony plays unobscured */
+  const open = (msg) => { send(msg); if (onCrate) onCrate(); };
   return (
     <div className="cosgroup">
       <div className="coshead">📦 Chronicle Trove <span className="dim small">{crates}/{CRATE_CAP} crates · ♪ {fmt(enc)} Encores</span></div>
       <div className="dim small">Kings drop crates; a Gold Key ({fmt(price)}g from the guild coffers, dearer with every cut) or your own Encores open them. Retell your tale to earn Encores.</div>
       <div className="drow" style={{ marginTop: 6 }}>
         <button className="mini" disabled={!!lock || crates < 1 || g.gold < price}
-          onClick={() => send({ a: "openCrate", memberId: m.id, pay: "key" })}>🔑 Open ({fmt(price)}g)</button>
+          onClick={() => open({ a: "openCrate", memberId: m.id, pay: "key" })}>🔑 Open ({fmt(price)}g)</button>
         <button className="mini" disabled={!!lock || crates < 1 || enc < OPEN_ENC}
-          onClick={() => send({ a: "openCrate", memberId: m.id, pay: "enc" })}>♪ Open ({OPEN_ENC})</button>
+          onClick={() => open({ a: "openCrate", memberId: m.id, pay: "enc" })}>♪ Open ({OPEN_ENC})</button>
         <button className="mini" disabled={!!lock || enc < COMMISSION_ENC}
-          onClick={() => send({ a: "commissionCrate", memberId: m.id })}>♪ Commission ({COMMISSION_ENC})</button>
+          onClick={() => open({ a: "commissionCrate", memberId: m.id })}>♪ Commission ({COMMISSION_ENC})</button>
       </div>
       <div className="dim small" style={{ marginTop: 6 }}>
         {COS_TIERS.map((t) => (
@@ -790,10 +803,10 @@ function Trove({ g, m, send, lock }) {
   );
 }
 
-function Wardrobe({ g, m, send, lock }) {
+function Wardrobe({ g, m, send, lock, onCrate }) {
   return (
     <div className="ward">
-      <Trove g={g} m={m} send={send} lock={lock} />
+      <Trove g={g} m={m} send={send} lock={lock} onCrate={onCrate} />
       <div className="cosgroup">
         <div className="coshead">Fighting Style <span className="dim small">(free to switch)</span></div>
         <div className="cosgrid">
