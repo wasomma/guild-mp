@@ -73,6 +73,8 @@ Gold is a **guild pool**. Potions are **per-chapter charges**, not purchases: th
 
 Every fallen **King** leaves a **📦 Chronicle Crate** for each player's hero (find yours in the Wardrobe's Trove). Opening one takes a **Gold Key**, cut from the guild's coffers — and every key ever cut makes the next one dearer, forever. Inside is a cosmetic — hats, hair, outfits, weapon skins, capes, accessories, pets, auras — rolled on the rarity ladder:
 
+Opening one is a proper ceremony: the menu steps aside, the crate drops onto the stage, rumbles, and bursts open in a blaze of its tier's color with your prize named in lights.
+
 **Folk · Ballad · Saga · Legend · Myth** — the rarer the tier, the grander the tale. A crate never wastes a roll on something you own while that tier still holds something new; a fully-collected tier pays **♪ Encores** instead. And the ladder is honest: after 35 opens without a Myth, your **next crate is a sure Myth** — the pity meter in the Trove counts it down.
 
 **♪ Encores** are yours alone — the game's only personal currency:

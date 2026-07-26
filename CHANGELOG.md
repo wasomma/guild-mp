@@ -2,6 +2,14 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.42 — 2026-07-25
+
+**The crate ceremony.** Opening a Chronicle Crate is now a proper reveal instead of a log line:
+
+- The menu closes, the stage dims, and the crate drops in — it rumbles with a glowing lid seam, then bursts open under rotating rays in the won tier's color, naming your prize in lights. Dupes reveal their Encore payout the same way.
+- First generated crate art: a closed/open royal-reliquary sprite pair (PixelLab, `scripts/art/gen-crate.mjs`, picks documented in `docs/art-src/crate/`). The standalone prototype keeps a hand-drawn procedural chest so it stays self-contained.
+- Under the hood: a new `crate` event from `doOpenCrate` (the roll itself is untouched and still fires at intent time), `drawCrateCeremony` + a `CRATE_SPRITES` registry in both renderers, and a `qa-crate-preview.mjs` review harness.
+
 ## v0.1.41 — 2026-07-25
 
 The overlay menu is now **vertically centered** over the game view instead of hugging the top — same three-quarter height, with the world showing above and below. Client-only.

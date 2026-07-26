@@ -31,6 +31,12 @@ Three ways, all through the same roll (`doOpenCrate`):
 | ♪ **Open with Encores** | **30 Encores** (yours alone) | yes |
 | ♪ **Commission a crate** | **40 Encores** — the crate is conjured and opened in one act | no |
 
+Every open plays the **crate ceremony** on the stage (the menu closes so it's
+visible): the crate drops in, strains, and bursts open in the won tier's color
+— the `crate` event from `doOpenCrate`, drawn by `drawCrateCeremony` in both
+renderers. Pure presentation: the roll itself is unchanged and still happens
+at intent time.
+
 **The Gold Key price** rises with every key the world has *ever* cut and
 never resets — this is the game's permanent gold sink:
 
