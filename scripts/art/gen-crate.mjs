@@ -83,15 +83,21 @@ if (cmd === "roll") {
   /* two silhouette directions; bright-wood clauses per the enemy-gen learnings
      (dark prompts drift muddy), whole-object clause per the prop recipe */
   const VARIANTS = {
-    a: "ornate fantasy wooden treasure chest, closed, seen straight from the front, " +
-      "storybook fairytale style, warm oak brown wooden planks, carved rune engravings " +
-      "on the front panel, brass corner bands with rivets, large golden padlock hanging " +
-      "at the front center, bright warm wood tones dominate, evenly lit, centered, " +
+    /* round 1 (a/b: plain chest / strongbox) kept in docs/art-src/crate;
+       round 2 pushes epic-fantasy ornament while holding the bright-wood
+       and whole-object clauses — the glow work rides the palette's gold ramp */
+    c: "legendary fantasy treasure chest, closed, seen straight from the front, " +
+      "storybook fairytale style, warm golden oak planks, glowing golden runes etched " +
+      "across the front panel, ornate golden dragon-head clasp at the front center, " +
+      "sculpted brass filigree corner guards, thin golden light seeping from the lid seam, " +
+      "bright warm wood and gold tones dominate, evenly lit, centered, " +
       "the whole chest visible with margin around it",
-    b: "sturdy medieval wooden crate strongbox, closed, front view, rich warm oak planks, " +
-      "dark iron straps and rivets at the corners, heavy golden padlock on the front, " +
-      "small carved runes along the lid edge, bright even lighting, warm wood tones " +
-      "dominate, centered, the whole crate visible with margin around it",
+    d: "mythical royal reliquary chest, closed, front view, storybook fairytale style, " +
+      "warm honey-colored wood, elaborate golden crown crest emblem on the lid, " +
+      "gem-studded golden bands wrapping the corners, radiant golden filigree swirls, " +
+      "small glowing rune stones along the base, heavy ornate golden lock, " +
+      "bright warm wood and gold tones dominate, evenly lit, centered, " +
+      "the whole chest visible with margin around it",
   };
   for (const [v, desc] of Object.entries(VARIANTS)) {
     for (const seed of [11, 22, 33, 44, 55]) {
