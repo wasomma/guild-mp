@@ -4,7 +4,7 @@ import {
   dehydrateMember, rehydrateMember,
   RACES, SKINS, UNDERGARMENTS, UNDER_COLORS, FREE_HAIRSTYLES, raceOf,
   STYLES, CLASS_OUTFIT,
-} from "./shared/sim.js";
+} from "../shared/sim.js";
 
 let fails = 0;
 const ok = (cond, name) => { console.log((cond ? "PASS" : "FAIL") + " " + name); if (!cond) fails++; };

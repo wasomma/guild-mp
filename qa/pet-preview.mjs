@@ -1,9 +1,14 @@
 // Build a feast view with six members, one of each pet, for the
 // prototype/pet-preview.html dev harness (animated pet-corner review).
 // Run from the repo root, then bundle render and serve prototype/ —
-// same workflow as qa-kitsune-preview.mjs (see QA-STATUS.md soak command).
+// same workflow as qa/kitsune-preview.mjs (see QA-STATUS.md soak command).
 import { writeFileSync } from "node:fs";
-const sim = await import("./shared/sim.js");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+/* output lands in prototype/ (where the .html harness fetches it), keyed off
+   this file rather than the cwd so it runs from anywhere */
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, snapshot, endChapter } = sim;
 
 const g = newWorld();
@@ -16,5 +21,5 @@ endChapter(g);
 for (let s = 0; s < 80; s++) tick(g, 0.05); /* let everyone reach their spots */
 const snap = JSON.parse(JSON.stringify(snapshot(g, [])));
 const view = { ...snap, time: g.time, shake: 0, connected: true, particles: [], floaters: [] };
-writeFileSync("prototype/feast-pets-view.json", JSON.stringify(view));
+writeFileSync(path.join(ROOT, "prototype/feast-pets-view.json"), JSON.stringify(view));
 console.log("view written: phase", g.phase, "members", g.members.length, "pets", g.members.map((m) => m.cos.pet).join(","));

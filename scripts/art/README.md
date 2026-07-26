@@ -14,4 +14,4 @@ Setup (once): `npm install pngjs` at the repo root, and set `PIXELLAB_SECRET` to
 - `make-view.mjs <stage> [scenario]` — settled-formation judge views into `prototype/kitsune-view.json` for `hd-preview.html`; scenario `tanks` = three HD tank combos + a paperdoll DPS.
 - `frames-to-gif.mjs <framesJson> <outGif> [delayMs]` — looping GIF from canvas-captured frames (needs `npm i gifenc` alongside pngjs). Capture deterministically in the preview harness: re-import `/render.bundle.mjs` in the page (same module instance, registered sprites included), step `view.time` by fixed increments calling `render.draw`, collect `toDataURL()` strings as a JSON array. Review GIFs live in `docs/art-src/enemies/gifs/` (untracked).
 
-Review the results in-game with `qa-kitsune-preview.mjs` (repo root) + `prototype/kitsune-preview.html`, or all biomes at once via `prototype/biomes.html`.
+Review the results in-game with `qa/kitsune-preview.mjs` (repo root) + `prototype/kitsune-preview.html`, or all biomes at once via `prototype/biomes.html`.

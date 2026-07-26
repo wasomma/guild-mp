@@ -1,7 +1,7 @@
 // QA: automatic chapter end at the stage-20 finale + personal "retell" prestige.
 // Headless: drives shared/sim.js directly and asserts on world state.
 
-import { newWorld, joinVoice, tick, applyIntent, snapshot, dehydrateMember, rehydrateMember, renownEarn } from "./shared/sim.js";
+import { newWorld, joinVoice, tick, applyIntent, snapshot, dehydrateMember, rehydrateMember, renownEarn } from "../shared/sim.js";
 
 let checks = 0, failures = [];
 function assert(cond, name) {

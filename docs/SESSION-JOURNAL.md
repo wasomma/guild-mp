@@ -22,7 +22,7 @@ Format: commit :: what :: decisions/rationale/gotchas.
 
 - Gates: node --check shared/sim.js server/*.js; esbuild bundle checks (client App with --alias:@shared=./shared, prototype standalone).
 - Cardinal-rule enforcement: awk-extract shared functions from both files and diff (e.g. awk '/^function drawHat\(/,/^}$/'); drawAdventurer differs only by leading "export".
-- qa-render-soak.mjs needs the bundle at C:/tmp/render.bundle.mjs on Windows (node resolves /tmp -> C:\tmp; Git Bash /tmp is elsewhere).
+- qa/render-soak.mjs needs the bundle at C:/tmp/render.bundle.mjs on Windows (node resolves /tmp -> C:\tmp; Git Bash /tmp is elsewhere).
 - Headless suites written per feature as throwaway repo-root scratchpad-*.mjs (Windows ESM can't import absolute C:/ paths without file://; relative from repo root works), deleted after run.
 - Owner loop: build → verify → rebuild client → owner judges localhost:8787 (hard refresh) → commit+push to main on owner's word. Direct-to-main is deliberate (solo repo).
 

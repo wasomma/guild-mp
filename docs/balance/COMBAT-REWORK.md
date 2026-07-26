@@ -138,7 +138,7 @@ codebases.
   numbers including per-composition King TTK. Every later phase re-runs the
   sweep against the pacing targets in decision 3.
   Shipped: `scripts/balance/harness.mjs` (seeded RNG, forced comps, live
-  fixture), `qa-balance-sweep.mjs` (`npm run sweep`), vitest at the repo root
+  fixture), `qa/balance-sweep.mjs` (`npm run sweep`), vitest at the repo root
   (`npm test`, `test/balance-harness.test.mjs`), baselines in
   `docs/balance/baselines/`. See "Baseline findings" below.
 - **Phase 1 — Class triangle + aggro. ✅ DONE (core v0.1.31, creator class pick v0.1.32 — both 2026-07-25).**

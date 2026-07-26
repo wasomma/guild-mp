@@ -27,7 +27,7 @@ globalThis.document = {
 
 /* ---------- imports (after document mock) ---------- */
 const render = await import("/tmp/render.bundle.mjs");
-const sim = await import("./shared/sim.js");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, applyIntent, endChapter, snapshot, STYLES, GROUND } = sim;
 
 let scenarios = 0, failures = [];

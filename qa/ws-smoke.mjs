@@ -3,11 +3,15 @@
 // connect-time race: does any snapshot ever contain a member without _st?
 
 import { spawn } from "child_process";
-import WebSocket from "./server/node_modules/ws/index.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import WebSocket from "../server/node_modules/ws/index.js";
 
+/* the server is booted from the repo root regardless of where this is run */
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 8791;
-const srv = spawn("node", ["server/index.js"], {
-  cwd: process.cwd(),
+const srv = spawn("node", [path.join(ROOT, "server/index.js")], {
+  cwd: ROOT,
   env: { ...process.env, PORT: String(PORT), GUILD_ID: "qa-smoke" },
   stdio: ["ignore", "pipe", "pipe"],
 });

@@ -1,11 +1,16 @@
-// Run from the repo root after bundling render (see QA-STATUS.md soak command),
-// then copy /tmp/render.bundle.mjs to prototype/ and open /kitsune-preview.html.
+// Run after bundling render (see QA-STATUS.md soak command), then copy
+// /tmp/render.bundle.mjs to prototype/ and open /kitsune-preview.html.
 // Build a view snapshot with every member in the full Kitsune set, for the
 // kitsune-preview.html dev harness.
 // Optional arg: a stage number (e.g. 6 = Gloomwood, 11 = Crypt, 16 = Emberdeep)
 // or "feast" for the mead hall.
 import { writeFileSync } from "node:fs";
-const sim = await import("./shared/sim.js");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+/* output lands in prototype/ (where the .html harness fetches it), keyed off
+   this file rather than the cwd so it runs from anywhere */
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, snapshot, HAIRS, endChapter } = sim;
 
 const foxHair = HAIRS.findIndex((h) => h.name === "Foxfire");
@@ -32,5 +37,5 @@ if (arg === "feast") {
 }
 const snap = JSON.parse(JSON.stringify(snapshot(g, [])));
 const view = { ...snap, time: g.time, shake: 0, connected: true, particles: [], floaters: [] };
-writeFileSync("prototype/kitsune-view.json", JSON.stringify(view));
+writeFileSync(path.join(ROOT, "prototype/kitsune-view.json"), JSON.stringify(view));
 console.log("view written: phase", g.phase, "enemies", g.enemies.length, "members", g.members.length);

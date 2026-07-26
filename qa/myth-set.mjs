@@ -26,7 +26,7 @@ globalThis.document = {
 };
 
 const render = await import("/tmp/render.bundle.mjs");
-const sim = await import("./shared/sim.js");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, snapshot, CAPES, PETS, AURAS } = sim;
 
 for (const [cat, id] of [[CAPES, "starweave"], [PETS, "phoenix"], [AURAS, "aurora"]]) {

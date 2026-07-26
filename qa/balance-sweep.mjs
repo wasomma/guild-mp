@@ -3,13 +3,13 @@
 // baseline JSON per fixture to docs/balance/baselines/. Run it before and
 // after every rework phase; the JSON diff is the evidence.
 //
-//   node qa-balance-sweep.mjs [--fixture=fresh|live|both] [--chapters=3]
+//   node qa/balance-sweep.mjs [--fixture=fresh|live|both] [--chapters=3]
 //                             [--seed=20260725] [--comps=trinity,solo-dps]
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { COMPS, STYLE_FOR, LIVE, measure } from "./scripts/balance/harness.mjs";
-import { VERSION } from "./shared/version.js";
+import { COMPS, STYLE_FOR, LIVE, measure } from "../scripts/balance/harness.mjs";
+import { VERSION } from "../shared/version.js";
 
 const args = Object.fromEntries(
   process.argv.slice(2).filter((a) => a.startsWith("--")).map((a) => {
@@ -22,7 +22,7 @@ const chapters = Number(args.chapters) || 3;
 const seed = Number(args.seed) || 20260725;
 const compNames = args.comps ? String(args.comps).split(",") : Object.keys(COMPS);
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "docs", "balance", "baselines");
 fs.mkdirSync(outDir, { recursive: true });
 

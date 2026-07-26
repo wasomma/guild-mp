@@ -22,7 +22,7 @@ globalThis.document = {
 };
 
 const render = await import("/tmp/render.bundle.mjs");
-const sim = await import("./shared/sim.js");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, snapshot, HAIRS, HAIRSTYLES, ACCESSORIES, CAPES, AURAS } = sim;
 
 // sanity: the new catalog entries exist

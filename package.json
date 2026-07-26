@@ -4,7 +4,7 @@
   "description": "Repo-root dev tooling: balance sweep + sim tests. The game itself lives in server/ and client/ (each with its own package.json). No \"type\" field on purpose - root .js scripts rely on Node's module-syntax detection.",
   "scripts": {
     "test": "vitest run",
-    "sweep": "node qa-balance-sweep.mjs"
+    "sweep": "node qa/balance-sweep.mjs"
   },
   "devDependencies": {
     "vitest": "^3.2.4"

@@ -3,7 +3,12 @@
 // kitsune harness (esbuild render.js -> prototype/render.bundle.mjs), then
 // open /crate-preview.html on the art-preview server.
 import { writeFileSync, copyFileSync } from "node:fs";
-const sim = await import("./shared/sim.js");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+/* outputs land in prototype/ (where the .html harnesses fetch them), keyed
+   off this file rather than the cwd so it runs from anywhere */
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const sim = await import("../shared/sim.js");
 const { newWorld, joinVoice, tick, snapshot } = sim;
 
 const g = newWorld();
@@ -14,7 +19,7 @@ g.members[0].cls = "tank"; g.members[1].cls = "dps"; g.members[2].cls = "healer"
 for (let s = 0; s < 400 && !(g.phase === "combat" && g.enemies.length); s++) tick(g, 0.05);
 const snap = JSON.parse(JSON.stringify(snapshot(g, [])));
 const view = { ...snap, time: g.time, shake: 0, connected: true, particles: [], floaters: [] };
-writeFileSync("prototype/crate-view.json", JSON.stringify(view));
-copyFileSync("client/public/assets/crate/closed.png", "prototype/crate-closed.png");
-copyFileSync("client/public/assets/crate/open.png", "prototype/crate-open.png");
+writeFileSync(path.join(ROOT, "prototype/crate-view.json"), JSON.stringify(view));
+copyFileSync(path.join(ROOT, "client/public/assets/crate/closed.png"), path.join(ROOT, "prototype/crate-closed.png"));
+copyFileSync(path.join(ROOT, "client/public/assets/crate/open.png"), path.join(ROOT, "prototype/crate-open.png"));
 console.log("harness inputs written: phase", g.phase, "members", g.members.length);
