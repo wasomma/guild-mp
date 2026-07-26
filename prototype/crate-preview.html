@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- DEV HARNESS (not shipped): the Chronicle Crate opening ceremony on the
+     real render.js draw(). Regenerate crate-view.json + sprites with
+     qa-crate-preview.mjs, bundle render like the kitsune harness.
+     ?mode=win|dupe|proc (proc = no sprites, procedural chest),
+     ?freeze=<seconds> holds the timeline at that instant. -->
+<html>
+<head><meta charset="utf-8"><title>Crate ceremony preview</title>
+<style>
+  body { background: #14121f; margin: 0; padding: 12px; font: 12px monospace; color: #cfc9e0; }
+  canvas { image-rendering: pixelated; display: block; margin-bottom: 10px; border: 1px solid #333; width: 960px; height: 450px; }
+</style></head>
+<body>
+<div id="label">crate ceremony (2x HD canvas)</div>
+<canvas id="scene" width="1280" height="600"></canvas>
+<script type="module">
+  const render = await import("./render.bundle.mjs");
+  const view = await (await fetch("./crate-view.json")).json();
+  const q = new URLSearchParams(location.search);
+  const mode = q.get("mode") || "win";
+  const freeze = q.get("freeze") !== null ? Number(q.get("freeze")) : null;
+  if (mode !== "proc") {
+    for (const state of ["closed", "open"]) {
+      const img = new Image();
+      img.onload = () => render.registerCrateSprite(state, img);
+      img.src = "./crate-" + state + ".png";
+    }
+  }
+  const payload = mode === "dupe"
+    ? { tier: "saga", label: "Saga", color: "#5aa9e6", dupe: true, enc: 8, hero: "Aria" }
+    : { tier: "myth", label: "Myth", color: "#e05aa8", name: "Starweave Mantle", hero: "Aria" };
+  document.getElementById("label").textContent =
+    `crate ceremony — mode=${mode}` + (freeze !== null ? ` frozen at t=${freeze}s` : " looping");
+  const scene = document.getElementById("scene").getContext("2d");
+  /* console hooks for deterministic driving: __hold=seconds freezes there;
+     __render.draw can be called manually when rAF is paused (hidden pane) */
+  window.__view = view; window.__payload = payload; window.__hold = freeze; window.__render = render;
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    view.time += dt;
+    if (window.__hold !== null && window.__hold !== undefined) view.crateFx = { t: window.__hold - dt, ...payload };
+    else if (!view.crateFx) view.crateFx = { t: 0, ...payload };
+    render.draw(scene, view, dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

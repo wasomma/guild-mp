@@ -50,6 +50,12 @@ export function registerEnemySprite(kind, img, hd) {
   if (hd) img._ds = 2;
   ENEMY_SPRITES[kind] = img;
 }
+/* Chronicle Crate ceremony sprites — the closed/open pair for the loot-box
+   reveal (docs/art-src/crate picks, HD density: 2 art px per logical unit,
+   the open raw is the closed raw padded upward and inpainted so the pair
+   shares a bottom-center anchor). Empty registry = procedural chest. */
+export const CRATE_SPRITES = {};
+export function registerCrateSprite(state, img) { CRATE_SPRITES[state] = img; }
 /* Hi-res hero sprites for the HD canvas direction (docs/ART-PIPELINE.md):
    authored at 2 device px per logical unit, so they render source-native on
    a 2x canvas (see the render-scale wrapper in draw). Two-level registry —
@@ -3245,6 +3251,115 @@ function drawTimeline(ctx, g) {
   ctx.fillStyle = "#8b84ad"; ctx.fillText(l2, tx + 7, 47);
 }
 
+/* ---------------- Chronicle Crate ceremony (the loot-box reveal) ----------
+   View-local cinematic: g.crateFx = {t, tier, label, color, name, dupe, enc,
+   hero} — set from the sim's "crate" event (client) or directly by
+   doOpenCrate (prototype). Timeline: drop + landing squash, rumble with a
+   glowing lid seam, flash + swap to the open sprite under rotating rays,
+   then the tier-colored reveal. Sprites from CRATE_SPRITES; none registered
+   draws the procedural chest so the standalone prototype stays whole. */
+const CRATE_T = { drop: 0.55, rumble: 1.7, reveal: 1.85, fade: 3.0, end: 3.4 };
+function drawCeremonyChest(ctx, open, t) {
+  /* bottom-center origin; the game crate ramp (wood, iron, gold) */
+  ctx.fillStyle = "#57381f"; ctx.fillRect(-24, -26, 48, 26);
+  ctx.fillStyle = "#6f4c2e"; ctx.fillRect(-22, -24, 44, 20);
+  ctx.fillStyle = "#3c3c4c"; ctx.fillRect(-24, -8, 48, 3); ctx.fillRect(-24, -26, 3, 26); ctx.fillRect(21, -26, 3, 26);
+  ctx.fillStyle = "#c9a227"; ctx.fillRect(-5, -18, 10, 10);
+  ctx.fillStyle = "#e3c04b"; ctx.fillRect(-3, -16, 6, 6);
+  if (open) {
+    /* lid thrown back: standing plank behind the body, glowing mouth */
+    ctx.fillStyle = "#2a1c10"; ctx.fillRect(-22, -30, 44, 6);
+    ctx.fillStyle = "#57381f"; ctx.fillRect(-20, -52, 40, 24);
+    ctx.fillStyle = "#8a6440"; ctx.fillRect(-18, -50, 36, 20);
+    ctx.fillStyle = "#f7e28b"; ctx.globalAlpha *= 0.55 + 0.45 * Math.sin(t * 9);
+    ctx.fillRect(-18, -29, 36, 4); ctx.globalAlpha /= 0.55 + 0.45 * Math.sin(t * 9);
+  } else {
+    ctx.fillStyle = "#8a6440"; ctx.fillRect(-24, -34, 48, 8);
+    ctx.fillStyle = "#916641"; ctx.fillRect(-22, -32, 44, 4);
+    ctx.fillStyle = "#3c3c4c"; ctx.fillRect(-24, -34, 3, 8); ctx.fillRect(21, -34, 3, 8);
+  }
+}
+function drawCrateCeremony(ctx, g, dt) {
+  const f = g.crateFx;
+  if (!f) return;
+  f.t += dt;
+  if (f.t >= CRATE_T.end) { g.crateFx = null; return; }
+  const tt = f.t, cx = W / 2, floorY = 208;
+  const open = tt >= CRATE_T.rumble;
+  const dim = Math.min(1, tt / 0.35) * (tt > CRATE_T.fade ? Math.max(0, 1 - (tt - CRATE_T.fade) / (CRATE_T.end - CRATE_T.fade)) : 1);
+  ctx.fillStyle = `rgba(12,10,22,${0.62 * dim})`;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = dim;
+  /* drop in, land with a squash */
+  let y = floorY, sq = 1;
+  if (tt < CRATE_T.drop) y = floorY - (1 - (tt / CRATE_T.drop) * (tt / CRATE_T.drop)) * 180;
+  else if (tt < CRATE_T.drop + 0.18) sq = 1 - Math.sin(((tt - CRATE_T.drop) / 0.18) * Math.PI) * 0.12;
+  /* rumble builds until the lid gives */
+  let dx = 0;
+  if (!open && tt > CRATE_T.drop + 0.2)
+    dx = Math.sin(tt * 46) * 2.2 * ((tt - CRATE_T.drop - 0.2) / (CRATE_T.rumble - CRATE_T.drop - 0.2));
+  /* rotating rays behind the opened crate */
+  if (open) {
+    const k = Math.min(1, (tt - CRATE_T.rumble) / 0.4);
+    ctx.save();
+    ctx.translate(cx, floorY - 34);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = f.color;
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 + tt * 0.5;
+      ctx.globalAlpha = dim * k * 0.16;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 130 * k, a, a + 0.22); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = dim;
+  }
+  /* the crate */
+  const img = CRATE_SPRITES[open ? "open" : "closed"];
+  ctx.save();
+  ctx.translate(cx + dx, y);
+  ctx.scale(1 + (1 - sq), sq);
+  if (img) ctx.drawImage(img, -img.width / 4, -img.height / 2, img.width / 2, img.height / 2);
+  else drawCeremonyChest(ctx, open, tt);
+  ctx.restore();
+  /* the seam glows while the crate strains */
+  if (!open && tt > 0.9) {
+    ctx.globalAlpha = dim * ((tt - 0.9) / (CRATE_T.rumble - 0.9)) * (0.5 + 0.5 * Math.sin(tt * 18));
+    ctx.fillStyle = "#f7e28b";
+    ctx.fillRect(cx - 22 + dx, y - 27, 44, 2);
+    ctx.globalAlpha = dim;
+  }
+  /* the give: one bright flash frame-span */
+  if (open && tt < CRATE_T.rumble + 0.22) {
+    ctx.fillStyle = `rgba(255,242,200,${0.75 * (1 - (tt - CRATE_T.rumble) / 0.22)})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+  /* rising sparks out of the mouth */
+  if (open) {
+    for (let i = 0; i < 14; i++) {
+      const k = ((tt - CRATE_T.rumble) * (0.55 + (i % 5) * 0.13) + i * 0.37) % 1;
+      ctx.globalAlpha = dim * (1 - k) * 0.9;
+      ctx.fillStyle = i % 2 ? f.color : "#f7e28b";
+      ctx.fillRect(Math.round(cx + Math.sin(i * 2.4) * 34), Math.round(floorY - 36 - k * 70), 3, 3);
+    }
+    ctx.globalAlpha = dim;
+  }
+  /* the reveal */
+  ctx.textAlign = "center";
+  ctx.font = "9px 'Press Start 2P', monospace";
+  ctx.fillStyle = "#14122188"; ctx.fillText(`${f.hero.toUpperCase()}'S CHRONICLE CRATE`, cx + 1, 63);
+  ctx.fillStyle = "#cfc9e8"; ctx.fillText(`${f.hero.toUpperCase()}'S CHRONICLE CRATE`, cx, 62);
+  if (tt >= CRATE_T.reveal) {
+    const pop = 1 + Math.max(0, 1 - (tt - CRATE_T.reveal) / 0.25) * 3;
+    ctx.font = `${Math.round(14 * pop)}px 'Press Start 2P', monospace`;
+    ctx.fillStyle = "#141221cc"; ctx.fillText(`${f.label.toUpperCase()}!`, cx + 1, 91);
+    ctx.fillStyle = f.color; ctx.fillText(`${f.label.toUpperCase()}!`, cx, 90);
+    ctx.font = "10px 'Press Start 2P', monospace";
+    const line = f.dupe ? `Tale already told — +${f.enc} Encores` : f.name;
+    ctx.fillStyle = "#14122188"; ctx.fillText(line, cx + 1, 111);
+    ctx.fillStyle = "#f5f2ff"; ctx.fillText(line, cx, 110);
+  }
+  ctx.globalAlpha = 1;
+}
 export function draw(ctx, g, dt) {
   ctx.imageSmoothingEnabled = false;
   /* Render scale, derived from the canvas: a 640-wide canvas renders the
@@ -3348,6 +3463,7 @@ export function draw(ctx, g, dt) {
     ctx.fillText("The legend grows...", W / 2, H / 2 + 16);
     ctx.globalAlpha = 1;
   }
+  drawCrateCeremony(ctx, g, dt);
   if (!g.members.length) {
     ctx.font = "10px 'Press Start 2P', monospace"; ctx.textAlign = "center";
     ctx.fillStyle = "#cfc9e8";

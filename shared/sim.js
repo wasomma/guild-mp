@@ -493,12 +493,14 @@ export function doOpenCrate(g, m, pay) {
   sfxEv(g, "quest");
   if (!pool.length) {
     m.encores = (m.encores || 0) + tier.enc;
+    ev(g, { t: "crate", tier: tier.id, label: tier.name, color: tier.color, dupe: true, enc: tier.enc, hero: m.name });
     addLog(g, `${m.name}'s crate sings a ${tier.name} tale already told — ${tier.enc} Encores instead.`, tier.color);
     return { tier: tier.id, dupe: true, enc: tier.enc };
   }
   const won = pool[Math.floor(Math.random() * pool.length)];
   m.owned[won.kind].push(won.key);
   m.cos[won.kind] = won.key;
+  ev(g, { t: "crate", tier: tier.id, label: tier.name, color: tier.color, name: won.item.name, hero: m.name });
   addFloat(g, m.x, m.y - 92, `${tier.name.toUpperCase()}! ${won.item.name}`, tier.color, true);
   sparkle(g, m.x, m.y - 40, tier.color, tier.id === "myth" ? 26 : 12);
   addLog(g, `${m.name} opens a Chronicle Crate: ${won.item.name} — a ${tier.name} piece!`, tier.color);
