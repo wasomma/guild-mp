@@ -19,6 +19,7 @@ import { saveWorld, loadWorld, characterCount, close as closeDb } from "./db.js"
 import { startBot } from "./bot.js";
 import { getSession, deleteSession } from "./db.js";
 import { handleAuthHttp, authorizeIntent, oauthConfigured } from "./auth.js";
+import { createMusic } from "./music.js";
 
 /* tiny .env loader so tokens never live in the code or shell history */
 const ENV_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), ".env");
@@ -117,9 +118,14 @@ function stamp(payload) {
   return payload;
 }
 
+/* the listening party lives beside the sim, never inside it (see music.js) */
+const music = createMusic(broadcast);
+
 wss.on("connection", (sock) => {
   console.log(`Client connected (${wss.clients.size} total).`);
   sock.send(JSON.stringify(stamp(snapshot(world, []))));
+  sock.send(JSON.stringify(music.payload()));
+  sock.on("close", () => music.drop(sock));
   sock.on("message", (data) => {
     let msg;
     try { msg = JSON.parse(data); } catch { return; }
@@ -139,6 +145,18 @@ wss.on("connection", (sock) => {
     /* bind ballots and vote calls to the authenticated identity */
     if (sock.user) msg.voter = sock.user.key;
     else if (oauthConfigured()) delete msg.voter;
+    /* listening party: handled beside the sim, never inside it. Anyone may
+       listen (join/leave); changing what plays requires login when OAuth
+       is on, same bar as the guild intents. */
+    if (msg.a === "music") {
+      const listenOnly = msg.op === "join" || msg.op === "leave";
+      if (!listenOnly && oauthConfigured() && !sock.user) {
+        sock.send(JSON.stringify({ type: "denied", a: msg.a }));
+        return;
+      }
+      music.handle(sock, msg);
+      return;
+    }
     /* authorization, then application */
     if (!authorizeIntent(sock, msg, world)) {
       sock.send(JSON.stringify({ type: "denied", a: msg.a }));

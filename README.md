@@ -65,6 +65,8 @@ Open the URL Vite prints (usually http://localhost:5173). Open it in two browser
 
 `server/bot.js` is the Discord bot. It runs inside the game server process and turns voice-channel presence into party membership, keyed by Discord user IDs.
 
+`server/music.js` is the listening party: a synchronized YouTube session (official IFrame player, visible per YouTube's terms) the whole guild hears together, driven from the 🎧 pill in the client header. It lives beside the sim, in memory only — never in the snapshot, SQLite, or the prototype.
+
 ## Connecting Discord
 
 1. Create an application at https://discord.com/developers/applications, add a Bot to it, and copy the bot token.

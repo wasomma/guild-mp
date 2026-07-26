@@ -2,6 +2,18 @@
 
 Every version that has gone live, newest first. The version lives in `shared/version.js` and every release is also a git tag (`git tag -n` is the short form of this file; `git show vX.Y.Z` inspects any release). Per the release procedure in CLAUDE.md, this file is updated in the same commit as the version bump — if a version is live, its entry is here.
 
+## v0.1.44 — 2026-07-25
+
+**The Listening Party.** The guild can now share a soundtrack: a synchronized YouTube listening session everyone in the world hears together.
+
+- A new **🎧 pill in the header** opens the party bar. Paste any YouTube link (or video id) to strike up the band; everyone else sees the party go live on their pill and can join with one click.
+- **Everyone hears the same moment.** The server keeps one shared clock; players align to it when they join and quietly re-align if they drift (an ad break on one screen can't drag the whole room away for long).
+- **A real, visible player** (YouTube's terms — no hidden audio-only playback) docks under the header while you're listening, with the queue, shared ⏸/⏭/⏹ controls, who's listening, and your own private volume slider beside it. Leave any time; the panel only collapses when you're not listening.
+- **Queue songs** while one plays — titles fill in automatically; when a song ends the next begins for everyone at once.
+- While a party plays on your screen, the game's own generative music box yields and the sound effects duck under the song. The 🎵 mute pill keeps gating only the game's own tune — the party has its own volume and its own leave button.
+- Listening is open to spectators; changing what plays requires Discord login when OAuth is on (same bar as guild actions).
+- Under the hood: a new `server/music.js` beside the sim — party state is in-memory only, never enters `shared/sim.js`, the snapshot, or SQLite, and the prototype is untouched. Clients talk to it with `{a:"music"}` intents and hear back on a dedicated `{type:"music"}` channel using wall-clock epochs (the sim's own clock is sim-seconds and freezes when the world sleeps).
+
 ## v0.1.43 — 2026-07-25
 
 Discord login now always shows Discord's authorize screen (`prompt: "consent"` instead of `"none"`), so players with multiple Discord accounts can see which account is about to be used and switch via the "Not you?" link. Previously a returning player was silently re-authorized as whatever account the browser was logged into. Server-only.

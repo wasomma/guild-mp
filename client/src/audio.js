@@ -1,15 +1,16 @@
 import { rand } from "@shared/sim.js";
 
 /* ===== chiptune audio engine (Web Audio, no dependencies) ===== */
-const AUDIO = { ctx: null, master: null, sfxMuted: false, musicMuted: false, inMusic: false, musicT: 0 };
+const AUDIO = { ctx: null, master: null, sfxMuted: false, musicMuted: false, inMusic: false, musicT: 0, party: false };
 const gated = () => (AUDIO.inMusic ? AUDIO.musicMuted : AUDIO.sfxMuted);
+const MASTER_VOL = 0.5, DUCKED_VOL = 0.22;
 export function audioInit() {
   if (AUDIO.ctx) return true;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     AUDIO.ctx = new AC();
     AUDIO.master = AUDIO.ctx.createGain();
-    AUDIO.master.gain.value = 0.5;
+    AUDIO.master.gain.value = AUDIO.party ? DUCKED_VOL : MASTER_VOL;
     const comp = AUDIO.ctx.createDynamicsCompressor();
     AUDIO.master.connect(comp); comp.connect(AUDIO.ctx.destination);
     return true;
@@ -18,6 +19,15 @@ export function audioInit() {
 export function audioResume() { if (AUDIO.ctx && AUDIO.ctx.state === "suspended") AUDIO.ctx.resume(); }
 export function setSfxMuted(m) { AUDIO.sfxMuted = m; }
 export function setMusicMuted(m) { AUDIO.musicMuted = m; }
+/* The listening party owns the soundtrack while it plays: the generative
+   music box yields entirely and the game's own output ducks under the
+   YouTube audio (which lives outside the Web Audio graph, so ducking is
+   all we can do on this side). The 🎵 pill keeps gating only the box. */
+export function setPartyPlaying(on) {
+  AUDIO.party = !!on;
+  if (AUDIO.ctx && AUDIO.master)
+    AUDIO.master.gain.setTargetAtTime(on ? DUCKED_VOL : MASTER_VOL, AUDIO.ctx.currentTime, 0.35);
+}
 function tone(freq, dur, type, vol, slide, delay) {
   if (!AUDIO.ctx || gated()) return;
   const t0 = AUDIO.ctx.currentTime + (delay || 0);
@@ -87,7 +97,7 @@ const ZONE_SCALES = [
   [262, 311, 349, 392, 466, 523],
 ];
 export function musicTick(g, dt) {
-  if (!AUDIO.ctx || AUDIO.musicMuted) return;
+  if (!AUDIO.ctx || AUDIO.musicMuted || AUDIO.party) return;
   AUDIO.inMusic = true;
   try { musicStep(g, dt); } finally { AUDIO.inMusic = false; }
 }

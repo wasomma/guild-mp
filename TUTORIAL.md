@@ -16,7 +16,7 @@ The world only moves while someone is in voice. When the last person leaves, tim
 - **Center** — the world itself, rendered live. Beneath it, the **world bar**: chapter, wave, ⚔️ threat (how hard the foes ahead are — see below), zone, the active mutator, guild gold 🪙, renown ✨, and the **☰ Menu** button.
 - **The timeline** — the strip above the world. Near stages scroll by in detail: zone-tinted packs, elite spikes, the honor guard's war banner (the gauntlet before each King), and crowns whose gems are colored by the King who wears them. Past the bend on the right, the **horizon queue**: the next three Kings beyond the road, each crown in its King's color over how many waves remain (purple counts mark a chapter finale). Hover anything — including the queue — for details; when a King is on the field, a golden halo pulses over your party's banner.
 - **The menu** — one window that opens over the game (☰ Menu on the world bar, or click a party card; **Esc** or ✕ closes it) with seven tabs. Four are about a hero: **📊 Stats**, **🗡️ Equipment**, **📚 Skills**, **👗 Wardrobe** — plus the **🪞 Appearance** button that reopens the character creator. Three are about the guild: **🏛️ Guild Hall** (chapter progress, personal retellings, legacy upgrades, quests, Hall of Legends), **🧪 Alchemist** (potions), and **📜 Chronicle** (the running log of everything happening).
-- **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵), this guide (❓ How to play), and the Discord login.
+- **Header** — the LIVE/OFFLINE status, separate mute buttons for sound effects (🔊) and music (🎵 — the game's own tune; the listening party has its own volume), the **🎧 listening party** (see below), this guide (❓ How to play), and the Discord login.
 
 ## Your character
 
@@ -83,6 +83,16 @@ Opening one is a proper ceremony: the menu steps aside, the crate drops onto the
 - Each daily contract fulfilled pays every hero in voice a couple, and your first King each day adds a few more.
 - Spend them in the Trove: open a held crate without touching the guild's gold, or **commission** a crate outright when the Kings are being stingy.
 
+## The listening party 🎧
+
+The guild can share a soundtrack. Click the **🎧 pill** in the header and paste any YouTube link (or bare video id):
+
+- **▶ Start the party** — the song begins for everyone who joins, all hearing the same moment. When a party is live, the 🎧 pill shows how many are listening; one click on **Join** and you're in it too.
+- **The player stays visible** — a small video panel docks under the header while you listen (YouTube's rules: no hidden music players). It packs the queue, who's listening, and **your own volume slider** — your volume is yours alone.
+- **+ queue** more songs while one plays; titles fill in on their own, and when a song ends the next starts for the whole room at once. The shared **⏸ pause / ⏭ skip / ⏹ end** buttons act for everyone.
+- While the party plays, the game's own music steps aside and the sound effects duck politely under the song. The 🎵 mute pill still only governs the game's own tune.
+- Anyone can listen, even spectators; changing what plays requires Discord login (when the server has it on). **🚪 leave** any time — the world never cared for your taste in ballads anyway.
+
 ## Daily guild quests
 
 The Guild Hall board posts **three contracts each day** — slay foes, defeat elites, fell Kings, earn gold, gain levels. They complete themselves as the guild plays and pay out gold and renown. Fulfillments are counted in the chronicle.
@@ -128,5 +138,6 @@ About a minute after the voice channel empties, the bot posts a **session chroni
 | Renown | Permanent; buys legacy multipliers, then ♾️ Eternal Saga ranks |
 | Cosmetics | Won from 📦 Chronicle Crates (Kings drop them; 🔑 gold keys or ♪ Encores open them) |
 | Crate tiers | Folk · Ballad · Saga · Legend · Myth — sure Myth after 35 opens without one |
+| Listening party | 🎧 in the header: paste a YouTube link, everyone hears it in sync; anyone may listen, login to control |
 
 Now get in voice — the guild needs you.

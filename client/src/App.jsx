@@ -102,7 +102,42 @@ for (const [zoneName, file] of Object.entries({
   img.onload = () => registerBgPlate(zoneName, img);
   img.src = "/assets/zones/" + file;
 }
-import { audioInit, audioResume, setSfxMuted, setMusicMuted, sfx, musicTick } from "./audio.js";
+import { audioInit, audioResume, setSfxMuted, setMusicMuted, setPartyPlaying, sfx, musicTick } from "./audio.js";
+
+/* ===== The Listening Party (YouTube IFrame API) =====
+   Multiplayer-only, like voting and presence: state comes from the server
+   as {type:"music"} messages (see server/music.js) and never touches the
+   sim or the snapshot. YouTube's terms want the player VISIBLE — no hidden
+   audio-only playback — so joining docks a real 320x200 player under the
+   header, and the panel cannot be collapsed while you are listening. */
+
+function parseVideoId(s) {
+  if (!s) return null;
+  s = s.trim();
+  if (/^[\w-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+/* one lazy load of the IFrame API for the whole session */
+let ytApiPromise = null;
+function loadYT() {
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    if (window.YT && window.YT.Player) return resolve(window.YT);
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); resolve(window.YT); };
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  });
+  return ytApiPromise;
+}
+
+const MUSIC_IDLE = { active: false, videoId: null, title: null, by: null, epochStartMs: 0, paused: false, pausedPosMs: 0, queue: [], listeners: [] };
+/* where the shared song is right now, in seconds, on the server's clock */
+const partyPos = (mu, offset) =>
+  mu.paused ? mu.pausedPosMs / 1000 : Math.max(0, (Date.now() + (offset || 0) - mu.epochStartMs) / 1000);
 
 /* In dev (vite on :5173) talk to the server on :8787; in production the
    page is served by the game server itself, so use the same origin and
@@ -166,6 +201,13 @@ export default function App() {
   const [musicOff, setMusicOffUI] = useState(false);
   const [authConfigured, setAuthConfigured] = useState(false);
   const tokenRef = useRef(null);
+  /* listening party: server state, panel visibility, my membership */
+  const [musicSt, setMusicSt] = useState(MUSIC_IDLE);
+  const [partyOpen, setPartyOpen] = useState(false);
+  const [partyJoined, setPartyJoined] = useState(false);
+  const partyJoinedRef = useRef(false);
+  partyJoinedRef.current = partyJoined;
+  const musicOffsetRef = useRef(0); // serverNow - Date.now(), for the shared clock
 
   /* pick up the session token from the OAuth redirect fragment */
   useEffect(() => {
@@ -230,6 +272,8 @@ export default function App() {
       s.onopen = () => {
         setConnected(true); viewRef.current.connected = true;
         if (tokenRef.current) s.send(JSON.stringify({ a: "auth", token: tokenRef.current }));
+        /* a reconnect gets a fresh socket: re-register as a listener */
+        if (partyJoinedRef.current) s.send(JSON.stringify({ a: "music", op: "join" }));
       };
       s.onclose = () => {
         setConnected(false); viewRef.current.connected = false;
@@ -242,6 +286,11 @@ export default function App() {
         if (data.type === "auth") {
           setMe(data.ok ? data.user : null);
           if (!data.ok && tokenRef.current) { localStorage.removeItem("guild_token"); tokenRef.current = null; }
+          return;
+        }
+        if (data.type === "music") {
+          musicOffsetRef.current = data.serverNow - Date.now();
+          setMusicSt(data);
           return;
         }
         if (data.type !== "state") return;
@@ -370,8 +419,13 @@ export default function App() {
             <span className={"pill " + (connected ? "ok" : "bad")}>{connected ? "● LIVE" : "○ OFFLINE"}</span>
             <button className="pill sound" title={sfxOff ? "unmute sounds" : "mute sounds"}
               onClick={() => { audioInit(); audioResume(); setSfxMuted(!sfxOff); setSfxOffUI(!sfxOff); }}>{sfxOff ? "🔇" : "🔊"}</button>
-            <button className="pill sound" title={musicOff ? "unmute music" : "mute music"} style={{ opacity: musicOff ? 0.35 : 1 }}
+            <button className="pill sound" title={musicOff ? "unmute music" : "mute music (the game's own tune — the listening party has its own volume)"} style={{ opacity: musicOff ? 0.35 : 1 }}
               onClick={() => { audioInit(); audioResume(); setMusicMuted(!musicOff); setMusicOffUI(!musicOff); }}>🎵</button>
+            <button className={"pill sound" + (musicSt.active ? " partylive" : "")}
+              title={musicSt.active ? `listening party: ${musicSt.listeners.length} listening` : "start a listening party"}
+              onClick={() => setPartyOpen((o) => !o)}>
+              🎧{musicSt.active ? ` ${musicSt.listeners.length}` : ""}
+            </button>
             <a className="pill login" href="https://github.com/wasomma/guild-mp/blob/main/TUTORIAL.md" target="_blank" rel="noopener" title="open the player guide in a new tab">❓ How to play</a>
             {authConfigured && (me
               ? <span className="pill who">
@@ -382,6 +436,11 @@ export default function App() {
               : <a className="pill login" href={`${AUTH_URL}/login`}>Log in with Discord</a>)}
           </div>
         </header>
+        {(partyOpen || partyJoined) && (
+          <MusicBar music={musicSt} joined={partyJoined} setJoined={setPartyJoined} send={send}
+            offsetRef={musicOffsetRef} canControl={!authConfigured || !!me}
+            onClose={() => setPartyOpen(false)} />
+        )}
         <div className="main">
           <aside className="voice">
             <div className="vhead">🔊 Voice Channel</div>
@@ -470,6 +529,212 @@ export default function App() {
 }
 
 /* ===================== UI sections ===================== */
+
+/* The listening party bar, docked under the header. Left: the (policy-
+   mandated visible) YouTube player once you have joined, or a join/start
+   prompt. Right: now playing, shared controls, the queue, and your own
+   volume. Sync model: the server owns {videoId, epochStartMs, paused};
+   every client seeks its player to the shared clock and re-checks for
+   drift every few seconds (ads served to non-Premium listeners stall the
+   player, so periodic correction is what keeps the room together). */
+function MusicBar({ music, joined, setJoined, send, offsetRef, canControl, onClose }) {
+  const [url, setUrl] = useState("");
+  const [vol, setVol] = useState(() => {
+    const v = parseInt(localStorage.getItem("guild_music_vol") || "60", 10);
+    return isNaN(v) ? 60 : clamp(v, 0, 100);
+  });
+  const wrapRef = useRef(null);      // where the player iframe lives
+  const playerRef = useRef(null);    // YT.Player instance
+  const readyRef = useRef(false);
+  const curVidRef = useRef(null);    // videoId the player was last given
+  const alignedRef = useRef(false);  // one precise seek once playback begins
+  const musicRef = useRef(music);
+  musicRef.current = music;
+
+  const joinParty = () => {
+    audioInit(); audioResume();
+    setJoined(true);
+    send({ a: "music", op: "join" });
+  };
+  const leaveParty = () => {
+    setJoined(false);
+    send({ a: "music", op: "leave" });
+  };
+  const addSong = () => {
+    const id = parseVideoId(url);
+    if (!id || !canControl) return;
+    send({ a: "music", op: music.active ? "queue" : "play", videoId: id });
+    setUrl("");
+    if (!joined) joinParty(); // putting a song on implies you want to hear it
+  };
+
+  /* player lifecycle: exists exactly while (joined && party active) */
+  useEffect(() => {
+    if (!(joined && music.active)) {
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch {}
+        playerRef.current = null;
+        readyRef.current = false;
+        curVidRef.current = null;
+        if (wrapRef.current) wrapRef.current.innerHTML = "";
+      }
+      return;
+    }
+    if (playerRef.current) return;
+    let cancelled = false;
+    loadYT().then((YT) => {
+      if (cancelled || playerRef.current || !wrapRef.current) return;
+      const mu = musicRef.current;
+      const holder = document.createElement("div");
+      wrapRef.current.appendChild(holder);
+      curVidRef.current = mu.videoId;
+      playerRef.current = new YT.Player(holder, {
+        width: "320", height: "200",
+        videoId: mu.videoId,
+        playerVars: { autoplay: 1, playsinline: 1, start: Math.floor(partyPos(mu, offsetRef.current)) },
+        events: {
+          onReady: (e) => {
+            readyRef.current = true;
+            window.__party = e.target; // console/QA handle for sync checks
+            try {
+              e.target.setVolume(parseInt(localStorage.getItem("guild_music_vol") || "60", 10) || 60);
+              if (musicRef.current.paused) e.target.pauseVideo();
+            } catch {}
+          },
+          onStateChange: (e) => {
+            /* 0 = ENDED: report the id the PLAYER finished (never the
+               server's current one — a stale report must look stale) */
+            if (e.data === 0) {
+              let vid = null;
+              try { vid = e.target.getVideoData().video_id; } catch {}
+              send({ a: "music", op: "ended", videoId: vid || musicRef.current.videoId });
+            }
+            /* 1 = PLAYING: the creation-time start param is whole seconds,
+               so snap once to the exact shared position on first play */
+            if (e.data === 1 && !alignedRef.current) {
+              alignedRef.current = true;
+              const mu = musicRef.current;
+              if (mu.active && !mu.paused) { try { e.target.seekTo(partyPos(mu, offsetRef.current), true); } catch {} }
+            }
+          },
+        },
+      });
+    });
+    return () => { cancelled = true; };
+  }, [joined, music.active]);
+
+  /* follow the shared state: song changes, pause/resume, epoch moves */
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!p || !readyRef.current || !music.active) return;
+    try {
+      if (curVidRef.current !== music.videoId) {
+        curVidRef.current = music.videoId;
+        alignedRef.current = false; // re-align once the new song starts playing
+        p.loadVideoById({ videoId: music.videoId, startSeconds: partyPos(music, offsetRef.current) });
+        if (music.paused) p.pauseVideo();
+      } else if (music.paused) {
+        p.pauseVideo();
+        p.seekTo(music.pausedPosMs / 1000, true);
+      } else {
+        p.seekTo(partyPos(music, offsetRef.current), true);
+        p.playVideo();
+      }
+    } catch {}
+  }, [music.videoId, music.paused, music.epochStartMs]);
+
+  /* drift check: only correct a player that is actually PLAYING — a
+     buffering or ad-serving player would fight the seek and stutter */
+  useEffect(() => {
+    if (!joined) return;
+    const iv = setInterval(() => {
+      const p = playerRef.current, mu = musicRef.current;
+      if (!p || !readyRef.current || !mu.active || mu.paused) return;
+      try {
+        if (p.getPlayerState() !== 1) return;
+        const want = partyPos(mu, offsetRef.current);
+        if (Math.abs(p.getCurrentTime() - want) > 2) p.seekTo(want, true);
+      } catch {}
+    }, 5000);
+    return () => clearInterval(iv);
+  }, [joined]);
+
+  /* my volume only ever touches my player */
+  useEffect(() => {
+    localStorage.setItem("guild_music_vol", String(vol));
+    const p = playerRef.current;
+    if (p && readyRef.current) { try { p.setVolume(vol); } catch {} }
+  }, [vol]);
+
+  /* duck the game's own audio while the party is playing on this client */
+  useEffect(() => {
+    setPartyPlaying(joined && music.active && !music.paused);
+    return () => setPartyPlaying(false);
+  }, [joined, music.active, music.paused]);
+
+  return (
+    <div className="musicbar">
+      <div className="ytpane">
+        {joined && music.active
+          ? <div ref={wrapRef} className="ytwrap" />
+          : <div className="ytjoin">
+              {music.active
+                ? <>
+                    <div className="nowplay">🎶 {music.title || music.videoId}</div>
+                    <button className="mini big" onClick={joinParty}>🎧 Join the listening party</button>
+                  </>
+                : <div className="dim small">The stage is quiet. Paste a YouTube link to strike up the band →</div>}
+            </div>}
+      </div>
+      <div className="mside">
+        <div className="mrow">
+          <b className="mtitle">🎧 Listening Party</b>
+          {music.active && (
+            <span className="dim small">
+              {music.listeners.length} listening{music.by ? ` · started by ${music.by}` : ""}
+            </span>
+          )}
+          <span className="mspacer" />
+          {joined
+            ? <button className="mini" onClick={leaveParty}>🚪 leave</button>
+            : <button className="mini" title="hide this panel" onClick={onClose}>✕</button>}
+        </div>
+        {music.active && (
+          <div className="mrow">
+            <span className="nowplay" title={music.title || music.videoId}>▶ {music.title || music.videoId}</span>
+            {canControl && <>
+              <button className="mini" title={music.paused ? "resume for everyone" : "pause for everyone"}
+                onClick={() => send({ a: "music", op: music.paused ? "resume" : "pause" })}>{music.paused ? "▶" : "⏸"}</button>
+              <button className="mini" title="skip to the next song" onClick={() => send({ a: "music", op: "skip" })}>⏭</button>
+              <button className="mini warn" title="end the party for everyone" onClick={() => send({ a: "music", op: "stop" })}>⏹ end</button>
+            </>}
+            {joined && (
+              <label className="dim small mvol" title="your volume (only yours)">
+                🔉<input type="range" min="0" max="100" value={vol} onChange={(e) => setVol(+e.target.value)} />
+              </label>
+            )}
+          </div>
+        )}
+        <div className="mrow">
+          <input className="minput" placeholder="YouTube link or video id…" value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") addSong(); }} />
+          <button className="mini" disabled={!canControl || !parseVideoId(url)} onClick={addSong}>
+            {music.active ? "+ queue" : "▶ start the party"}
+          </button>
+        </div>
+        {music.queue.length > 0 && (
+          <div className="mqueue">
+            {music.queue.map((q, i) => (
+              <div key={i} className="dim small mqrow">#{i + 1} {q.title || q.videoId} <span className="mby">· {q.by}</span></div>
+            ))}
+          </div>
+        )}
+        {!canControl && <div className="dim small">Log in with Discord to change the music; anyone may listen.</div>}
+      </div>
+    </div>
+  );
+}
 
 /* Zoomed, animated inspect view of one adventurer: the same drawAdventurer
    that renders the world, at 4x, minus the HUD bars. This is where earned
@@ -1226,5 +1491,21 @@ canvas { width: 100%; display: block; image-rendering: pixelated; background: #0
 .qbar { height: 5px; background: #26213c; border-radius: 3px; overflow: hidden; }
 .qfill { height: 100%; }
 .auto { display: flex; align-items: center; gap: 4px; }
+.pill.partylive { color: #8fe3ff; border-color: #8fe3ff66; }
+.musicbar { display: flex; gap: 12px; padding: 8px 14px; background: #131022; border-bottom: 2px solid #2b2740; align-items: flex-start; flex-wrap: wrap; }
+.ytpane { flex: none; width: 320px; min-height: 200px; background: #000; border: 1px solid #2b2740; border-radius: 8px; overflow: hidden; }
+.ytwrap iframe { display: block; width: 320px; height: 200px; border: 0; }
+.ytjoin { width: 100%; min-height: 200px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; padding: 10px; text-align: center; }
+.mside { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 6px; }
+.mrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mspacer { flex: 1; }
+.mtitle { color: #8fe3ff; }
+.nowplay { color: #f2c14e; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.minput { flex: 1; min-width: 160px; font-family: 'VT323', monospace; font-size: 16px; background: #1e1a30; border: 1px solid #3a3550; color: #efeaff; border-radius: 5px; padding: 3px 8px; }
+.minput::placeholder { color: #6d6790; }
+.mqueue { max-height: 96px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.mby { color: #6d6790; }
+.mvol { display: inline-flex; align-items: center; gap: 4px; }
+.mvol input { width: 90px; accent-color: #8fe3ff; }
 @media (max-width: 760px) { .main { flex-direction: column; } .voice { width: 100%; border-right: none; border-bottom: 2px solid #2b2740; } }
 `;
