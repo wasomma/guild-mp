@@ -39,8 +39,12 @@ function tickUntil(g, pred, maxSec = 120) {
   assert(g.members.every((m) => m.level === 30), "characters keep their levels");
   assert(g.members.every((m) => m.gear.weapon && m.gear.weapon.name === "Test Blade"), "characters keep their gear");
   assert(g.gold === goldBefore, "shared gold persists through the chapter end");
-  assert(g.stock.heal >= 3, "feast restocks empty potions");
-  assert(g.stock.armor === 10, "restock never lowers an ample stock");
+  /* per-chapter charges (v0.1.34, rework Phase 3): the feast sets the satchel
+     to EXACTLY the stipend baseline, so an emptied pocket refills and a hoarded
+     one is cut back down — leftovers never bank into the next chapter */
+  const st = g.legacy.stipend * 2;
+  assert(g.stock.heal === 3 + st, "feast refills an emptied potion to the baseline");
+  assert(g.stock.armor === 1 + st, "feast clamps a hoarded potion down to the baseline");
   assert(g.mutator !== null, "a mutator was rolled for the new chapter");
   assert(g.renown === Math.round(renownEarn(20)), "chapter renown earned at the stage-20 rate");
   assert(g.session && g.session.chapters === 1, "session ledger counts the chapter");
